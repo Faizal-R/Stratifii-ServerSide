@@ -1,0 +1,15 @@
+import { Candidate } from "../../models";
+import { ICandidate } from "../../interfaces/ICandidateModel";
+import { BaseRepository } from "../base/BaseRepository";
+import { ICandidateRepository } from "./ICandidateRepository";
+
+export class CandidateRepository
+    extends BaseRepository<ICandidate>
+    implements ICandidateRepository {
+    constructor() {
+        super(Candidate);
+    }
+    async findByEmail(email: string): Promise<ICandidate | null> {
+        return Candidate.findOne({ email }).exec();
+    }
+}

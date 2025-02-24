@@ -1,18 +1,29 @@
-import express from "express";
-import cookieParser from "cookie-parser";
-import dotenv from "dotenv";
+
+import app from "./app";
 import connectDB from "./config/database";
+import dotenv from "dotenv";
 
 dotenv.config({ path: "src/.env" });
-const PORT = process.env.PORT;
 
-const app = express();
-
-app.use(cookieParser());
-
-connectDB();
+const PORT = process.env.PORT || 5000;
 
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+const startServer = async () => {
+  try {
+    await connectDB(); 
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running at http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("❌ Server failed to start:", error);
+  }
+};
+
+startServer();
+
+// Graceful Shutdown
+process.on("SIGINT", async () => {
+  console.log("🔻 Closing server...");
+  await connectDB(); 
+  process.exit(0);
 });

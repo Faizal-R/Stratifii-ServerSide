@@ -1,0 +1,16 @@
+import { ICompany } from "../../interfaces/ICompanyModel";
+import { Company } from "../../models";
+import { BaseRepository } from "../base/BaseRepository";
+import { ICompanyRepository } from "./ICompanyRepository";
+
+export class CompanyRepository extends BaseRepository<ICompany> implements ICompanyRepository{
+    constructor(){
+        super(Company)
+    }
+
+   async findByEmail(email: string): Promise<ICompany | null> {
+        const company=await Company.findOne({email}).exec()
+        return company || null
+    }
+
+}
