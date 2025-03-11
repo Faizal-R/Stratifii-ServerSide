@@ -9,7 +9,6 @@ dist/
 out/
 *.js
 *.js.map
-*.d.ts
 .tsbuildinfo
 
 # Environment variables
