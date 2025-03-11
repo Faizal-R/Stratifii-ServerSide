@@ -1,4 +1,4 @@
-import { ICompany } from "../../interfaces/ICompanyModel";
+import { ICompany } from "../../models/company/Company";
 import { Company } from "../../models";
 import { BaseRepository } from "../base/BaseRepository";
 import { ICompanyRepository } from "./ICompanyRepository";

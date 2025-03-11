@@ -1,5 +1,21 @@
 import mongoose, {Schema, Document, ObjectId } from "mongoose";
-import { ICompany } from "../../interfaces/ICompanyModel";
+import { TStatus } from "../interviewer/Interviewer";
+// import { TStatus } from "./IInterviewerModel"; // Ensure this module exists or remove if not needed
+
+export interface ICompany extends Document {
+  companyName: string;
+  email: string;
+  companyWebsite: string;
+  registrationCertificateNumber: string;
+  linkedInProfile: string;
+  phone: string;
+  password: string;
+  companyType: string;
+  candidates?: ObjectId[];
+  isVerified?: boolean;
+  status?:TStatus
+}
+
 
 const CompanySchema: Schema = new Schema(
     {
@@ -51,6 +67,11 @@ const CompanySchema: Schema = new Schema(
         type: Boolean,
         default: false,
       },
+      status:{
+        type:String,
+        default:"pending",
+        enum:["pending","approved","rejected"]
+      }
     },
     {
       timestamps: true, 

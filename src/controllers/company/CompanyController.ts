@@ -1,61 +1,60 @@
 import { Request, Response } from "express";
-import { CompanyService } from "../../services/company/CompanySerive";
+import { ICompanyService } from "../../services/company/ICompanyService";
 import { ICompanyController } from "./ICompanyController";
-import { createResponse } from "../../helper/responseHandler";
+import { createResponse, errorResponse } from "../../helper/responseHandler";
 import { HttpStatus } from "../../config/HttpStatusCodes";
-import { COOKIE_OPTIONS } from "../../config/cookieConfig";
+import { CustomError } from "../../error/CustomError";
+import { COMPANY_SUCCESS_MESSAGES } from "../../constants/messages";
+import { z } from "zod";
+import { CompanyProfileSchema } from "../../validations/CompanyValidations";
+import { create } from "ts-node";
 
 export class CompanyController implements ICompanyController {
-    constructor(private readonly _companyService: CompanyService) { }
-    async login(request: Request, response: Response) {
-        const { email, password } = request.body;
-        try {
-            const { accessToken, refreshToken, user } =
-                await this._companyService.login(email, password);
-            if (!user) {
-                createResponse(
-                    response,
-                    HttpStatus.OK,
-                    false,
-                    "Invalid email or password"
-                );
-                return;
-            }
-            response.cookie("accessToken", accessToken, COOKIE_OPTIONS);
-            createResponse(
-                response,
-                HttpStatus.OK,
-                true,
-                "User LoggedIn Successfully",
-                user
-            );
-            return;
-        } catch (error) {
-            if (error instanceof Error)
-                createResponse(response, 500, false, error.message);
-        }
-    }
-    async register(request: Request, response: Response) {
-        const {
-            companyName,
-            email,
-            companyWebsite,
-            registrationCertificateNumber,
-            linkedInProfile,
-            phone,
-            password,
-            companyType,
-        } = request.body;
-   
-         const newCompany=this._companyService.register(companyName,
-            email,
-            companyWebsite,
-            registrationCertificateNumber,
-            linkedInProfile,
-            phone,
-            password,
-            companyType)
+  constructor(private readonly _companyService: ICompanyService) {}
 
-            createResponse(response,200,true,"Company Registration completed Successfully",newCompany)
+  async getCompanyById(request: Request, response: Response) {
+    try {
+      const companyId = request.user?.userId;
+      const company = await this._companyService.getCompanyById(companyId!);
+      return createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        "Company Found",
+        company
+      );
+    } catch (error) {
+      errorResponse(response, error);
     }
+  }
+  async updateCompanyProfile(request: Request, response: Response) {
+    try {
+      const companyId = request.user?.userId;
+      const validatedCompany = CompanyProfileSchema.safeParse(request.body);
+      if (!validatedCompany.success) {
+        console.log(validatedCompany.error  )
+        return createResponse(
+          response,
+          HttpStatus.BAD_REQUEST,
+          false,
+          "Some fields in your company profile contain invalid data.",
+          validatedCompany.error.format()
+        );
+      }
+
+      const updatedCompany = await this._companyService.updateCompanyProfile(
+        companyId!,
+        validatedCompany.data
+      );
+      return createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        COMPANY_SUCCESS_MESSAGES.COMPANY_PROFILE_UPDATED,
+        updatedCompany
+      );
+    } catch (error) {
+      errorResponse(response, error);
+    }
+  }
 }

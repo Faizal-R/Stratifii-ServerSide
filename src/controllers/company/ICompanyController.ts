@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
-import { ICompany } from "../../interfaces/ICompanyModel";
+import { ICompany } from "../../models/company/Company";
 
 export interface ICompanyController{
-    login(request:Request,response:Response):void
-    register(request:Request,response:Response):void
-
+  getCompanyById(request: Request, response: Response): Promise<void>;
+  updateCompanyProfile(request: Request, response: Response): Promise<void>;
 }

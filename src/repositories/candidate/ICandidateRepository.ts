@@ -1,4 +1,4 @@
-import { ICandidate } from "../../interfaces/ICandidateModel"
+import { ICandidate } from "../../models/candidate/Candidate";
 import { IBaseRepository } from "../base/IBaseRepository";
 
 export interface ICandidateRepository extends IBaseRepository<ICandidate> {

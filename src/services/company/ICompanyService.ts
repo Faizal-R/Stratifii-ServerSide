@@ -1,18 +1,6 @@
-import { ICompany } from "../../interfaces/ICompanyModel";
-export interface ICompanyService {
-  login(email: string, password: string):  Promise<{
-    accessToken: string;
-    refreshToken: string;
-    user: ICompany;
-  }>;
-  register(
-    companyName: string,
-    email: string,
-    companyWebsite: string,
-    registrationCertificateNumber: string,
-    linkedInProfile: string,
-    phone: string,
-    password: string,
-    companyType: string
-  ):Promise<ICompany>
+import { ICompany } from "../../models/company/Company";
+import { ICompanyProfile } from "../../validations/CompanyValidations";
+export interface ICompanyService  {
+  getCompanyById(companyId: string): Promise<ICompany | null>;
+  updateCompanyProfile(companyId:string,company: ICompanyProfile): Promise<ICompany|null>;
 }

@@ -1,12 +1,16 @@
 import { Router } from "express";
 const router=Router()
-// import { AdminController } from "../../../controllers/admin/AdminController";
-// import { AuthController } from "../../../controllers/auth/AuthController";
-// import { AuthService } from "../../../services/auth/AuthService";
+import {AdminController} from "../../../controllers/admin/AdminController"
+import{AdminService} from "../../../services/admin/AdminService"
+import{AdminRepository} from "../../../repositories/admin/AdminRepository"
+
+const adminRepository=new AdminRepository()
+const adminService=new AdminService(adminRepository)
+const adminController=new AdminController(adminService)
 
 
 
-router.get('/',(req,res)=>{})
+router.post('/signin',adminController.login.bind(adminController))
 
 
 

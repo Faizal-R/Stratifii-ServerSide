@@ -1,68 +1,48 @@
 import { ICompanyService } from "./ICompanyService";
-import { CompanyRepository } from "../../repositories/company/CompanyRepository";
-import { ICompany } from "../../interfaces/ICompanyModel";
-import { comparePassword, hashPassword } from "../../utils/hash";
-import { Document } from "mongoose";
-import { generateAccessToken, generateRefreshToken } from "../../helper/generateTokens";
+import { ICompanyRepository } from "../../repositories/company/ICompanyRepository";
+import { ICompany } from "../../models/company/Company";
+import { CustomError } from "../../error/CustomError";
+import { HttpStatus } from "../../config/HttpStatusCodes";
+import { ERROR_MESSAGES } from "../../constants/messages";
+import { ICompanyProfile } from "../../validations/CompanyValidations";
 
 export class CompanyService implements ICompanyService {
-  constructor(private _companyRepository: CompanyRepository) {}
-  /**
-   * Authenticating a User
-   *
-   * @param {string} email
-   * @param {string} password
-   * @returns {Promise<ICompany>}
-   */
-    async login(
-      email: string,
-      password: string
-    ): Promise<{
-      accessToken: string;
-      refreshToken: string;
-      user: ICompany;
-    }> {
-      const user = await this._companyRepository.findByEmail(email);
-      if (!user) {
-        throw new Error("Invalid email or password");
-      }
-      // Compare passwords
-      const isPasswordValid = await comparePassword(password, user.password);
-      if (!isPasswordValid) {
-        throw new Error("Invalid email or password");
-      }
-      const accessToken = generateAccessToken(user._id as string);
-      const refreshToken = generateRefreshToken(user._id as string);
-      return { accessToken, refreshToken, user };
-    }
-  async register(
-    companyName: string,
-    email: string,
-    companyWebsite: string,
-    registrationCertificateNumber: string,
-    linkedInProfile: string,
-    phone: string,
-    password: string,
-    companyType: string
-  ): Promise<ICompany> {
-    const existingUser = await this._companyRepository.findByEmail(email);
-    if (existingUser) {
-      throw new Error("Email already in use");
-    }
-    let hashedPassword = await hashPassword(password);
+  constructor(private _companyRepository: ICompanyRepository) {}
 
-    type companyInput = Omit<ICompany, keyof Document>;
-
-    const newCompany: companyInput = {
-      companyName,
-      email,
-      companyWebsite,
-      registrationCertificateNumber,
-      linkedInProfile,
-      phone,
-      password: hashedPassword,
-      companyType,
-    };
-    return await this._companyRepository.create(newCompany)
+  async getCompanyById(companyId: string): Promise<ICompany | null> {
+    try {
+      const company = await this._companyRepository.findById(companyId);
+      if (!company)
+        throw new CustomError("Company not found", HttpStatus.NOT_FOUND);
+      return company;
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      throw new CustomError(
+        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+  async updateCompanyProfile(
+    companyId: string,
+    company: ICompanyProfile
+  ): Promise<ICompany | null> {
+    try {
+      const updatedCompany = await this._companyRepository.update(
+        companyId,
+        company
+      );
+      return updatedCompany;
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      throw new CustomError(
+        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
   }
 }

@@ -3,80 +3,43 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../../helper/generateTokens";
-import { IInterviewer } from "../../interfaces/IInterviewerModel";
-import { InterviewerRepository } from "../../repositories/interviewer/InterviewerRepository";
-import { comparePassword, hashPassword } from "../../utils/hash";
+import { IInterviewer } from "../../models/interviewer/Interviewer";
+import { IInterviewerRepository } from "../../repositories/interviewer/IInterviewerRepository";
+
 import { IInterviewerService } from "./IInterviewerService";
+import { IInterviewerProfile } from "../../validations/InterviewerValidations";
+import { CustomError } from "../../error/CustomError";
+import { HttpStatus } from "../../config/HttpStatusCodes";
+import { ERROR_MESSAGES } from "../../constants/messages";
 
 export class InterviewerService implements IInterviewerService {
-  constructor(private readonly _interviewerRepository: InterviewerRepository) {}
-
-  async login(
-    email: string,
-    password: string
-  ): Promise<{
-    accessToken: string;
-    refreshToken: string;
-    user: IInterviewer;
-  }> {
-    const user = await this._interviewerRepository.findByEmail(email);
-    if (!user) {
-      throw new Error("Invalid email or password");
-    }
-    // Compare passwords
-    const isPasswordValid = await comparePassword(password, user.password);
-    if (!isPasswordValid) {
-      throw new Error("Invalid email or password");
-    }
-    const accessToken = generateAccessToken(user._id as string);
-    const refreshToken = generateRefreshToken(user._id as string);
-    return { accessToken, refreshToken, user };
+  constructor(private readonly _interviewerRepository: IInterviewerRepository) {}
+ async getInterviewerById(interviewerId: string): Promise<IInterviewer | null> {
+      try {
+         const interviewer = await this._interviewerRepository.findById(interviewerId);
+         if(!interviewer) throw new CustomError('Interviewer Not Found',HttpStatus.NOT_FOUND)
+          return interviewer
+      } catch (error) {
+        if(error instanceof CustomError){
+          throw error
+        }
+        throw new CustomError(ERROR_MESSAGES.INTERNAL_SERVER_ERROR,HttpStatus.INTERNAL_SERVER_ERROR)
+      }
   }
-  async register(
-    name: string,
-    email: string,
-    position: string,
-    password: string,
-    phone: string,
-    experience: number,
-    linkedinProfile: string,
-    language: Record<string, string>,
-    availability: { day: string; timeSlot: string[] }[],
-    professionalSummary: string,
-    expertise: string[]
-  ): Promise<IInterviewer> {
-    // Check if email already exists
-    const existingUser = await this._interviewerRepository.findByEmail(email);
-    if (existingUser) {
-      throw new Error("Email already in use");
+ async updateInterviewerProfile(interviewerId: string, interviewer: IInterviewerProfile): Promise<IInterviewer | null> {
+    try {
+      const updatedInterviewer =await  this._interviewerRepository.update(interviewerId, interviewer);
+      return updatedInterviewer
+    } catch (error) {
+      console.log("updateing Interviewer",error)
+      if(error instanceof CustomError){
+        throw error
+      }
+      throw new CustomError(ERROR_MESSAGES.INTERNAL_SERVER_ERROR,HttpStatus.INTERNAL_SERVER_ERROR)
     }
-
-    // Hash the password
-    const hashedPassword = await hashPassword(password);
-    
-     //Removing the unnecessary Documents properites
-    type InterviewerInput = Omit<IInterviewer, keyof Document>;
-
-    // Create the interviewer object
-    const newInterviewer: InterviewerInput = {
-      name,
-      email,
-      position,
-      password: hashedPassword,
-      phone,
-      experience,
-      linkedinProfile,
-      language,
-      availability,
-      professionalSummary,
-      expertise,
-      isVerified: false,
-    };
-
-  
-    return await this._interviewerRepository.create(
-        newInterviewer
-      );
-  
   }
+
+
+ 
+  
 }

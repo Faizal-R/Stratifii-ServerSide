@@ -18,11 +18,11 @@ app.use(cors({
 app.use('/api',router)
 
 // 🔹 Health Check Route
-app.get("/", (req, res) => {
+app.get("/health", (req, res) => {
     res.json({ message: " API is running successfully!" });
   });
 
-app.use((err:any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err:Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
     console.error(err.stack);
     res.status(500).json({ message: "Internal Server Error" });
   });

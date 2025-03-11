@@ -1,79 +1,43 @@
 import { Request, Response } from "express";
-import { InterviewerService } from "../../services/interviewer/InterviewerService";
+import { IInterviewerService } from "../../services/interviewer/IInterviewerService";
 import { IInterviewerController } from "./IInterviewerController";
-import { createResponse } from "../../helper/responseHandler";
+import { createResponse, errorResponse } from "../../helper/responseHandler";
 import {  HttpStatus,  } from "../../config/HttpStatusCodes";
-import { COOKIE_OPTIONS } from "../../config/cookieConfig";
+import { INTERVIEWER__SUCCESS_MESSAGES } from "../../constants/messages";
 
-export class InterviewController {
-  constructor(private readonly _interviewerService: InterviewerService) {}
-  async login(request: Request, response: Response) {
-    const { email, password } = request.body;
-    const { accessToken, refreshToken, user } =
-      await this._interviewerService.login(email, password);
-    if (!user) {
-      createResponse(response,HttpStatus.OK, false, "Invalid email or password");
-      return;
-    }
-    response.cookie("accessToken",accessToken,COOKIE_OPTIONS);
-    createResponse(response,HttpStatus.OK,true,"User LoggedIn Successfully",user)
-    return
-  }
-  async register(request: Request, response: Response) {
-    try {
-      // Extract data from request body
-      const {
-        name,
-        email,
-        position,
-        password,
-        phone,
-        experience,
-        linkedinProfile,
-        language,
-        availability,
-        professionalSummary,
-        expertise,
-      } = request.body;
+import { InterviewerProfileSchema } from "../../validations/InterviewerValidations";
 
-      // Basic validation (ensure required fields are present)
-      if (!name || !email || !password || !phone || !experience) {
-        createResponse(response, HttpStatus.BAD_REQUEST, false, "Missing required fields");
-        return;
+export class InterviewController implements IInterviewerController {
+  constructor(private readonly _interviewerService: IInterviewerService) {}
+
+  async getInterviewerProfile(request: Request, response: Response) {
+      try {
+
+        const interviewerId=request.user?.userId
+        console.log(interviewerId)
+        const interviewer= await this._interviewerService.getInterviewerById(interviewerId!)
+        console.log(interviewer)
+        return createResponse(response,HttpStatus.OK,true,INTERVIEWER__SUCCESS_MESSAGES.INTERVIEWER_PROFILE_FETCHED,interviewer)
+      } catch (error) {
+
+        console.log("error while fetching",error)
+        return errorResponse(response,error)
       }
-
-     
-      const newInterviewer = await this._interviewerService.register(
-        name,
-        email,
-        position,
-        password,
-        phone,
-        experience,
-        linkedinProfile,
-        language,
-        availability,
-        professionalSummary,
-        expertise
-      );
-
-      createResponse(
-        response,
-        HttpStatus.OK,
-        true,
-        "Interviewer Registration Successfully Completed",
-        { interviewer: newInterviewer }
-      );
-      return;
-    } catch (error) {
-      console.log(error);
-      createResponse(
-        response,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        false,
-        "A error occur while registering interveiwer"
-      );
-      return;
-    }
   }
+  async updateInterviewerProfile(request: Request, response: Response) {
+      try {
+        console.log(request.body)
+        const interviewerId=request.user?.userId
+        const interviewer =InterviewerProfileSchema.safeParse(request.body)
+          if(!interviewer.success){
+            return createResponse(response,HttpStatus.BAD_REQUEST,false,interviewer.error.message)
+          } 
+        
+        const updatedInterviewer = this._interviewerService.updateInterviewerProfile(interviewerId!,interviewer.data)
+        return createResponse(response,HttpStatus.OK,true,INTERVIEWER__SUCCESS_MESSAGES.INTERVIEWER_PROFILE_UPDATED,updatedInterviewer)
+      } catch (error) {
+        errorResponse(response,error)
+      }
+  }
+      
 }

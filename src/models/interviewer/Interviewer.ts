@@ -1,37 +1,65 @@
-import mongoose, { Schema, Document, ObjectId } from "mongoose";
-import { IInterviewer } from "../../interfaces/IInterviewerModel";
-import { string } from "zod";
+import mongoose, { Document,ObjectId,Schema } from "mongoose";
+
+type Availability = {
+  date?: string; // Format: "YYYY-MM-DD"
+  day: string;
+  timeSlot?: string[];
+};
+
+export type TStatus= "pending" | "approved" | "rejected"
+
+export interface IInterviewer extends Document {
+    name: string;
+    position: string;
+    email: string;
+    phone: string;
+    password:string;
+    experience: number;
+    linkedinProfile: string;
+    location?: string;
+    language: Record<string, string>;
+    availableDays:string[];
+    availability?:Availability[];
+    professionalSummary: string;
+    expertise: string[];
+    scheduleInterviews?: ObjectId[];
+    avatar?: string;
+    isVerified: boolean;
+    rating?: number;
+    reviews?: ObjectId[];
+    status?:TStatus
+  }
+
+  export interface IGoogleInterviewer extends Document{
+    name:string;
+    email:string;
+  }
+  
 
 const interviewerSchema: Schema = new Schema(
   {
     name: {
       type: String,
-      required: true,
     },
     position: {
       type: String,
-      required: true,
     },
-    password:{
-      type:String,
-      required:true
+    password: {
+      type: String,
     },
     email: {
       type: String,
-      required: true,
+
       unique: true,
     },
     phone: {
       type: String,
-      required: true,
     },
     experience: {
       type: Number,
-      required: true,
     },
     linkedinProfile: {
       type: String,
-      required:true
     },
     duration: {
       type: Number,
@@ -41,32 +69,30 @@ const interviewerSchema: Schema = new Schema(
     },
     language: {
       type: Object,
-      required: false,
     },
+    availableDays: [{ type: String }],
+
     availability: [
       {
-        type: Object, 
+        type: Object,
       },
     ],
     professionalSummary: {
       type: String,
-      required: false,
     },
     expertise: [
       {
         type: String,
-        required: false,
       },
     ],
     scheduleInterviews: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Interview", 
+        ref: "Interview",
       },
     ],
     avatar: {
       type: String,
-      required: false,
     },
     isVerified: {
       type: Boolean,
@@ -74,21 +100,30 @@ const interviewerSchema: Schema = new Schema(
     },
     rating: {
       type: Number,
-      required: false,
+
       default: 0,
     },
     reviews: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Review", 
+        ref: "Review",
       },
     ],
+    status: {
+      type: String,
+      default: "pending",
+      enum: ["pending", "approved", "rejected"],
+    },
   },
+
   {
-    timestamps: true, 
+    timestamps: true,
   }
 );
 
-const Interviewer=mongoose.model<IInterviewer>("Interviewer", interviewerSchema);
+const Interviewer = mongoose.model<IInterviewer>(
+  "Interviewer",
+  interviewerSchema
+);
 
-export default Interviewer
+export default Interviewer;

@@ -1,5 +1,5 @@
 import { Candidate } from "../../models";
-import { ICandidate } from "../../interfaces/ICandidateModel";
+import { ICandidate } from "../../models/candidate/Candidate";
 import { BaseRepository } from "../base/BaseRepository";
 import { ICandidateRepository } from "./ICandidateRepository";
 

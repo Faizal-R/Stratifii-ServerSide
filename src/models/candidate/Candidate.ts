@@ -1,7 +1,13 @@
 import mongoose, { Schema, Document } from "mongoose";
-import { ICandidate } from "../../interfaces/ICandidateModel";
 
 
+export interface ICandidate extends Document {
+  email: string;
+  password: string;
+  name: string;
+  //   resume: string;
+  status?: string;
+}
 
 const CandidateSchema: Schema = new Schema(
   {
@@ -27,7 +33,7 @@ const CandidateSchema: Schema = new Schema(
     status: {
       type: String,
       required: true,
-      enum:[""]
+      enum:["active","pending"]
     },
   },
   {
