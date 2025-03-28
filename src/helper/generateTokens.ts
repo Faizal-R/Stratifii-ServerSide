@@ -11,7 +11,7 @@ export function generateRefreshToken(userId: string, role: string): string {
     { userId, role },
     process.env.REFRESH_TOKEN_SECRET as string,
     {
-      expiresIn: "7d",
+      expiresIn:'7d',
     }
   );
 }

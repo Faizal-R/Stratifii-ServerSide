@@ -1,4 +1,4 @@
-import { Model, Document } from "mongoose";
+import { Model, Document, FilterQuery } from "mongoose";
 import { IBaseRepository } from "./IBaseRepository";
 
 export abstract class BaseRepository<T extends Document>
@@ -17,8 +17,8 @@ export abstract class BaseRepository<T extends Document>
     return this.model.findById(id).exec();
   }
 
-  async findAll(): Promise<T[] | null> {
-    return this.model.find().exec();
+  async findAll(query?:FilterQuery<T>): Promise<T[] | []> {
+    return this.model.find(query??{}).exec();
   }
 
   async update(id: string, data: Partial<T>): Promise<T | null> {

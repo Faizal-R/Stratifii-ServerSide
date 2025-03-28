@@ -8,7 +8,14 @@ import { COOKIE_OPTIONS } from "../../config/CookieConfig";
 import { ICompany } from "../../models/company/Company";
 import { CustomError } from "../../error/CustomError";
 import { IInterviewer } from "../../models/interviewer/Interviewer";
-import { AUTH_SUCCESS_MESSAGES } from "../../constants/messages";
+import jwt from "jsonwebtoken";
+import {
+  AUTH_SUCCESS_MESSAGES,
+  COMMON_MESSAGES,
+  ERROR_MESSAGES,
+} from "../../constants/messages";
+import { TokenPayload } from "../../middlewares/Auth";
+import { storeRefreshToken } from "../../helper/handleRefreshToken";
 
 export class AuthController implements IAuthController {
   constructor(private readonly _authService: IAuthService) {}
@@ -34,7 +41,7 @@ export class AuthController implements IAuthController {
           response,
           HttpStatus.BAD_REQUEST,
           false,
-          "Invalid Role"
+          ERROR_MESSAGES.INVALID_INPUT
         );
       }
 
@@ -46,14 +53,14 @@ export class AuthController implements IAuthController {
       );
 
       // Set refresh token as an HTTP-only cookie
-      response.cookie(`${role}RefreshToken`, refreshToken, COOKIE_OPTIONS);
+      response.cookie(`refreshToken`, refreshToken, COOKIE_OPTIONS);
 
       // Send success response
       return createResponse(
         response,
         HttpStatus.OK,
         true,
-        "Logged in successfully",
+        AUTH_SUCCESS_MESSAGES.LOGGED_IN,
         {
           accessToken,
           user,
@@ -70,11 +77,7 @@ export class AuthController implements IAuthController {
       // Extract request body
       const companyData: ICompany = request.body;
 
-      //  Call the service layer to handle registration
       const newCompany = await this._authService.registerCompany(companyData);
-
-      //  Send verification code
-      await this._authService.sendVerificationCode(newCompany.email);
 
       return createResponse(
         response,
@@ -95,7 +98,6 @@ export class AuthController implements IAuthController {
       const newInterviewer = await this._authService.registerInterviewer(
         interviewer
       );
-      await this._authService.sendVerificationCode(newInterviewer.email);
       return createResponse(
         response,
         HttpStatus.CREATED,
@@ -115,7 +117,7 @@ export class AuthController implements IAuthController {
     }
   }
   async authenticateOTP(request: Request, response: Response): Promise<void> {
-    const { otp, email} = request.body;
+    const { otp, email } = request.body;
     console.log(request.body);
     if (otp.length !== 6) {
       return createResponse(
@@ -130,18 +132,24 @@ export class AuthController implements IAuthController {
         response,
         HttpStatus.BAD_REQUEST,
         false,
-        "Email is required"
+        COMMON_MESSAGES.ALREADY_EXIST
       );
     }
     try {
       await this._authService.authenticateOTP(otp, email);
-      return createResponse(response, HttpStatus.OK, true, AUTH_SUCCESS_MESSAGES.OTP_VERIFIED);
+      return createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        AUTH_SUCCESS_MESSAGES.OTP_VERIFIED
+      );
     } catch (error) {
       console.log(error);
       return errorResponse(response, error);
     }
   }
   async googleAuthentication(request: Request, response: Response) {
+    console.log(request.body);
     try {
       const { email, name } = request.body;
 
@@ -156,11 +164,8 @@ export class AuthController implements IAuthController {
       }
       const { accessToken, refreshToken, user } =
         await this._authService.googleAuthentication(email, name);
-      response.cookie(
-        `${Roles.INTERVIEWER}RefreshToken`,
-        refreshToken,
-        COOKIE_OPTIONS
-      );
+      response.cookie("refreshToken", refreshToken, COOKIE_OPTIONS);
+      console.log(refreshToken);
       return createResponse(
         response,
         HttpStatus.OK,
@@ -169,6 +174,7 @@ export class AuthController implements IAuthController {
         { accessToken, user }
       );
     } catch (error) {
+      console.log(error)
       return errorResponse(response, error);
     }
   }
@@ -186,6 +192,96 @@ export class AuthController implements IAuthController {
       );
     } catch (error) {
       errorResponse(response, error);
+    }
+  }
+
+  // updateUserPassword(request: Request, response: Response):void {}
+  async requestPasswordReset(request: Request, response: Response) {
+    const { email, role } = request.body;
+    console.log(email, role);
+    if (!email) {
+      return createResponse(
+        response,
+        HttpStatus.BAD_REQUEST,
+        false,
+        ERROR_MESSAGES.BAD_REQUEST
+      );
+    }
+    try {
+      await this._authService.requestPasswordReset(email, role);
+      return createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        AUTH_SUCCESS_MESSAGES.PASSWORD_RESET_LINK_SENT
+      );
+    } catch (error) {
+      console.log(error);
+      return errorResponse(response, error);
+    }
+  }
+
+  async resetUserPassword(request: Request, response: Response) {
+    console.log(request.body);
+    try {
+      const { password, confirmPassword, token } = request.body;
+      if (!password || !token) {
+        return createResponse(
+          response,
+          HttpStatus.BAD_REQUEST,
+          false,
+          ERROR_MESSAGES.INVALID_INPUT
+        );
+      }
+      await this._authService.resetUserPassword(
+        password,
+        confirmPassword,
+        token
+      );
+      return createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        AUTH_SUCCESS_MESSAGES.PASSWORD_RESET_SUCCESS
+      );
+    } catch (error) {
+      console.log(error);
+      return errorResponse(response, error);
+    }
+  }
+
+  async refreshAccessToken(request: Request, response: Response) {
+    console.log("inside refreshAccessToken method of AuthController.ts");
+    try {
+      const incomingRefreshToken = request.cookies.refreshToken;
+      if (!incomingRefreshToken) {
+        throw new CustomError(
+          ERROR_MESSAGES.INVALID_INPUT,
+          HttpStatus.UNAUTHORIZED
+        );
+      }
+      const { userId } = (await jwt.verify(
+        incomingRefreshToken,
+        process.env.REFRESH_TOKEN_SECRET as string
+      )) as TokenPayload;
+
+
+      const { accessToken, refreshToken } =
+        await this._authService.refreshAccessToken(
+          userId as string,
+          incomingRefreshToken
+        );
+      response.cookie(`refreshToken`, refreshToken, COOKIE_OPTIONS);
+      return createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        AUTH_SUCCESS_MESSAGES.ACCESS_TOKEN_REFRESHED,
+        { accessToken }
+      );
+    } catch (error) {
+      console.log(error);
+      return errorResponse(response, error);
     }
   }
 }

@@ -1,9 +1,11 @@
 import mongoose, { Document,ObjectId,Schema } from "mongoose";
-
+interface ITimeSlot{
+  startTime:string,
+  endTime:string
+}
 type Availability = {
-  date?: string; // Format: "YYYY-MM-DD"
   day: string;
-  timeSlot?: string[];
+  timeSlot?: ITimeSlot[];
 };
 
 export type TStatus= "pending" | "approved" | "rejected"
@@ -28,6 +30,7 @@ export interface IInterviewer extends Document {
     rating?: number;
     reviews?: ObjectId[];
     status?:TStatus
+    isBlocked?:boolean
   }
 
   export interface IGoogleInterviewer extends Document{
@@ -114,8 +117,11 @@ const interviewerSchema: Schema = new Schema(
       default: "pending",
       enum: ["pending", "approved", "rejected"],
     },
+    isBlocked:{
+     type:Boolean,
+     default:false
+    },
   },
-
   {
     timestamps: true,
   }

@@ -24,8 +24,9 @@ export const companyRegistrationSchema = z.object({
       "Password must contain at least one special character."
     ),
   companyType: z.enum(["product-based", "service-based"], {
-    message: "Company type must be one of: Startup, Enterprise, SME, Other.",
+    message: "Company type must be one of: ServiceBased or ProductBased.",
   }),
+  isBlocked: z.boolean().optional()
 });
 
 export const statusEnum = z.enum(["approved", "pending", "rejected"], {
@@ -33,6 +34,7 @@ export const statusEnum = z.enum(["approved", "pending", "rejected"], {
 });
 
 export const CompanyProfileSchema = z.object({
+
   companyName: z.string().min(1, "Company name is required").trim(),
   email: z
     .string()
@@ -41,7 +43,7 @@ export const CompanyProfileSchema = z.object({
       "Invalid email format"
     )
     .trim(),
-  companyWebsite: z.string().url("Invalid URL format").trim(),
+  companyWebsite: z.string().url("Invalid Website URL format").trim(),
   registrationCertificateNumber: z
     .string()
     .min(1, "Registration certificate number is required")
@@ -53,6 +55,12 @@ export const CompanyProfileSchema = z.object({
     .optional(),
   phone: z.string().min(1, "Phone number is required"),
   status: statusEnum.optional().default("approved"),
+  companyType: z.string().optional(),
+   description:z.string().optional(),
+   numberOfEmployees:z.string().optional() ,
+   headquartersLocation:z.string().optional(),
+   companySize:z.string().optional(),
+   companyLogo:z.string().optional(),
 });
 
 export type ICompanyProfile = z.infer<typeof CompanyProfileSchema>;

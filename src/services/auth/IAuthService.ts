@@ -13,7 +13,7 @@ export interface IAuthService {
   ): Promise<{ accessToken: string; refreshToken: string; user: IUser }>;
 
   registerCompany(company: ICompany): Promise<ICompany>;
-  
+
   sendVerificationCode(email: string): Promise<void>;
 
   registerInterviewer(interviewer: IInterviewer): Promise<IInterviewer>;
@@ -28,4 +28,17 @@ export interface IAuthService {
     refreshToken: string;
     user: IGoogleInterviewer;
   }>;
+
+  requestPasswordReset(email: string, role: string): Promise<void>;
+
+  resetUserPassword(
+    password: string,
+    confirmPassword: string,
+    token: string
+  ): Promise<void>;
+
+  refreshAccessToken(
+    userId: string,
+    refreshToken: string
+  ): Promise<{ accessToken: string; refreshToken: string }>;
 }

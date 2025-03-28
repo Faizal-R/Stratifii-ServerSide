@@ -5,6 +5,8 @@ import { CustomError } from "../../error/CustomError";
 import { HttpStatus } from "../../config/HttpStatusCodes";
 import { ERROR_MESSAGES } from "../../constants/messages";
 import { ICompanyProfile } from "../../validations/CompanyValidations";
+import { uploadOnCloudinary } from "../../helper/cloudinary";
+import { Multer } from "multer";
 
 export class CompanyService implements ICompanyService {
   constructor(private _companyRepository: ICompanyRepository) {}
@@ -27,9 +29,14 @@ export class CompanyService implements ICompanyService {
   }
   async updateCompanyProfile(
     companyId: string,
-    company: ICompanyProfile
+    company: ICompanyProfile,
+    companyLogoFile?: Express.Multer.File
   ): Promise<ICompany | null> {
     try {
+      if (companyLogoFile) {
+        const uploadedLogoUrl = await uploadOnCloudinary(companyLogoFile.path);
+        company.companyLogo = uploadedLogoUrl;
+      }
       const updatedCompany = await this._companyRepository.update(
         companyId,
         company

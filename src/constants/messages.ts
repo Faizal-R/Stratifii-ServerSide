@@ -6,6 +6,9 @@ export enum ERROR_MESSAGES {
   NOT_FOUND = "The requested resource could not be found.",
   INVALID_INPUT = "The request contains invalid data.",
 }
+export enum COMMON_MESSAGES{
+  ALREADY_EXIST = "The requested resource is already Exists."
+}
 
 export enum AUTH_SUCCESS_MESSAGES {
   LOGGED_IN = "Logged in successfully",
@@ -14,6 +17,13 @@ export enum AUTH_SUCCESS_MESSAGES {
   OTP_VERIFIED = "OTP Verified Successfully",
   RESEND_OTP_SUCCESS = "Your OTP has been resent successfully.",
   GOOGLE_AUTH_SUCCESS = "Google Authentication Successful",
+  PASSWORD_RESET_SUCCESS = "Your password has been successfully reset. You can now log in with your new password.",
+  PASSWORD_RESET_FAILED = "Password reset failed. Please try again or request a new reset link.",
+  PASSWORD_RESET_LINK_SENT = "A password reset link has been sent to your email. Please check your inbox.",
+  INVALID_TOKEN = "Invalid or expired token. Please request a new password reset link.",
+  ACCESS_TOKEN_REFRESHED = "Access token refreshed successfully",
+  LOGGED_OUT = "Logged out successfully",
+
 }
 
 export enum COMPANY_SUCCESS_MESSAGES {
@@ -23,4 +33,18 @@ export enum COMPANY_SUCCESS_MESSAGES {
 export enum INTERVIEWER__SUCCESS_MESSAGES {
   INTERVIEWER_PROFILE_UPDATED = "Interviewer profile updated successfully",
   INTERVIEWER_PROFILE_FETCHED = "Interviewer profile fetched successfully",
+}
+
+
+export enum ADMIN_SUCCESS_MESSAGES{
+  ADMIN_USER_UPDATED = "Admin user updated successfully",
+  ADMIN_USER_FETCHED = "Admin user fetched successfully",
+}
+
+
+ export enum JOB_SUCCESS_MESSAGES {
+  JOB_CREATED = "Job created successfully",
+  JOB_UPDATED = "Job updated successfully",
+  JOB_DELETED = "Job deleted successfully",
+  JOB_FETCHED = "Job fetched successfully",
 }

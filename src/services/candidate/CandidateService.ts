@@ -10,5 +10,4 @@ import { ICandidateService } from "./ICandidateService";
 export class CandidateService implements ICandidateService {
   constructor(private readonly candidateRepository: ICandidateRepository) { }
   
- 
 }

@@ -7,6 +7,7 @@ export interface ICandidate extends Document {
   name: string;
   //   resume: string;
   status?: string;
+  isBlocked?:boolean;
 }
 
 const CandidateSchema: Schema = new Schema(
@@ -35,6 +36,10 @@ const CandidateSchema: Schema = new Schema(
       required: true,
       enum:["active","pending"]
     },
+    isBlocked:{
+      type:Boolean,
+      default:false
+    }
   },
   {
     timestamps: true,

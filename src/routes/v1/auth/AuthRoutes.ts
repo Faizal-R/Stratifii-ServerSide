@@ -5,33 +5,62 @@ import { CompanyRepository } from "../../../repositories/company/CompanyReposito
 import { AuthService } from "../../../services/auth/AuthService";
 import { AuthController } from "../../../controllers/auth/AuthController";
 import { OtpRepository } from "../../../repositories/auth/OtpRepository";
-import {AdminRepository} from '../../../repositories/admin/AdminRepository'
+import { AdminRepository } from "../../../repositories/admin/AdminRepository";
 const router = Router();
-import redis from '../../../config/RedisConfig'
+import redis from "../../../config/RedisConfig";
+import { checkBlockedUser } from "../../../middlewares/checkBlockedUser";
 
 const interviwerRepository = new InterviewerRepository();
 const candidateRepository = new CandidateRepository();
 const companyRepository = new CompanyRepository();
-const otpRepository=new OtpRepository(redis)
+const otpRepository = new OtpRepository(redis);
 
 const authService = new AuthService(
-    interviwerRepository,
-    candidateRepository,
-    companyRepository,
-    otpRepository,
-
+  interviwerRepository,
+  candidateRepository,
+  companyRepository,
+  otpRepository
 );
 
 const authController = new AuthController(authService);
 
-router.post("/signin", authController.login.bind(authController));
-router.post('/register/company',authController.registerCompany.bind(authController))
-router.post('/register/interviewer',authController.registerInterviewer.bind(authController))
-router.post('/otp/verify',authController.authenticateOTP.bind(authController))
-router.post('/otp/resend',authController.triggerOtpResend.bind(authController))
+router.post(
+  "/signin",
+  checkBlockedUser,
+  authController.login.bind(authController)
+);
+router.post(
+  "/google",
+  authController.googleAuthentication.bind(authController)
+);
 
-router.post('/google',authController.googleAuthentication.bind(authController))
+router.post(
+  "/register/company",
+  authController.registerCompany.bind(authController)
+);
+router.post(
+  "/register/interviewer",
+  authController.registerInterviewer.bind(authController)
+);
 
+router.post("/otp/verify", authController.authenticateOTP.bind(authController));
+router.post(
+  "/otp/resend",
+  authController.triggerOtpResend.bind(authController)
+);
 
+router.post(
+  "/forgot-password",
+  authController.requestPasswordReset.bind(authController)
+);
+router.post(
+  "/reset-password",
+  authController.resetUserPassword.bind(authController)
+);
 
-export default router
+router.post(
+  "/refresh-token",
+  authController.refreshAccessToken.bind(authController)
+);
+
+export default router;

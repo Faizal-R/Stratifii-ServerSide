@@ -4,6 +4,7 @@ import interviewerRoutes from "./interviewer/InterviewerRoutes";
 import candidateRoutes from './candidate/CandidateRoutes'
 import companyRoutes from './company/CompanyRoutes'
 import authRoutes from './auth/AuthRoutes'
+import { checkRole } from "../../middlewares/Auth";
 const router = Router();
 
 // Role-based routing

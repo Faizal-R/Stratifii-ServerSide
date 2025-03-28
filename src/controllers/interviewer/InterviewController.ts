@@ -14,9 +14,7 @@ export class InterviewController implements IInterviewerController {
       try {
 
         const interviewerId=request.user?.userId
-        console.log(interviewerId)
         const interviewer= await this._interviewerService.getInterviewerById(interviewerId!)
-        console.log(interviewer)
         return createResponse(response,HttpStatus.OK,true,INTERVIEWER__SUCCESS_MESSAGES.INTERVIEWER_PROFILE_FETCHED,interviewer)
       } catch (error) {
 

@@ -3,7 +3,7 @@ import { z } from "zod";
 // Define allowed status values
 const statusEnum = z.enum(["pending", "approved", "rejected"]);
 
-// Define interviewer schema
+// Define interviewer schema 
 export const interviewerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters long"),
   position: z.string().min(2, "Position must be at least 2 characters long"),
@@ -20,6 +20,7 @@ export const interviewerSchema = z.object({
     startTime: z.string(),
     endTime: z.string()
   })).optional(),
+  isBlocked:z.boolean().optional(),
   professionalSummary: z.string().min(10, "Professional summary must be at least 10 characters"),
   expertise: z.array(z.string()).nonempty("At least one expertise area is required"),
   scheduleInterviews: z.array(z.string()).optional(), // Array of ObjectIds (strings)
