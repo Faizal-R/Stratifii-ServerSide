@@ -3,12 +3,9 @@ import { ICompanyService } from "../../services/company/ICompanyService";
 import { ICompanyController } from "./ICompanyController";
 import { createResponse, errorResponse } from "../../helper/responseHandler";
 import { HttpStatus } from "../../config/HttpStatusCodes";
-import { CustomError } from "../../error/CustomError";
 import { COMPANY_SUCCESS_MESSAGES } from "../../constants/messages";
-import { z } from "zod";
 import { CompanyProfileSchema } from "../../validations/CompanyValidations";
-import { create } from "ts-node";
-import { parse } from "dotenv";
+
 
 export class CompanyController implements ICompanyController {
   constructor(private readonly _companyService: ICompanyService) {}
@@ -17,7 +14,6 @@ export class CompanyController implements ICompanyController {
     try {
       const companyId = request.user?.userId;
       const company = await this._companyService.getCompanyById(companyId!);
-      console.log(company)
       return createResponse(
         response,
         HttpStatus.OK,
@@ -25,7 +21,6 @@ export class CompanyController implements ICompanyController {
         "Company Found",
         company
       );
-
     } catch (error) {
       errorResponse(response, error);
     }
@@ -33,14 +28,14 @@ export class CompanyController implements ICompanyController {
   async updateCompanyProfile(request: Request, response: Response) {
     try {
       const companyId = request.user?.userId;
-       const parsedCompany=JSON.parse(request.body.company)
-       const companyLogoFile = request.file
-       console.log("companyLogoFile", companyLogoFile)
+      const parsedCompany = JSON.parse(request.body.company);
+      const companyLogoFile = request.file;
+      console.log("companyLogoFile", companyLogoFile);
 
       const validatedCompany = CompanyProfileSchema.safeParse(parsedCompany);
-      console.log("validated Company",validatedCompany)
+      console.log("validated Company", validatedCompany);
       if (!validatedCompany.success) {
-        console.log(validatedCompany.error)
+        console.log(validatedCompany.error);
         return createResponse(
           response,
           HttpStatus.BAD_REQUEST,
