@@ -12,7 +12,7 @@ const interviewerService = new InterviewerService(interviewerRepository)
 const interviewerController=new InterviewController(interviewerService)
 
 
-router.get('/profile',verifyToken,checkBlockedUser,checkRole(Roles.INTERVIEWER),interviewerController.getInterviewerProfile.bind(interviewerController))
-router.put('/profile',verifyToken,checkBlockedUser,checkRole(Roles.INTERVIEWER),interviewerController.updateInterviewerProfile.bind(interviewerController))
+    router.get('/profile',verifyToken,checkBlockedUser,checkRole([Roles.INTERVIEWER]),interviewerController.getInterviewerProfile.bind(interviewerController))
+    router.put('/profile',verifyToken,checkBlockedUser,checkRole([Roles.INTERVIEWER]),interviewerController.updateInterviewerProfile.bind(interviewerController))
 
 export default router

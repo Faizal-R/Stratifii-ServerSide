@@ -22,7 +22,7 @@ export class JobService implements IJobService {
       );
     }
   }
- async updateJob(job: IJob): Promise<IJob | null> {
+ async updateJob(job: Partial<IJob>): Promise<IJob | null> {
     try {
       const updatedJob=await this._jobRepository.update(job._id as string,job)
       return updatedJob;
