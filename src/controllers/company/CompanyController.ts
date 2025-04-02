@@ -6,7 +6,6 @@ import { HttpStatus } from "../../config/HttpStatusCodes";
 import { COMPANY_SUCCESS_MESSAGES } from "../../constants/messages";
 import { CompanyProfileSchema } from "../../validations/CompanyValidations";
 
-
 export class CompanyController implements ICompanyController {
   constructor(private readonly _companyService: ICompanyService) {}
 

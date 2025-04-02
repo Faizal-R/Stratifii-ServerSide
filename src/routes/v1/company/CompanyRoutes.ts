@@ -28,14 +28,14 @@ router.get(
   "/profile",
   verifyToken,
   checkBlockedUser,
-  checkRole(Roles.COMPANY),
+  checkRole([Roles.COMPANY]),
   companyController.getCompanyById.bind(companyController)
 );
 router.put(
   "/profile",
   verifyToken,
   checkBlockedUser,
-  checkRole(Roles.COMPANY),
+  checkRole([Roles.COMPANY]),
   uploader.single("companyLogo"),
   companyController.updateCompanyProfile.bind(companyController)
 );
@@ -46,7 +46,7 @@ router.get(
   "/jobs",
   verifyToken,
   checkBlockedUser,
-  checkRole(Roles.COMPANY),
+  checkRole([Roles.COMPANY]),
 
   jobController.getAllJobs.bind(jobController)
 );
@@ -54,20 +54,20 @@ router.post(
   "/jobs",
   verifyToken,
   checkBlockedUser,
-  checkRole(Roles.COMPANY),
+  checkRole([Roles.COMPANY]),
   jobController.createJob.bind(jobController)
 );
 router.put(
   "/jobs",
   verifyToken,
   checkBlockedUser,
-  checkRole(Roles.COMPANY),
+  checkRole([Roles.COMPANY]),
   jobController.updateJob.bind(jobController)
 );
 router.delete(
   "/jobs/:jobId",
   verifyToken,
-  checkRole(Roles.COMPANY),
+  checkRole([Roles.COMPANY]),
   jobController.deleteJob.bind(jobController)
 );
 

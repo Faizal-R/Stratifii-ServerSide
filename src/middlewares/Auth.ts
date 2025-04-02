@@ -23,7 +23,6 @@ export async function verifyToken(
   next: NextFunction
 ): Promise<void> {
   const token = req.headers["authorization"]?.split(" ")[1];
-  console.log(req.url)
   //  console.log(token)
   if (!token) {
     return createResponse(
@@ -98,17 +97,17 @@ const checkIsUserVerified = async (role: string, userId: string) => {
 };
 
 // Middleware to check if the user has the required role
-export function checkRole(requiredRole: string) {
+export function checkRole(requiredRoles: string[]) {
   return (req: Request, res: Response, next: NextFunction): void => {
     const userRole = req.user?.role;
-    if (userRole === requiredRole) {
+    if (requiredRoles.includes(userRole!)) {
       next();
     } else {
       createResponse(
         res,
         HttpStatus.FORBIDDEN,
         false,
-        `Forbidden: ${requiredRole} access required.`
+        `Forbidden: Your role (${userRole}) does not have permission to access this resource.`
       );
     }
   };
