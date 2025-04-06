@@ -1,8 +1,8 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-interface ISubscriptionRecord extends Document {
-  subscriberId: Schema.Types.ObjectId; // The user who subscribed
-  planId: Schema.Types.ObjectId;
+ export interface ISubscriptionRecord extends Document {
+  subscriberId: mongoose.Types.ObjectId;
+  planId: mongoose.Types.ObjectId;
   status: "active" | "expired" | "canceled" | "pending";
   planDetails:Object;
   startDate: Date;
@@ -14,17 +14,17 @@ const SubscriptionRecordSchema = new Schema<ISubscriptionRecord>(
   {
     subscriberId: {
       type: Schema.Types.ObjectId,
-      required: true,
+     
       ref: "Company",
     },
     planId: {
       type: Schema.Types.ObjectId,
-      required: true,
+     
       ref: "SubscriptionPlan",
     },
     planDetails:{
       type:Object,
-      required:true
+
     },//(name, price, features)
     status: {
       type: String,

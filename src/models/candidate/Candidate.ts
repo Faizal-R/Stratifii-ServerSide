@@ -5,7 +5,8 @@ export interface ICandidate extends Document {
   email: string;
   password: string;
   name: string;
-  //   resume: string;
+  resume: string;
+  avatar:string;
   status?: string;
   isBlocked?:boolean;
 }
@@ -27,10 +28,14 @@ const CandidateSchema: Schema = new Schema(
       required: true,
       trim: true,
     },
-    // resume: {
-    //   type: String,
-    //   required: false,
-    // },
+    avatar: {
+      type: String,
+      required: false,
+    },
+    resume: {
+      type: String,
+      required: false,
+    },
     status: {
       type: String,
       required: true,

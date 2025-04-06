@@ -18,6 +18,10 @@ export function createResponse<T>(
 
 export const errorResponse = (response: Response, error: unknown): void => {
   console.log(error)
-  const errorMessage = error instanceof CustomError ? error.message : "Something went wrong";
+  const errorMessage = error instanceof CustomError 
+    ? error.message 
+    : error instanceof Error 
+    ? error.message 
+    : "Something unexpected happened";
   createResponse(response, HttpStatus.INTERNAL_SERVER_ERROR, false, errorMessage);
 };

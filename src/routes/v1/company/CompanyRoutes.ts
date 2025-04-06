@@ -9,10 +9,18 @@ import { JobService } from "../../../services/job/JobService";
 import { JobController } from "../../../controllers/job/JobController";
 import { Roles } from "../../../constants/roles";
 import { uploader } from "../../../middlewares/multer";
-import Interviewer, { IInterviewer } from "../../../models/interviewer/Interviewer";
+import Interviewer, {
+  IInterviewer,
+} from "../../../models/interviewer/Interviewer";
 import { Candidate, Company } from "../../../models";
 import { ICompany } from "../../../models/company/Company";
 import { createResponse } from "../../../helper/responseHandler";
+import { SubscriptionRecordRepository } from "../../../repositories/subscription/subscription-record/SubscriptionRecordRepository";
+import { SubscriptionRecordService } from "../../../services/subscription/subscription-record/SubscriptionRecordService";
+import { SubscriptionController } from "../../../controllers/subscription/SubscriptionController";
+import { ISubscriptionPlanService } from "../../../services/subscription/subscription-plan/ISubscriptionPlanService";
+import { SubscriptionPlanRepository } from "../../../repositories/subscription/subscription-plan/SubscriptionPlanRepository";
+import { SubscriptionPlanService } from "../../../services/subscription/subscription-plan/SubscriptionPlanService";
 const router = Router();
 
 const companyRepository = new CompanyRepository();
@@ -22,6 +30,12 @@ const companyController = new CompanyController(companyService);
 const jobRespository = new JobRepository();
 const jobService = new JobService(jobRespository);
 const jobController = new JobController(jobService);
+
+const subscriptionRepository= new SubscriptionRecordRepository()
+const subscriptionService= new SubscriptionRecordService(subscriptionRepository)
+const subscriptionPlanRepository=new SubscriptionPlanRepository();
+const subscriptionPlanService=new SubscriptionPlanService(subscriptionPlanRepository)
+const subscriptionController= new SubscriptionController(subscriptionPlanService,subscriptionService)
 
 //company profile
 router.get(
@@ -71,6 +85,19 @@ router.delete(
   jobController.deleteJob.bind(jobController)
 );
 
+//creating subscription payment order
+router.post(
+  "/subscription/payment-order",
+  verifyToken,
+  checkRole([Roles.COMPANY]),
+  subscriptionController.createPaymentOrder.bind(subscriptionController)
+);
 
+router.post(
+  "/subscription/payment-verify",
+  verifyToken,
+  checkRole([Roles.COMPANY]),
+  subscriptionController.subscriptionPaymentVerificationAndCreateSubscriptionRecord.bind(subscriptionController)
+);
 
 export default router;

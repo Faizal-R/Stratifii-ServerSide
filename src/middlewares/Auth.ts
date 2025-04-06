@@ -48,21 +48,7 @@ export async function verifyToken(
         "Invalid or expired token."
       );
     }
-    // if(req.url!=="/profile"){
-      
-    //   const isUserVerified = await checkIsUserVerified(
-    //     decoded.role,
-    //     decoded.userId
-    //   );
-    //   if (!isUserVerified) {
-    //     return createResponse(
-    //       res,
-    //       HttpStatus.FORBIDDEN,
-    //       false,
-    //       "Access Denied: Admin verification is required to proceed."
-    //     );
-    //   }
-    // }
+   
     req.user = decoded;
     next();
   } catch (err) {

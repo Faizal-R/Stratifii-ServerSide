@@ -2,6 +2,9 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import cors from 'cors'
 import router from "./routes/route";
+import dotenv from "dotenv";
+
+dotenv.config({ path: "src/.env" });
 
 const app = express();
 
@@ -14,7 +17,7 @@ app.use(cors({
   origin: "http://localhost:3000", 
   credentials: true, 
 }));
-
+console.log(process.env.RAZORPAY_API_KEY)
 app.use('/api',router)
 
 // 🔹 Health Check Route

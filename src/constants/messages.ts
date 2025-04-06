@@ -48,3 +48,18 @@ export enum ADMIN_SUCCESS_MESSAGES{
   JOB_DELETED = "Job deleted successfully",
   JOB_FETCHED = "Job fetched successfully",
 }
+
+export enum SUBSCRIPTION_SUCCESS_MESSAGES {
+  SUBSCRIPTION_PLAN_CREATED = "Subscription plan created successfully",
+  SUBSCRIPTION_PLAN_UPDATED = "Subscription plan updated successfully",
+  SUBSCRIPTION_PLAN_DELETED = "Subscription plan deleted successfully",
+  SUBSCRIPTION_PLAN_FETCHED = "Subscription plan fetched successfully",
+  SUBSCRIPTION_SUBSCRIBED = "Subscription subscribed successfully",
+  SUBSCRIPTION_UNSUBSCRIBED = "Subscription unsubscribed successfully",
+  SUBSCRIPTION_PAYMENT_ORDER_SUCCESS = "Subscription payment order created successfully",
+}
+export enum SUBSCRIPTION_ERROR_MESSAGES {
+  SUBSCRIPTION_PLAN_NOT_FOUND = "Subscription plan not found", 
+  SUBSCRIPTION_ALREADY_SUBSCRIBED = "You have already subscribed to this plan",
+  SUBSCRIPTION_PAYMENT_FAILED = "Payment failed. Please try again.",
+}

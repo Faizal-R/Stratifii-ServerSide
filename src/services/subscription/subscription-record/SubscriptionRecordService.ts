@@ -1,0 +1,101 @@
+import { Orders } from "razorpay/dist/types/orders";
+import { razorpay as RazorPay } from "../../../config/razorpay";
+import { ISubscriptionRecordRepository } from "../../../repositories/subscription/subscription-record/ISubscriptionRecordRepository";
+import { ISubscriptionRecordService } from "./ISubscriptionRecordService";
+import { CustomError } from "../../../error/CustomError";
+import {
+  ERROR_MESSAGES,
+  SUBSCRIPTION_ERROR_MESSAGES,
+} from "../../../constants/messages";
+import { HttpStatus } from "../../../config/HttpStatusCodes";
+import { ISubscriptionPlan } from "../../../models/subscription/SubscriptionPlan";
+import crypto from "crypto";
+import mongoose, { Schema, Types } from "mongoose";
+
+export class SubscriptionRecordService implements ISubscriptionRecordService {
+  constructor(
+    private readonly _subscriptionRepository: ISubscriptionRecordRepository
+  ) {}
+  async createPaymentOrder(amount: number): Promise<Orders.RazorpayOrder> {
+    try {
+      const options = {
+        amount: amount * 100,
+        currency: "INR",
+        receipt: `receipt_${Date.now()}`,
+        payment_capture: 1,
+      };
+      const order = await RazorPay.orders.create(options);
+      return order;
+    } catch (error) {
+      console.log(error);
+      throw new CustomError(
+        SUBSCRIPTION_ERROR_MESSAGES.SUBSCRIPTION_PAYMENT_FAILED,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async subscriptionPaymentVerification(
+    razorpay_order_id: string,
+    razorpay_payment_id: string,
+    razorpay_signature: string,
+    subscriptionDetails: ISubscriptionPlan,
+    companyId: mongoose.Types.ObjectId
+  ): Promise<boolean> {
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_SECRET_KEY!)
+      .update(body.toString())
+      .digest("hex");
+    if (expectedSignature === razorpay_signature) {
+      const subscriptionRecord = await this.createSubscriptionRecord(
+        subscriptionDetails,
+        companyId,
+        razorpay_payment_id
+      );
+      if (subscriptionRecord) {
+        return true;
+      } else {
+        throw new CustomError(
+          ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+          HttpStatus.INTERNAL_SERVER_ERROR
+        );
+      }
+    }
+    return false;
+  }
+
+  async createSubscriptionRecord(
+    data: ISubscriptionPlan,
+    subscriberId: string | mongoose.Types.ObjectId,
+    transactionId: string
+  ) {
+    try {
+      const validSubscriberId = new mongoose.Types.ObjectId(String(subscriberId));
+      const validPlanId = new mongoose.Types.ObjectId(String(data._id));
+      const subscriptionRecordData = {
+        subscriberId: validSubscriberId,
+        planId: validPlanId,
+        planDetails: {
+          name: data.name as string,
+          price: data.price,
+          features: data.features,
+        },
+        startDate: new Date(),
+        endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+        transactionId,
+      };
+      const subscriptionRecord = await this._subscriptionRepository.create({
+        ...subscriptionRecordData,
+        status: "active",
+      });
+      return subscriptionRecord;
+    } catch (error) {
+      console.log(error);
+      throw new CustomError(
+        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+}

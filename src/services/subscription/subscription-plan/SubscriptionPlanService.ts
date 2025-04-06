@@ -14,7 +14,10 @@ export class SubscriptionPlanService implements ISubscriptionPlanService {
     subscription: ISubscriptionPlan
   ): Promise<ISubscriptionPlan> {
     try {
-      return await this._subscriptionPlanRepository.create({...subscription,isActive:true});
+      return await this._subscriptionPlanRepository.create({
+        ...subscription,
+        isActive: true,
+      });
     } catch (error) {
       console.error("Error creating subscription:", error);
       throw new CustomError(
@@ -58,19 +61,26 @@ export class SubscriptionPlanService implements ISubscriptionPlanService {
     }
   }
 
-  async deleteSubscription(subscriptionId: string): Promise<boolean> {
+  async getSubscriptionById(
+    subscriptionId: string
+  ): Promise<ISubscriptionPlan | null> {
     try {
-      const deleted = await this._subscriptionPlanRepository.delete(
+      const subscription = await this._subscriptionPlanRepository.findById(
         subscriptionId
       );
-      if (!deleted) {
+      if (!subscription) {
         throw new CustomError(ERROR_MESSAGES.NOT_FOUND, HttpStatus.NOT_FOUND);
       }
-      return true;
+      return subscription;
     } catch (error) {
-      console.error("Error deleting subscription:", error);
+      console.error("Error finding subscription by ID:", error);
+      if (error instanceof CustomError) {
+        throw error;
+      }
       throw new CustomError(
-        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        error instanceof Error
+          ? error.message
+          : ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
