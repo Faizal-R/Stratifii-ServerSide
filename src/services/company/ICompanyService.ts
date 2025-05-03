@@ -7,4 +7,5 @@ export interface ICompanyService {
     company: ICompanyProfile,
     companyLogoFile?: Express.Multer.File
   ): Promise<ICompany | null>;
+  changePassword(currentPassword: string, newPassword: string, companyId: string): Promise<ICompany | null>;
 }

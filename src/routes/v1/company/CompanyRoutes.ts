@@ -21,6 +21,7 @@ import { SubscriptionController } from "../../../controllers/subscription/Subscr
 import { ISubscriptionPlanService } from "../../../services/subscription/subscription-plan/ISubscriptionPlanService";
 import { SubscriptionPlanRepository } from "../../../repositories/subscription/subscription-plan/SubscriptionPlanRepository";
 import { SubscriptionPlanService } from "../../../services/subscription/subscription-plan/SubscriptionPlanService";
+import { CandidateRepository } from "../../../repositories/candidate/CandidateRepository";
 const router = Router();
 
 const companyRepository = new CompanyRepository();
@@ -28,76 +29,85 @@ const companyService = new CompanyService(companyRepository);
 const companyController = new CompanyController(companyService);
 
 const jobRespository = new JobRepository();
-const jobService = new JobService(jobRespository);
+const candidateRepository = new CandidateRepository();
+const jobService = new JobService(jobRespository, candidateRepository);
 const jobController = new JobController(jobService);
 
-const subscriptionRepository= new SubscriptionRecordRepository()
-const subscriptionService= new SubscriptionRecordService(subscriptionRepository)
-const subscriptionPlanRepository=new SubscriptionPlanRepository();
-const subscriptionPlanService=new SubscriptionPlanService(subscriptionPlanRepository)
-const subscriptionController= new SubscriptionController(subscriptionPlanService,subscriptionService)
+const subscriptionRepository = new SubscriptionRecordRepository();
+const subscriptionService = new SubscriptionRecordService(
+  subscriptionRepository
+);
+
+const subscriptionPlanRepository = new SubscriptionPlanRepository();
+const subscriptionPlanService = new SubscriptionPlanService(
+  subscriptionPlanRepository
+);
+
+const subscriptionController = new SubscriptionController(
+  subscriptionPlanService,
+  subscriptionService
+);
 
 //company profile
 router.get(
   "/profile",
-  verifyToken,
-  checkBlockedUser,
-  checkRole([Roles.COMPANY]),
   companyController.getCompanyById.bind(companyController)
 );
 router.put(
   "/profile",
-  verifyToken,
-  checkBlockedUser,
-  checkRole([Roles.COMPANY]),
+
   uploader.single("companyLogo"),
   companyController.updateCompanyProfile.bind(companyController)
+);
+router.put(
+  "/change-password",
+  companyController.changePassword.bind(companyController)
 );
 
 //company interview Delegation routes
 
 router.get(
   "/jobs",
-  verifyToken,
-  checkBlockedUser,
-  checkRole([Roles.COMPANY]),
 
   jobController.getAllJobs.bind(jobController)
 );
-router.post(
-  "/jobs",
-  verifyToken,
-  checkBlockedUser,
-  checkRole([Roles.COMPANY]),
-  jobController.createJob.bind(jobController)
-);
+router.post("/jobs", jobController.createJob.bind(jobController));
 router.put(
   "/jobs",
-  verifyToken,
-  checkBlockedUser,
-  checkRole([Roles.COMPANY]),
+
   jobController.updateJob.bind(jobController)
 );
 router.delete(
   "/jobs/:jobId",
-  verifyToken,
-  checkRole([Roles.COMPANY]),
+
   jobController.deleteJob.bind(jobController)
+);
+
+router.post(
+  "/jobs/:jobId/resumes",
+
+  uploader.array("resumes"),
+  jobController.createCandidatesFromResumesAndAddToJob.bind(jobController)
+);
+
+router.get(
+  "/jobs/:jobId/candidates",
+
+  jobController.getCandidatesByJobId.bind(jobController)
 );
 
 //creating subscription payment order
 router.post(
   "/subscription/payment-order",
-  verifyToken,
-  checkRole([Roles.COMPANY]),
   subscriptionController.createPaymentOrder.bind(subscriptionController)
 );
 
 router.post(
   "/subscription/payment-verify",
   verifyToken,
-  checkRole([Roles.COMPANY]),
-  subscriptionController.subscriptionPaymentVerificationAndCreateSubscriptionRecord.bind(subscriptionController)
+  subscriptionController.subscriptionPaymentVerificationAndCreateSubscriptionRecord.bind(
+    subscriptionController
+  )
 );
 
 export default router;

@@ -5,8 +5,9 @@ import { ISubscriptionRecordService } from "./ISubscriptionRecordService";
 import { CustomError } from "../../../error/CustomError";
 import {
   ERROR_MESSAGES,
-  SUBSCRIPTION_ERROR_MESSAGES,
-} from "../../../constants/messages";
+ 
+} from "../../../constants/messages/ErrorMessages";
+import { SUBSCRIPTION_ERROR_MESSAGES } from "../../../constants/messages/PaymentAndSubscriptionMessages";
 import { HttpStatus } from "../../../config/HttpStatusCodes";
 import { ISubscriptionPlan } from "../../../models/subscription/SubscriptionPlan";
 import crypto from "crypto";

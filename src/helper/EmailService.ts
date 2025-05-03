@@ -1,24 +1,23 @@
 import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+dotenv.config({ path: "src/.env" });
 
 const transporter = nodemailer.createTransport({
-  host:"smtp.gmail.com" , // e.g., "smtp.gmail.com"
+  host: "smtp.gmail.com", // e.g., "smtp.gmail.com"
   port: 587, // Use 465 for SSL
-  secure:false, // true for 465, false for others
+  secure: false, // true for 465, false for others
   auth: {
-    user:'stratifiii@gmail.com',
-    pass: 'olkk cpfw bdgd uxsj',
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
   },
 });
 
-export const sendEmail = async (to: string,data:string,html='') => {
-  
-
-
+export const sendEmail = async (to: string, html = "",subject='"Email Verification Code Inside – Don’t Share It!') => {
   try {
     const mailOptions = {
-      from: process.env.SMTP_FROM, 
+      from: process.env.SMTP_FROM,
       to,
-      subject:"Email Verification Code Inside – Don’t Share It!",
+      subject,
       html,
     };
 

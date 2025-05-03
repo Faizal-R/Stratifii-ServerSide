@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 
 dotenv.config({ path: "src/.env" });
 
+
 const app = express();
 
 app.use(express.static('public'))
@@ -17,7 +18,7 @@ app.use(cors({
   origin: "http://localhost:3000", 
   credentials: true, 
 }));
-console.log(process.env.RAZORPAY_API_KEY)
+
 app.use('/api',router)
 
 // 🔹 Health Check Route

@@ -6,8 +6,10 @@ import { SubscriptionPlanSchema } from "../../validations/SubscriptionValidation
 import { HttpStatus } from "../../config/HttpStatusCodes";
 import {
   ERROR_MESSAGES,
-  SUBSCRIPTION_SUCCESS_MESSAGES,
-} from "../../constants/messages";
+  
+} from "../../constants/messages/ErrorMessages";
+import {SUBSCRIPTION_SUCCESS_MESSAGES} from "../../constants/messages/PaymentAndSubscriptionMessages";
+
 import { ISubscriptionRecordService } from "../../services/subscription/subscription-record/ISubscriptionRecordService";
 import mongoose from "mongoose";
 
@@ -22,6 +24,7 @@ export class SubscriptionController implements ISubscriptionController {
     response: Response
   ): Promise<void> {
     const { name, price, features } = request.body;
+    console.log(request.body);
     const validatedSubscriptionPlan = SubscriptionPlanSchema.safeParse(
       request.body
     );
@@ -76,7 +79,9 @@ export class SubscriptionController implements ISubscriptionController {
     response: Response
   ): Promise<void> {
     const subscriptionId = request.params.subscriptionId;
+    console.log(subscriptionId)
     const { updatedSubscription } = request.body;
+    console.log(request.body)
 
     try {
       await this._subscriptionService?.updateSubscription(

@@ -1,38 +1,41 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-export interface ISubscriptionPlan extends Document {
-  name: "Base" | "Premium" | "Elite";
-  price: number;
-  features: string[];
-  isActive:boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
+export interface ISubscriptionFeatures {
+  candidateSlotPerMonth: number;
+  finalInterviewAccess: boolean;
+  interviewRecordingAccess: boolean;
+  feedbackDownloadAccess: boolean;
+  jobPostLimitPerMonth: number;
+  companySpecificQuestionAccess: boolean;
 }
 
-const SubscriptionPlanSchema = new Schema<ISubscriptionPlan>(
+export interface ISubscriptionPlan extends Document {
+  name: string; // Plan Name (Basic, Pro, Elite etc.)
+  price: number; // Price of Plan
+  isActive: boolean;
+  features: ISubscriptionFeatures; // Plan Features
+}
+
+const subscriptionPlanSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      enum: ["Base", "Premium", "Elite"],
-      required: true,
-    },
-    price: { type: Number, required: true, min: 0 },
+    name: { type: String, required: true },
+    price: { type: Number, required: true },
+    isActive: { type: Boolean, required: true },
     features: {
-      type: [String],
-      required: true,
+      candidateSlotPerMonth: { type: Number, required: true },
+      finalInterviewAccess: { type: Boolean, required: true },
+      interviewRecordingAccess: { type: Boolean, required: true },
+      feedbackDownloadAccess: { type: Boolean, required: true },
+      jobPostLimitPerMonth: { type: Number, required: true },
+      companySpecificQuestionAccess: { type: Boolean, required: true },
     },
-    isActive:{
-      type: Boolean,
-      default: false,
-      required: true,
-    }
   },
   { timestamps: true }
 );
 
 const SubscriptionPlan = mongoose.model<ISubscriptionPlan>(
   "SubscriptionPlan",
-  SubscriptionPlanSchema
+  subscriptionPlanSchema
 );
 
-export default SubscriptionPlan
+export default SubscriptionPlan;

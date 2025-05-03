@@ -19,7 +19,10 @@ export interface IInterviewer extends Document {
     experience: number;
     linkedinProfile: string;
     location?: string;
-    language: Record<string, string>;
+    languages:{
+      language:string;
+      level:string;
+    }[];
     availableDays:string[];
     availability?:Availability[];
     professionalSummary: string;
@@ -70,9 +73,10 @@ const interviewerSchema: Schema = new Schema(
     location: {
       type: String,
     },
-    language: {
-      type: Object,
-    },
+    language: [{
+      language: { type: String },
+      level: { type: String },
+    }],
     availableDays: [{ type: String }],
 
     availability: [

@@ -13,7 +13,7 @@ export const interviewerSchema = z.object({
   experience: z.number().min(0, "Experience cannot be negative"),
   linkedinProfile: z.string().url("Invalid LinkedIn profile URL"),
   location: z.string().optional(),
-  language: z.record(z.string(), z.string()), // Accepts an object { language: proficiency }
+  languages: z.array(z.object({ language: z.string(), level: z.string() })), 
   availableDays: z.array(z.string()).nonempty("At least one available day is required"),
   availability: z.array(z.object({
     day: z.string(),

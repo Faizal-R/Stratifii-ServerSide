@@ -5,9 +5,10 @@ import { Request, Response } from "express";
 import { HttpStatus } from "../../config/HttpStatusCodes";
 import z from "zod";
 import {
-  ADMIN_SUCCESS_MESSAGES,
-  AUTH_SUCCESS_MESSAGES,
-} from "../../constants/messages";
+
+  AUTH_MESSAGES,
+} from "../../constants/messages/AuthMessages";
+import { ADMIN_SUCCESS_MESSAGES } from "../../constants/messages/AdminMessages";
 import { Roles } from "../../constants/roles";
 import { COOKIE_OPTIONS } from "../../config/CookieConfig";
 import { storeRefreshToken } from "../../helper/handleRefreshToken";
@@ -25,13 +26,13 @@ export class AdminController implements IAdminController {
       const { email, password } = request.body;
       // Validate input using Zod
       const parsedData = adminLoginSchema.parse({ email, password });
-      console.log(parsedData);
+     
       const { accessToken, refreshToken } = await this._adminService.login(
         parsedData.email,
         parsedData.password
       );
       response.cookie(
-        `refreshToken`,
+        `${Roles.ADMIN}RefreshToken`,
         refreshToken,
         COOKIE_OPTIONS
       );
@@ -40,7 +41,7 @@ export class AdminController implements IAdminController {
         response,
         HttpStatus.OK,
         true,
-        // AUTH_SUCCESS_MESSAGES.LOGGED_IN,
+        // AUTH_MESSAGES.LOGGED_IN,
         "Admin logged  in successfully",
         accessToken
       );

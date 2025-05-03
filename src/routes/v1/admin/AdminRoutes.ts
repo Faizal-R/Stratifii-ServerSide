@@ -21,13 +21,7 @@ const adminRepository = new AdminRepository(
 const adminService = new AdminService(adminRepository);
 const adminController = new AdminController(adminService);
 
-const subscriptionPlanRepository = new SubscriptionPlanRepository();
-const subscriptionPlanService = new SubscriptionPlanService(
-  subscriptionPlanRepository
-);
-const subscriptionPlanController = new SubscriptionController(
-  subscriptionPlanService
-);
+
 
 router.post("/signin", adminController.signin.bind(adminController));
 
@@ -73,25 +67,6 @@ router.patch(
 
 //admin Subscription plan routes
 
-router.post(
-  "/subscription",
-  verifyToken,
-  checkRole([Roles.ADMIN]),
-  subscriptionPlanController.createSubscription.bind(subscriptionPlanController)
-);
 
-router.get(
-  "/subscription",
-  verifyToken,
-  checkRole([Roles.ADMIN,Roles.COMPANY]),
-  subscriptionPlanController.getAllSubscriptions.bind(subscriptionPlanController)
-);
-
-router.put(
-  "/subscription/:subscriptionId",
-  verifyToken,
-  checkRole([Roles.ADMIN]),
-  subscriptionPlanController.updateSubscription.bind(subscriptionPlanController)
-);
 
 export default router;

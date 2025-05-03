@@ -1,14 +1,18 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, Types } from "mongoose";
+import { ICompany } from "../company/Company";
 
 
 export interface ICandidate extends Document {
+  
+  companyId:Types.ObjectId | ICompany
   email: string;
-  password: string;
+  password?: string;
   name: string;
   resume: string;
-  avatar:string;
+  avatar?:string;
   status?: string;
   isBlocked?:boolean;
+  
 }
 
 const CandidateSchema: Schema = new Schema(
@@ -16,12 +20,11 @@ const CandidateSchema: Schema = new Schema(
     email: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     password: {
       type: String,
-      required: true,
+
     },
     name: {
       type: String,
@@ -30,7 +33,6 @@ const CandidateSchema: Schema = new Schema(
     },
     avatar: {
       type: String,
-      required: false,
     },
     resume: {
       type: String,
@@ -38,12 +40,17 @@ const CandidateSchema: Schema = new Schema(
     },
     status: {
       type: String,
-      required: true,
-      enum:["active","pending"]
+      enum:["active","pending","deactive"]
     },
+
     isBlocked:{
       type:Boolean,
       default:false
+    },
+    companyId:{
+      type:Schema.Types.ObjectId,
+      ref:"Company",
+      required:true
     }
   },
   {

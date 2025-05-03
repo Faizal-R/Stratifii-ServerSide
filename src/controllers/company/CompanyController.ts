@@ -3,7 +3,7 @@ import { ICompanyService } from "../../services/company/ICompanyService";
 import { ICompanyController } from "./ICompanyController";
 import { createResponse, errorResponse } from "../../helper/responseHandler";
 import { HttpStatus } from "../../config/HttpStatusCodes";
-import { COMPANY_SUCCESS_MESSAGES } from "../../constants/messages";
+import { COMPANY_SUCCESS_MESSAGES, USER_COMMON_MESSAGES } from "../../constants/messages/UserProfileMessages";
 import { CompanyProfileSchema } from "../../validations/CompanyValidations";
 
 export class CompanyController implements ICompanyController {
@@ -60,4 +60,24 @@ export class CompanyController implements ICompanyController {
       errorResponse(response, error);
     }
   }
+  async changePassword(request: Request, response: Response): Promise<void> {
+      const passwordDetails = request.body;
+  
+      try {
+        const interviewer = await this._companyService.changePassword(
+          passwordDetails.currentPassword,
+          passwordDetails.newPassword,
+          request.user?.userId!
+        );
+        return createResponse(
+          response,
+          HttpStatus.OK,
+          true,
+          USER_COMMON_MESSAGES.PASSWORD_CHANGED,
+          interviewer
+        );
+      } catch (error) {
+        errorResponse(response, error);
+      }
+    }
 }

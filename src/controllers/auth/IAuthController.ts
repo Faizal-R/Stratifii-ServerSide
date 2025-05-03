@@ -10,4 +10,7 @@ export interface IAuthController {
   resetUserPassword(request: Request, response: Response): Promise<void>;
   requestPasswordReset(request: Request, response: Response): Promise<void>;
   refreshAccessToken(request: Request, response: Response): Promise<void>;
+  verifyUserAccount(request: Request, response: Response): Promise<void>;
+  setupInterviewerAccount(request: Request, response: Response): Promise<void>;
+  signout(request: Request, response: Response): void;
 }

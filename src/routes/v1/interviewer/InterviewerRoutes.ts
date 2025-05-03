@@ -14,5 +14,5 @@ const interviewerController=new InterviewController(interviewerService)
 
     router.get('/profile',verifyToken,checkBlockedUser,checkRole([Roles.INTERVIEWER]),interviewerController.getInterviewerProfile.bind(interviewerController))
     router.put('/profile',verifyToken,checkBlockedUser,checkRole([Roles.INTERVIEWER]),interviewerController.updateInterviewerProfile.bind(interviewerController))
-
+    router.put('/change-password',verifyToken,checkBlockedUser,checkRole([Roles.INTERVIEWER]),interviewerController.changePassword.bind(interviewerController))
 export default router

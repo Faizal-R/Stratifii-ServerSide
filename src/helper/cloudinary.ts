@@ -10,7 +10,8 @@ cloudinary.config({
 });
 
 export const uploadOnCloudinary = async (
-  localFilePath: string
+  localFilePath: string,
+  type:"auto"|"raw"="auto"
 ): Promise<string> => {
   try {
     if (!localFilePath) {
@@ -18,7 +19,7 @@ export const uploadOnCloudinary = async (
     }
 
     const result = await cloudinary.uploader.upload(localFilePath, {
-      resource_type: "auto",
+      resource_type: type,
     });
 
     if (!result || !result.secure_url) {

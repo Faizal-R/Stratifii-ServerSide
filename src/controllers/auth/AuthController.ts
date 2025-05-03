@@ -9,21 +9,22 @@ import { ICompany } from "../../models/company/Company";
 import { CustomError } from "../../error/CustomError";
 import { IInterviewer } from "../../models/interviewer/Interviewer";
 import jwt from "jsonwebtoken";
-import {
-  AUTH_SUCCESS_MESSAGES,
-  COMMON_MESSAGES,
-  ERROR_MESSAGES,
-} from "../../constants/messages";
+import { AUTH_MESSAGES } from "../../constants/messages/AuthMessages";
+import { ERROR_MESSAGES } from "../../constants/messages//ErrorMessages";
 import { TokenPayload } from "../../middlewares/Auth";
-import { storeRefreshToken } from "../../helper/handleRefreshToken";
+import {
+  deleteRefreshToken,
+  storeRefreshToken,
+} from "../../helper/handleRefreshToken";
+import { VALIDATION_MESSAGES } from "../../constants/messages/ValidationMessages";
+import { INTERVIEWER__SUCCESS_MESSAGES } from "../../constants/messages/UserProfileMessages";
 
 export class AuthController implements IAuthController {
-  constructor(private readonly _authService: IAuthService) {}
+  constructor(private readonly _authService: IAuthService) { }
 
   async login(request: Request, response: Response): Promise<void> {
     try {
       const { role, email, password } = request.body;
-      console.log(request.body);
 
       // Validate request body
       if (!role || !email || !password) {
@@ -31,7 +32,7 @@ export class AuthController implements IAuthController {
           response,
           HttpStatus.BAD_REQUEST,
           false,
-          "All fields are required"
+          VALIDATION_MESSAGES.ALL_FIELDS_REQUIRED
         );
       }
 
@@ -53,14 +54,14 @@ export class AuthController implements IAuthController {
       );
 
       // Set refresh token as an HTTP-only cookie
-      response.cookie(`refreshToken`, refreshToken, COOKIE_OPTIONS);
+      response.cookie(`${role}RefreshToken`, refreshToken, COOKIE_OPTIONS);
 
       // Send success response
       return createResponse(
         response,
         HttpStatus.OK,
         true,
-        AUTH_SUCCESS_MESSAGES.LOGGED_IN,
+        AUTH_MESSAGES.LOGGED_IN,
         {
           accessToken,
           user,
@@ -83,7 +84,7 @@ export class AuthController implements IAuthController {
         response,
         HttpStatus.CREATED,
         true,
-        AUTH_SUCCESS_MESSAGES.COMPANY_REGISTERED,
+        AUTH_MESSAGES.COMPANY_REGISTERED,
         newCompany
       );
     } catch (error) {
@@ -102,7 +103,7 @@ export class AuthController implements IAuthController {
         response,
         HttpStatus.CREATED,
         true,
-        AUTH_SUCCESS_MESSAGES.INTERVIEWER_REGISTERED,
+        AUTH_MESSAGES.INTERVIEWER_REGISTERED,
         newInterviewer
       );
     } catch (error) {
@@ -116,15 +117,40 @@ export class AuthController implements IAuthController {
       return;
     }
   }
+
+  async setupInterviewerAccount(
+    request: Request,
+    response: Response
+  ): Promise<void> {
+    const { interviewer, interviewerId } = request.body;
+
+    try {
+      const { accessToken, refreshToken, setupedInterviewer } =
+        await this._authService.setupInterviewerAccount(
+          interviewerId,
+          interviewer
+        );
+      response.cookie(`${Roles.INTERVIEWER}RefreshToken`, refreshToken, COOKIE_OPTIONS);
+      createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        INTERVIEWER__SUCCESS_MESSAGES.INTERVIEWER_PROFILE_UPDATED,
+        { interviewer: setupedInterviewer, accessToken }
+      );
+    } catch (error) {
+      errorResponse(response, error);
+    }
+  }
   async authenticateOTP(request: Request, response: Response): Promise<void> {
-    const { otp, email } = request.body;
-    console.log(request.body);
+    const { otp, email, role } = request.body;
+
     if (otp.length !== 6) {
       return createResponse(
         response,
         HttpStatus.BAD_REQUEST,
         false,
-        "Invalid OTP"
+        AUTH_MESSAGES.INVALID_OTP_FORMAT
       );
     }
     if (!email) {
@@ -132,16 +158,16 @@ export class AuthController implements IAuthController {
         response,
         HttpStatus.BAD_REQUEST,
         false,
-        COMMON_MESSAGES.ALREADY_EXIST
+        ERROR_MESSAGES.BAD_REQUEST
       );
     }
     try {
-      await this._authService.authenticateOTP(otp, email);
+      await this._authService.authenticateOTP(otp, email, role);
       return createResponse(
         response,
         HttpStatus.OK,
         true,
-        AUTH_SUCCESS_MESSAGES.OTP_VERIFIED
+        AUTH_MESSAGES.OTP_VERIFIED
       );
     } catch (error) {
       console.log(error);
@@ -158,23 +184,33 @@ export class AuthController implements IAuthController {
           response,
           HttpStatus.BAD_REQUEST,
           false,
-          "Email and name are required",
+          VALIDATION_MESSAGES.ALL_FIELDS_REQUIRED,
           HttpStatus.BAD_REQUEST
         );
       }
-      const { accessToken, refreshToken, user } =
+      const { accessToken, refreshToken, user, isRegister } =
         await this._authService.googleAuthentication(email, name);
-      response.cookie("refreshToken", refreshToken, COOKIE_OPTIONS);
-      console.log(refreshToken);
+      if (isRegister) {
+        return createResponse(
+          response,
+          HttpStatus.OK,
+          true,
+          AUTH_MESSAGES.GOOGLE_AUTH_SUCCESS,
+          { user }
+        );
+      }
+      
+      response.cookie(`${Roles.INTERVIEWER}RefreshToken`, refreshToken, COOKIE_OPTIONS);
+
       return createResponse(
         response,
         HttpStatus.OK,
         true,
-        AUTH_SUCCESS_MESSAGES.GOOGLE_AUTH_SUCCESS,
+        AUTH_MESSAGES.GOOGLE_AUTH_SUCCESS,
         { accessToken, user }
       );
     } catch (error) {
-      console.log(error)
+      console.log(error);
       return errorResponse(response, error);
     }
   }
@@ -188,7 +224,7 @@ export class AuthController implements IAuthController {
         response,
         HttpStatus.OK,
         true,
-        AUTH_SUCCESS_MESSAGES.RESEND_OTP_SUCCESS
+        AUTH_MESSAGES.RESEND_OTP_SUCCESS
       );
     } catch (error) {
       errorResponse(response, error);
@@ -198,7 +234,7 @@ export class AuthController implements IAuthController {
   // updateUserPassword(request: Request, response: Response):void {}
   async requestPasswordReset(request: Request, response: Response) {
     const { email, role } = request.body;
-    console.log(email, role);
+
     if (!email) {
       return createResponse(
         response,
@@ -213,7 +249,7 @@ export class AuthController implements IAuthController {
         response,
         HttpStatus.OK,
         true,
-        AUTH_SUCCESS_MESSAGES.PASSWORD_RESET_LINK_SENT
+        AUTH_MESSAGES.PASSWORD_RESET_LINK_SENT
       );
     } catch (error) {
       console.log(error);
@@ -222,7 +258,6 @@ export class AuthController implements IAuthController {
   }
 
   async resetUserPassword(request: Request, response: Response) {
-    console.log(request.body);
     try {
       const { password, confirmPassword, token } = request.body;
       if (!password || !token) {
@@ -242,7 +277,7 @@ export class AuthController implements IAuthController {
         response,
         HttpStatus.OK,
         true,
-        AUTH_SUCCESS_MESSAGES.PASSWORD_RESET_SUCCESS
+        AUTH_MESSAGES.PASSWORD_RESET_SUCCESS
       );
     } catch (error) {
       console.log(error);
@@ -251,37 +286,70 @@ export class AuthController implements IAuthController {
   }
 
   async refreshAccessToken(request: Request, response: Response) {
-    console.log("inside refreshAccessToken method of AuthController.ts");
     try {
-      const incomingRefreshToken = request.cookies.refreshToken;
+      const incomingRole=request.body.role
+
+      const incomingRefreshToken = request.cookies[`${incomingRole}RefreshToken`];
+      console.log(request.cookies)
       if (!incomingRefreshToken) {
         throw new CustomError(
           ERROR_MESSAGES.INVALID_INPUT,
           HttpStatus.UNAUTHORIZED
         );
       }
-      const { userId } = (await jwt.verify(
+      const { userId,role } = (await jwt.verify(
         incomingRefreshToken,
         process.env.REFRESH_TOKEN_SECRET as string
       )) as TokenPayload;
-
 
       const { accessToken, refreshToken } =
         await this._authService.refreshAccessToken(
           userId as string,
           incomingRefreshToken
         );
-      response.cookie(`refreshToken`, refreshToken, COOKIE_OPTIONS);
+      response.cookie(`${role}RefreshToken`, refreshToken, COOKIE_OPTIONS);
       return createResponse(
         response,
         HttpStatus.OK,
         true,
-        AUTH_SUCCESS_MESSAGES.ACCESS_TOKEN_REFRESHED,
+        AUTH_MESSAGES.ACCESS_TOKEN_REFRESHED,
         { accessToken }
       );
     } catch (error) {
       console.log(error);
       return errorResponse(response, error);
+    }
+  }
+  async verifyUserAccount(request: Request, response: Response): Promise<void> {
+    const { email } = request.body;
+    console.log("enter in the otp controller");
+    try {
+      await this._authService.sendVerificationCode(email);
+      createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        AUTH_MESSAGES.VERIFICATION_CODE_SENT
+      );
+    } catch (error) {
+      errorResponse(response, error);
+    }
+  }
+
+  signout(request: Request, response: Response): void {
+    try {
+      const user = request.user;
+      response.clearCookie(`${user?.role}RefreshToken`);
+      deleteRefreshToken(user?.userId as string);
+
+      return createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        AUTH_MESSAGES.LOGGED_OUT
+      );
+    } catch (error) {
+      errorResponse(response, error);
     }
   }
 }

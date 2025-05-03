@@ -1,7 +1,8 @@
 import { Schema, model, Types, Document } from "mongoose";
+import { ICandidate } from "../candidate/Candidate";
 
 export interface IJob extends Document {
-  companyId: Types.ObjectId; 
+  companyId: Types.ObjectId;
   position: string;
   description?: string;
   requiredSkills: string[];
@@ -9,21 +10,18 @@ export interface IJob extends Document {
   status: "open" | "in-progress" | "completed";
   experienceRequired: number;
   candidates?: ICandidateJob[];
+  paymentTransactionId?: Types.ObjectId;
+  interviewDuration: number; // In minutes, e.g., 60 (for 1 hour)
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 export interface ICandidateJob {
-  candidateId: Types.ObjectId;
-  interviewStatus:
-    | "pending"
-    | "mock_started"
-    | "mock_completed"
-    | "shortlisted"
-    | "final_scheduled"
-    | "final_completed"
-    | "rejected";
+  candidate: ICandidate;
+  interviewStatus: string;
   interviewerId?: Types.ObjectId | null;
+  scheduledTime?: Date; // The confirmed scheduled time for the interview
+  interviewTimeZone?: string; // Optional: Time zone of the interview
 }
 
 const JobSchema: Schema = new Schema(
@@ -61,10 +59,20 @@ const JobSchema: Schema = new Schema(
       required: true,
       min: 0,
     },
+    interviewDuration: {  // Duration of the interview in minutes (e.g., 60 for 1 hour)
+      type: Number,
+      required: true,
+      default: 60,
+    },
+    paymentTransactionId: {
+      type: Types.ObjectId,
+      ref: "PaymentTransaction",
+      default: null,
+    },
 
     candidates: [
       {
-        candidateId: {
+        candidate: {
           type: Types.ObjectId,
           ref: "Candidate",
           required: true,
@@ -86,6 +94,10 @@ const JobSchema: Schema = new Schema(
           type: Types.ObjectId,
           ref: "Interviewer",
           default: null,
+        },
+        scheduledTime: {  // The final confirmed scheduled time for the interview
+          type: Date,
+          required: false,
         },
       },
     ],

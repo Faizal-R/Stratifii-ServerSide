@@ -1,5 +1,5 @@
 import { HttpStatus } from "../../../config/HttpStatusCodes";
-import { ERROR_MESSAGES } from "../../../constants/messages";
+import { ERROR_MESSAGES } from "../../../constants/messages/ErrorMessages";
 import { CustomError } from "../../../error/CustomError";
 import { ISubscriptionPlan } from "../../../models/subscription/SubscriptionPlan";
 import { ISubscriptionPlanRepository } from "../../../repositories/subscription/subscription-plan/ISubscriptionPlanRepository";

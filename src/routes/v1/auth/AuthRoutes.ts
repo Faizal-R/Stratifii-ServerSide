@@ -5,7 +5,7 @@ import { CompanyRepository } from "../../../repositories/company/CompanyReposito
 import { AuthService } from "../../../services/auth/AuthService";
 import { AuthController } from "../../../controllers/auth/AuthController";
 import { OtpRepository } from "../../../repositories/auth/OtpRepository";
-import { AdminRepository } from "../../../repositories/admin/AdminRepository";
+
 const router = Router();
 import redis from "../../../config/RedisConfig";
 import { checkBlockedUser } from "../../../middlewares/checkBlockedUser";
@@ -45,6 +45,14 @@ router.post(
 
 router.post("/otp/verify", authController.authenticateOTP.bind(authController));
 router.post(
+  "/verify-account",
+  authController.verifyUserAccount.bind(authController)
+);
+router.put(
+  "/interviewer/account/setup",
+  authController.setupInterviewerAccount.bind(authController)
+);
+router.post(
   "/otp/resend",
   authController.triggerOtpResend.bind(authController)
 );
@@ -62,5 +70,7 @@ router.post(
   "/refresh-token",
   authController.refreshAccessToken.bind(authController)
 );
+
+router.post('/signout',authController.signout.bind(authController))
 
 export default router;

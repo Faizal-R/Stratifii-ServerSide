@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, ObjectId } from "mongoose";
+import mongoose, { Schema, Document, Types } from "mongoose";
 import { TStatus } from "../interviewer/Interviewer";
 // import { TStatus } from "./IInterviewerModel"; // Ensure this module exists or remove if not needed
 
@@ -13,13 +13,17 @@ export interface ICompany extends Document {
   phone: string;
   password: string;
   companyType: string;
-  candidates?: ObjectId[];
   isVerified?: boolean;
   status?: TStatus;
   isBlocked?: boolean;
   description?: string;
   companySize?: string;
   numberOfEmployees?: string;
+  activePlan?: Types.ObjectId | null;
+  usage?: {
+    candidatesAddedThisMonth: number;
+    jobPostsThisMonth: number;
+  };
 }
 
 const CompanySchema: Schema = new Schema(
@@ -63,7 +67,7 @@ const CompanySchema: Schema = new Schema(
       required: true,
     },
 
-    descripiton: {
+    description: {
       type: String,
     },
     companySize: {
@@ -79,12 +83,6 @@ const CompanySchema: Schema = new Schema(
     companyLogo: {
       type: String,
     },
-    candidates: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Candidate",
-      },
-    ],
     isVerified: {
       type: Boolean,
       default: false,
@@ -97,6 +95,21 @@ const CompanySchema: Schema = new Schema(
     isBlocked: {
       type: Boolean,
       default: false,
+    },
+    activePlan: {
+      type: Schema.Types.ObjectId,
+      ref: "SubscriptionRecord",
+      default: null,
+    },
+    usage: {
+      jobPostsThisMonth: {
+        type: Number,
+        default: 0,
+      },
+      candidateAddedThisMonth: {
+        type: Number,
+        default: 0,
+      },
     },
   },
   {

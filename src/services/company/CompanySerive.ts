@@ -3,10 +3,12 @@ import { ICompanyRepository } from "../../repositories/company/ICompanyRepositor
 import { ICompany } from "../../models/company/Company";
 import { CustomError } from "../../error/CustomError";
 import { HttpStatus } from "../../config/HttpStatusCodes";
-import { ERROR_MESSAGES } from "../../constants/messages";
+import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 import { ICompanyProfile } from "../../validations/CompanyValidations";
 import { uploadOnCloudinary } from "../../helper/cloudinary";
-import { Multer } from "multer";
+import { comparePassword, hashPassword } from "../../utils/hash";
+import { USER_COMMON_MESSAGES } from "../../constants/messages/UserProfileMessages";
+
 
 export class CompanyService implements ICompanyService {
   constructor(private _companyRepository: ICompanyRepository) {}
@@ -52,4 +54,24 @@ export class CompanyService implements ICompanyService {
       );
     }
   }
+    async changePassword(currentPassword: string, newPassword: string, companyId: string): Promise<ICompany | null> {
+      try {
+      const company=  await this._companyRepository.findById(companyId);
+      if(!company || !comparePassword(currentPassword,company.password)){
+        throw new CustomError(USER_COMMON_MESSAGES.CURRENT_PASSWORD_INCORRECT,HttpStatus.BAD_REQUEST); 
+      }
+      const hashedPassword = await hashPassword(newPassword);
+      const updatedCompany = await this._companyRepository.update(companyId, {password:hashedPassword});
+      return updatedCompany;
+      }
+      catch (error) {
+        if (error instanceof CustomError) {
+          throw error;
+        }
+        throw new CustomError(
+         error instanceof  Error? error.message:ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+          HttpStatus.INTERNAL_SERVER_ERROR
+        );
+      }
+     }
 }

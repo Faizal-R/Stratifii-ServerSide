@@ -7,4 +7,6 @@ export interface IJobController{
     createJob(request:Request,response:Response):Promise<void>
     updateJob(request:Request,response:Response):Promise<void>
     deleteJob(request:Request,response:Response):Promise<void>
+    createCandidatesFromResumesAndAddToJob(request:Request,response:Response):Promise<void>
+    getCandidatesByJobId(request:Request,response:Response):Promise<void>
 }

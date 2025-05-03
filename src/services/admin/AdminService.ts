@@ -10,7 +10,7 @@ import {
 } from "../../helper/generateTokens";
 import { Roles } from "../../constants/roles";
 import { ICompany } from "../../models/company/Company";
-import { ERROR_MESSAGES } from "../../constants/messages";
+import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 import { IInterviewer } from "../../models/interviewer/Interviewer";
 import { storeRefreshToken } from "../../helper/handleRefreshToken";
 
@@ -57,12 +57,12 @@ export class AdminService implements IAdminService {
         );
       }
       const accessToken = await generateAccessToken(
-        admin._id as string,
-        Roles.ADMIN
+        {userId:admin._id as string,
+       role: Roles.ADMIN}
       );
       const refreshToken = await generateRefreshToken(
-        admin._id as string,
-        Roles.ADMIN
+        {userId:admin._id as string,
+        role:Roles.ADMIN}
       );
       await storeRefreshToken(admin._id as string,refreshToken)
       return { accessToken, refreshToken };

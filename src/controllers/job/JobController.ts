@@ -5,6 +5,7 @@ import { createResponse, errorResponse } from "../../helper/responseHandler";
 import { HttpStatus } from "../../config/HttpStatusCodes";
 import { JOB_SUCCESS_MESSAGES } from "../../constants/messages";
 import { IJobController } from "./IJobController";
+import mongoose from "mongoose";
 
 export class JobController implements IJobController {
   constructor(private readonly _jobService: IJobService) {}
@@ -13,8 +14,9 @@ export class JobController implements IJobController {
   }
 
   async getAllJobs(request: Request, response: Response): Promise<void> {
+    const companyId = request.user?.userId;
     try {
-      const jobs = await this._jobService.getJobs();
+      const jobs = await this._jobService.getJobs(companyId!);
 
       createResponse(
         response,
@@ -49,11 +51,11 @@ export class JobController implements IJobController {
   }
 
   async updateJob(request: Request, response: Response): Promise<void> {
-    console.log(request.body)
+    console.log(request.body);
     // console.log(job);
     try {
-    const updatedJob=  await this._jobService.updateJob(request.body);
-    console.log(updatedJob)
+      const updatedJob = await this._jobService.updateJob(request.body);
+      console.log(updatedJob);
       createResponse(
         response,
         HttpStatus.OK,
@@ -75,6 +77,56 @@ export class JobController implements IJobController {
         HttpStatus.OK,
         true,
         JOB_SUCCESS_MESSAGES.JOB_DELETED
+      );
+    } catch (error) {
+      console.log(error);
+      errorResponse(response, error);
+    }
+  }
+
+  async createCandidatesFromResumesAndAddToJob(
+    request: Request,
+    response: Response
+  ): Promise<void> {
+    const { jobId } = request.params;
+    console.log(jobId, request.params);
+    const resumes = request.files as Express.Multer.File[];
+    try {
+      const companyId = new mongoose.Types.ObjectId(request.user?.userId);
+      console.log(resumes);
+      const candidates =
+        await this._jobService.createCandidatesFromResumesAndAddToJob(
+          jobId,
+          resumes,
+          companyId
+        );
+      console.log(candidates);
+      createResponse(
+        response,
+        HttpStatus.CREATED,
+        true,
+        JOB_SUCCESS_MESSAGES.CREATED_CANDIDATES_ADDED_TO_JOB,
+        candidates
+      );
+    } catch (error) {
+      console.log(error);
+      errorResponse(response, error);
+    }
+  }
+
+  async getCandidatesByJobId(
+    request: Request,
+    response: Response
+  ): Promise<void> {
+    const { jobId } = request.params;
+    try {
+      const candidates = await this._jobService.getCandidatesByJobId(jobId);
+      createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        JOB_SUCCESS_MESSAGES.CANDIDATES_FETCHED,
+        candidates
       );
     } catch (error) {
       console.log(error);
