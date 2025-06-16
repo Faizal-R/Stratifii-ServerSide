@@ -294,13 +294,19 @@ export class AuthService implements IAuthService {
   ): Promise<{
     accessToken?: string;
     refreshToken?: string;
-    user: IGoogleInterviewer;
-    isRegister: boolean;
+    user?: IGoogleInterviewer;
+    isRegister?: boolean;
   }> {
     try {
       let interviewer = await this._interviewerRepository.findByEmail(email);
 
       if (interviewer) {
+        if (interviewer.status === "rejected") {
+          throw new CustomError(
+            "Your account has been rejected. Please contact support.",
+            HttpStatus.FORBIDDEN
+          );
+        }
         const accessToken = await generateAccessToken({
           userId: interviewer._id as string,
           role: Roles.INTERVIEWER,
@@ -309,31 +315,35 @@ export class AuthService implements IAuthService {
           userId: interviewer._id as string,
           role: Roles.INTERVIEWER,
         });
-         await storeRefreshToken(interviewer._id as string, refreshToken);
-         
-         return {
-           accessToken,
-           refreshToken,
-           user: interviewer,
-           isRegister: false,
-          };
-        }
-        const newInterviewer: Omit<IGoogleInterviewer, keyof Document> = {
-          name,
-          email,
+        await storeRefreshToken(interviewer._id as string, refreshToken);
+
+        return {
+          accessToken,
+          refreshToken,
+          user: interviewer,
+          isRegister: false,
         };
-        const createdInterviewer = await this._interviewerRepository.create(
-          newInterviewer
-        );
-        // await storeRefreshToken(createdInterviewer._id as string, refreshToken);
-        
+      }
+      const newInterviewer: Omit<IGoogleInterviewer, keyof Document> = {
+        name,
+        email,
+      };
+      const createdInterviewer = await this._interviewerRepository.create(
+        newInterviewer
+      );
+      // await storeRefreshToken(createdInterviewer._id as string, refreshToken);
+
       return { isRegister: true, user: createdInterviewer };
     } catch (error) {
       console.log(error);
-      throw new CustomError(
-        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+      if (error instanceof CustomError) {
+        throw error;
+      } else {
+        throw new CustomError(
+          ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+          HttpStatus.INTERNAL_SERVER_ERROR
+        );
+      }
     }
   }
 

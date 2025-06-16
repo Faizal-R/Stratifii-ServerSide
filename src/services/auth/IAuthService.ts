@@ -30,8 +30,8 @@ export interface IAuthService {
   ): Promise<{
     accessToken?: string;
     refreshToken?: string;
-    user: IGoogleInterviewer;
-    isRegister:boolean
+    user?: IGoogleInterviewer;
+    isRegister?:boolean
   }>;
 
   requestPasswordReset(email: string, role: string): Promise<void>;
