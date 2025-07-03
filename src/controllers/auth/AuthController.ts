@@ -25,6 +25,7 @@ export class AuthController implements IAuthController {
   async login(request: Request, response: Response): Promise<void> {
     try {
       const { role, email, password } = request.body;
+      console.log(request.body)
 
       // Validate request body
       if (!role || !email || !password) {
@@ -55,7 +56,7 @@ export class AuthController implements IAuthController {
 
       // Set refresh token as an HTTP-only cookie
       response.cookie(`${role}RefreshToken`, refreshToken, COOKIE_OPTIONS);
-
+      console.log
       // Send success response
       return createResponse(
         response,
@@ -95,9 +96,11 @@ export class AuthController implements IAuthController {
 
   async registerInterviewer(request: Request, response: Response) {
     try {
-      const interviewer: IInterviewer = request.body;
+      const interviewer: IInterviewer = JSON.parse(request.body.data);
+      
       const newInterviewer = await this._authService.registerInterviewer(
-        interviewer
+        interviewer,
+        request.file
       );
       return createResponse(
         response,
@@ -107,6 +110,7 @@ export class AuthController implements IAuthController {
         newInterviewer
       );
     } catch (error) {
+      console.log(error)
       if (error instanceof Error)
         createResponse(
           response,
@@ -122,13 +126,16 @@ export class AuthController implements IAuthController {
     request: Request,
     response: Response
   ): Promise<void> {
-    const { interviewer, interviewerId } = request.body;
-
+    const { interviewer, interviewerId } = JSON.parse(request.body.data);
+    const resume = request.file as Express.Multer.File;
+    console.log("resumeRequest", request.file);
+   
     try {
       const { accessToken, refreshToken, setupedInterviewer } =
         await this._authService.setupInterviewerAccount(
           interviewerId,
-          interviewer
+          interviewer,
+          resume
         );
       response.cookie(`${Roles.INTERVIEWER}RefreshToken`, refreshToken, COOKIE_OPTIONS);
       createResponse(

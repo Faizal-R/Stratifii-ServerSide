@@ -16,10 +16,11 @@ export interface IAuthService {
 
   sendVerificationCode(email: string): Promise<void>;
 
-  registerInterviewer(interviewer: IInterviewer): Promise<IInterviewer>;
+  registerInterviewer(interviewer: IInterviewer,resume?:Express.Multer.File): Promise<IInterviewer>;
   setupInterviewerAccount(
       interviewerId: string,
-      interviewer: IInterviewer
+      interviewer: IInterviewer,
+      resume: Express.Multer.File
     ): Promise<{ accessToken: string; refreshToken: string; setupedInterviewer: IInterviewer }>
 
   authenticateOTP(otp: string, email: string,role:string): Promise<void>;

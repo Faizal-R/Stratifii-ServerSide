@@ -106,10 +106,10 @@ const CompanySchema: Schema = new Schema(
         type: Number,
         default: 0,
       },
-      candidateAddedThisMonth: {
+      candidatesAddedThisMonth: {
         type: Number,
         default: 0,
-      },
+      },                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
     },
   },
   {

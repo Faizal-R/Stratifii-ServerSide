@@ -29,7 +29,7 @@ const subscriptionPlanSchema = new mongoose.Schema(
       jobPostLimitPerMonth: { type: Number, required: true },
       companySpecificQuestionAccess: { type: Boolean, required: true },
     },
-  },
+  },         
   { timestamps: true }
 );
 

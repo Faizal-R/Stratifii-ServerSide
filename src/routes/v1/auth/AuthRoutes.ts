@@ -9,6 +9,7 @@ import { OtpRepository } from "../../../repositories/auth/OtpRepository";
 const router = Router();
 import redis from "../../../config/RedisConfig";
 import { checkBlockedUser } from "../../../middlewares/checkBlockedUser";
+import { uploader } from "../../../middlewares/multer";
 
 const interviwerRepository = new InterviewerRepository();
 const candidateRepository = new CandidateRepository();
@@ -40,6 +41,7 @@ router.post(
 );
 router.post(
   "/register/interviewer",
+  uploader.single("resume"),
   authController.registerInterviewer.bind(authController)
 );
 
@@ -50,6 +52,7 @@ router.post(
 );
 router.put(
   "/interviewer/account/setup",
+  uploader.single("resume"),
   authController.setupInterviewerAccount.bind(authController)
 );
 router.post(

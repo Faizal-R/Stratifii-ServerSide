@@ -52,7 +52,7 @@ export class AdminService implements IAdminService {
       console.log(isPassMatch);
       if (!admin || !isPassMatch) {
         throw new CustomError(
-          "Invalid email or password",
+          " or password",
           HttpStatus.BAD_REQUEST
         );
       }

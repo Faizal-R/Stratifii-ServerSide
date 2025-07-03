@@ -3,19 +3,20 @@ import { razorpay as RazorPay } from "../../../config/razorpay";
 import { ISubscriptionRecordRepository } from "../../../repositories/subscription/subscription-record/ISubscriptionRecordRepository";
 import { ISubscriptionRecordService } from "./ISubscriptionRecordService";
 import { CustomError } from "../../../error/CustomError";
-import {
-  ERROR_MESSAGES,
- 
-} from "../../../constants/messages/ErrorMessages";
+import { ERROR_MESSAGES } from "../../../constants/messages/ErrorMessages";
 import { SUBSCRIPTION_ERROR_MESSAGES } from "../../../constants/messages/PaymentAndSubscriptionMessages";
 import { HttpStatus } from "../../../config/HttpStatusCodes";
 import { ISubscriptionPlan } from "../../../models/subscription/SubscriptionPlan";
 import crypto from "crypto";
-import mongoose, { Schema, Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
+import { ICompanyRepository } from "../../../repositories/company/ICompanyRepository";
+import { Type } from "typescript";
+import { ISubscriptionRecord } from "../../../models/subscription/SubscriptionRecord";
 
 export class SubscriptionRecordService implements ISubscriptionRecordService {
   constructor(
-    private readonly _subscriptionRepository: ISubscriptionRecordRepository
+    private readonly _subscriptionRepository: ISubscriptionRecordRepository,
+    private readonly _companyRepository: ICompanyRepository
   ) {}
   async createPaymentOrder(amount: number): Promise<Orders.RazorpayOrder> {
     try {
@@ -42,7 +43,10 @@ export class SubscriptionRecordService implements ISubscriptionRecordService {
     razorpay_signature: string,
     subscriptionDetails: ISubscriptionPlan,
     companyId: mongoose.Types.ObjectId
-  ): Promise<boolean> {
+  ): Promise<{
+    isVerified: boolean;
+    subscriptionRecord?: ISubscriptionRecord;
+  }> {
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_SECRET_KEY!)
@@ -55,7 +59,7 @@ export class SubscriptionRecordService implements ISubscriptionRecordService {
         razorpay_payment_id
       );
       if (subscriptionRecord) {
-        return true;
+        return { isVerified: true, subscriptionRecord };
       } else {
         throw new CustomError(
           ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
@@ -63,7 +67,7 @@ export class SubscriptionRecordService implements ISubscriptionRecordService {
         );
       }
     }
-    return false;
+    return { isVerified: false };
   }
 
   async createSubscriptionRecord(
@@ -72,7 +76,9 @@ export class SubscriptionRecordService implements ISubscriptionRecordService {
     transactionId: string
   ) {
     try {
-      const validSubscriberId = new mongoose.Types.ObjectId(String(subscriberId));
+      const validSubscriberId = new mongoose.Types.ObjectId(
+        String(subscriberId)
+      );
       const validPlanId = new mongoose.Types.ObjectId(String(data._id));
       const subscriptionRecordData = {
         subscriberId: validSubscriberId,
@@ -85,10 +91,18 @@ export class SubscriptionRecordService implements ISubscriptionRecordService {
         startDate: new Date(),
         endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
         transactionId,
+        status: "active" as "active",
       };
-      const subscriptionRecord = await this._subscriptionRepository.create({
-        ...subscriptionRecordData,
-        status: "active",
+      const subscriptionRecord = await this._subscriptionRepository.create(
+        subscriptionRecordData
+      );
+      console.log(data.features);
+      this._companyRepository.update(subscriberId as string, {
+        activePlan: subscriptionRecord._id as Types.ObjectId,
+        usage: {
+          jobPostsThisMonth: data.features.jobPostLimitPerMonth,
+          candidatesAddedThisMonth: data.features.candidateSlotPerMonth,
+        },
       });
       return subscriptionRecord;
     } catch (error) {
@@ -98,5 +112,8 @@ export class SubscriptionRecordService implements ISubscriptionRecordService {
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
+  }
+  getSubscriptionRecordDetails(companyId: string): Promise<ISubscriptionRecord | null> {
+   return this._subscriptionRepository.getSubscriptionRecordDetailsByCompanyId(companyId)  
   }
 }

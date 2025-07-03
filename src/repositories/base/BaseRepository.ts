@@ -13,6 +13,15 @@ export abstract class BaseRepository<T extends Document>
     return this.model.create(data);
   }
 
+
+
+
+
+  async find(query: FilterQuery<T>): Promise<T[]> {
+    return this.model.find(query).exec();
+  }
+
+
   async findById(id: string): Promise<T | null> {
     return this.model.findById(id).exec();
   }

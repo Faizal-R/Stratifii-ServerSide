@@ -11,7 +11,7 @@ export enum VALIDATION_MESSAGES {
     INVALID_USERNAME = "Username can only contain letters, numbers, and underscores.",
     INVALID_DATE = "Please enter a valid date.",
     TERMS_REQUIRED = "You must accept the terms and conditions.",
-    INVALID_CREDENTIALS = "Invalid email or password.",
+    INVALID_CREDENTIALS = "Incorrect email or password.",
     SOMETHING_WENT_WRONG = "Something went wrong. Please try again later.",
     UNAUTHORIZED = "You are not authorized to perform this action.",
     FORBIDDEN = "Access denied.",

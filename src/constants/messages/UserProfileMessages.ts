@@ -6,6 +6,7 @@ export enum COMPANY_SUCCESS_MESSAGES {
     INTERVIEWER_PROFILE_UPDATED = "Interviewer profile updated successfully",
     INTERVIEWER_PROFILE_FETCHED = "Interviewer profile fetched successfully",
   }
+
   
   export enum USER_COMMON_MESSAGES{
     CURRENT_PASSWORD_INCORRECT = "Your current password is invalid. Kindly re-enter the correct password",

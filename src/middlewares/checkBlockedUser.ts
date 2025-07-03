@@ -13,49 +13,36 @@ export async function checkBlockedUser(
   response: Response,
   next: NextFunction
 ): Promise<void> {
-  const role = request.user?.role;
+  const { role, userId } = request.user || {};
   let user: IInterviewer | ICompany | ICandidate | null = null;
 
-  if (!request.user) {
-    console.log("helo ")
-    switch (request.body.role) {
-      case Roles.COMPANY:
-        user = await Company.findOne({ email: request.body.email });
-        break;
-      case Roles.CANDIDATE:
-        user = await Candidate.findOne({ email: request.body.email });
-        break;
-      case Roles.INTERVIEWER:
-        user = await Interviewer.findOne({ email: request.body.email });
-        break;
-      default:
-        user = null;
-    }
-  } else {
-    switch (role) {
-      case Roles.COMPANY:
-        user = await Company.findById(request.user?.userId);
-        break;
-      case Roles.CANDIDATE:
-        user = await Candidate.findById(request.user?.userId);
-        break;
-      case Roles.INTERVIEWER:
-        user = await Interviewer.findById(request.user?.userId);
-        break;
-      default:
-        user = null;
-    }
+  const reqRole = role || request.body.role;
+  const identifier = userId || request.body.email;
+
+  switch (reqRole) {
+    case Roles.COMPANY:
+      user = userId
+        ? await Company.findById(userId)
+        : await Company.findOne({ email: identifier });
+      break;
+    case Roles.CANDIDATE:
+      user = userId
+        ? await Candidate.findById(userId)
+        : await Candidate.findOne({ email: identifier });
+      break;
+    case Roles.INTERVIEWER:
+      user = userId
+        ? await Interviewer.findById(userId)
+        : await Interviewer.findOne({ email: identifier });
+      break;
   }
 
+  // If user not found, silently continue
   if (!user) {
-    return createResponse(
-      response,
-      HttpStatus.UNAUTHORIZED,
-      false,
-      "No User Found with this Email"
-    );
+    return next();
   }
 
+  // If user is blocked, stop the request
   if (user.isBlocked) {
     return createResponse(
       response,
@@ -65,5 +52,6 @@ export async function checkBlockedUser(
     );
   }
 
+  // If user is fine, continue
   next();
 }

@@ -7,6 +7,10 @@ export class SubscriptionRecordRepository extends BaseRepository<ISubscriptionRe
     constructor(){
         super(SubscriptionRecord);
     }
+
+    async getSubscriptionRecordDetailsByCompanyId(companyId: string): Promise<ISubscriptionRecord | null> {
+        return await SubscriptionRecord.findOne({subscriberId:companyId})
+    }
    
     
 }

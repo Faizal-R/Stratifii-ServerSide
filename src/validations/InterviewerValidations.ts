@@ -13,7 +13,7 @@ export const interviewerSchema = z.object({
   experience: z.number().min(0, "Experience cannot be negative"),
   linkedinProfile: z.string().url("Invalid LinkedIn profile URL"),
   location: z.string().optional(),
-  languages: z.array(z.object({ language: z.string(), level: z.string() })), 
+  languages: z.array(z.object({ language: z.string(), level: z.string() })).optional(), 
   availableDays: z.array(z.string()).nonempty("At least one available day is required"),
   availability: z.array(z.object({
     day: z.string(),
@@ -28,7 +28,11 @@ export const interviewerSchema = z.object({
   isVerified: z.boolean().default(false),
   rating: z.number().min(0).max(5).optional(),
   reviews: z.array(z.string()).optional(), // Array of ObjectIds (strings)
-  status: statusEnum.default("pending"), // Default status is "pending"
+  status: statusEnum.default("pending").optional(), // Default status is "pending"
+  resume: z
+  .custom<Express.Multer.File>((file) => file instanceof File, {
+    message: "Resume file is required",
+  }).optional()
 });
 
 
@@ -43,7 +47,7 @@ export const InterviewerProfileSchema = z.object({
   linkedinProfile: z.string().url("Invalid LinkedIn profile URL"),
   duration: z.number().optional(),
   location: z.string().optional(),
-  language: z.record(z.string(), z.string()), // Key-value pair of languages
+  languages: z.array(z.object({ language: z.string(), level: z.string() })).optional(), 
   availableDays: z.array(z.string()).min(1, "At least one available day is required"),
   professionalSummary: z.string().min(1, "Professional summary is required"),
   expertise: z.array(z.string()).min(1, "At least one expertise is required"),

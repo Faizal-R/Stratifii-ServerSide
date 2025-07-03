@@ -9,13 +9,11 @@ import { uploadOnCloudinary } from "../../helper/cloudinary";
 import { ICandidateRepository } from "../../repositories/candidate/ICandidateRepository";
 import { Types } from "mongoose";
 
-
 export class JobService implements IJobService {
   constructor(
     private readonly _jobRepository: IJobRepository,
     private readonly _candidateRepository: ICandidateRepository
   ) {}
-
 
   getJobById(jobId: string): Promise<IJob | null> {
     throw new Error("Method not implemented.");
@@ -79,7 +77,7 @@ export class JobService implements IJobService {
     try {
       for (let resume of resumes) {
         const candidateData = await extractDetailsFromPDF(resume.path);
-        const resumeUrl = await uploadOnCloudinary(resume.path,"raw");
+        const resumeUrl = await uploadOnCloudinary(resume.path, "raw");
         const candidate = await this._candidateRepository.create({
           ...candidateData,
           resume: resumeUrl,
@@ -92,12 +90,12 @@ export class JobService implements IJobService {
           interviewStatus: "pending",
         });
       }
-      console.log("candidates in the service",candidates)
+      console.log("candidates in the service", candidates);
       const updatedJob = await this._jobRepository.addCandidatesToJob(
         jobId,
         candidates
       );
-      console.log(updatedJob)
+      console.log(updatedJob);
       return updatedJob?.candidates!;
     } catch (error) {
       console.log(error);
@@ -113,7 +111,7 @@ export class JobService implements IJobService {
       if (!candidates) {
         throw new CustomError(ERROR_MESSAGES.NOT_FOUND, HttpStatus.NOT_FOUND);
       }
-      return candidates
+      return candidates;
     } catch (error) {
       throw new CustomError(
         ERROR_MESSAGES.INTERNAL_SERVER_ERROR,

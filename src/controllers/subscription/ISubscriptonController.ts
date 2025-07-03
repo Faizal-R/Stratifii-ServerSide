@@ -10,4 +10,5 @@ export interface ISubscriptionController {
     response: Response
   ): Promise<void>;
   getSubscriptionRecord(request: Request, response: Response): Promise<void>;
+  getSubscriptionPlanDetails(request:Request,response:Response):Promise<void>
 }

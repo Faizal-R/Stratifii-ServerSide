@@ -4,10 +4,7 @@ import { IAdminController } from "./IAdminController";
 import { Request, Response } from "express";
 import { HttpStatus } from "../../config/HttpStatusCodes";
 import z from "zod";
-import {
-
-  AUTH_MESSAGES,
-} from "../../constants/messages/AuthMessages";
+import { AUTH_MESSAGES } from "../../constants/messages/AuthMessages";
 import { ADMIN_SUCCESS_MESSAGES } from "../../constants/messages/AdminMessages";
 import { Roles } from "../../constants/roles";
 import { COOKIE_OPTIONS } from "../../config/CookieConfig";
@@ -22,11 +19,10 @@ export class AdminController implements IAdminController {
   constructor(private readonly _adminService: IAdminService) {}
   async signin(request: Request, response: Response): Promise<void> {
     try {
- 
       const { email, password } = request.body;
       // Validate input using Zod
       const parsedData = adminLoginSchema.parse({ email, password });
-     
+
       const { accessToken, refreshToken } = await this._adminService.login(
         parsedData.email,
         parsedData.password
@@ -36,7 +32,7 @@ export class AdminController implements IAdminController {
         refreshToken,
         COOKIE_OPTIONS
       );
-      
+
       return createResponse(
         response,
         HttpStatus.OK,
@@ -78,9 +74,11 @@ export class AdminController implements IAdminController {
     request: Request,
     response: Response
   ): Promise<void> {
-    const {status}=request.query
+    const { status } = request.query;
     try {
-      const interviewers = await this._adminService.getAllInterivewers(status as string);
+      const interviewers = await this._adminService.getAllInterivewers(
+        status as string
+      );
       return createResponse(
         response,
         HttpStatus.OK,
@@ -170,8 +168,8 @@ export class AdminController implements IAdminController {
     request: Request,
     response: Response
   ): Promise<void> {
-   const {interviewerId}=request.params
-   const {isApproved}=request.body
+    const { interviewerId } = request.params;
+    const { isApproved } = request.body;
     if (!interviewerId) {
       return createResponse(
         response,
@@ -182,10 +180,11 @@ export class AdminController implements IAdminController {
     }
 
     try {
-      const updatedInterviewer = await this._adminService.handleInterviewerVerification(
-        interviewerId,
-        isApproved
-      );
+      const updatedInterviewer =
+        await this._adminService.handleInterviewerVerification(
+          interviewerId,
+          isApproved
+        );
       return createResponse(
         response,
         HttpStatus.OK,
@@ -197,5 +196,4 @@ export class AdminController implements IAdminController {
       errorResponse(response, error);
     }
   }
-   
 }

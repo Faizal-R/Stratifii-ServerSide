@@ -22,6 +22,7 @@ import { ISubscriptionPlanService } from "../../../services/subscription/subscri
 import { SubscriptionPlanRepository } from "../../../repositories/subscription/subscription-plan/SubscriptionPlanRepository";
 import { SubscriptionPlanService } from "../../../services/subscription/subscription-plan/SubscriptionPlanService";
 import { CandidateRepository } from "../../../repositories/candidate/CandidateRepository";
+import { ensureActiveSubscription } from "../../../middlewares/subscriptionExpiry";
 const router = Router();
 
 const companyRepository = new CompanyRepository();
@@ -35,7 +36,8 @@ const jobController = new JobController(jobService);
 
 const subscriptionRepository = new SubscriptionRecordRepository();
 const subscriptionService = new SubscriptionRecordService(
-  subscriptionRepository
+  subscriptionRepository,
+  companyRepository
 );
 
 const subscriptionPlanRepository = new SubscriptionPlanRepository();
@@ -71,7 +73,7 @@ router.get(
 
   jobController.getAllJobs.bind(jobController)
 );
-router.post("/jobs", jobController.createJob.bind(jobController));
+router.post("/jobs",ensureActiveSubscription, jobController.createJob.bind(jobController));
 router.put(
   "/jobs",
 
@@ -108,6 +110,8 @@ router.post(
   subscriptionController.subscriptionPaymentVerificationAndCreateSubscriptionRecord.bind(
     subscriptionController
   )
+
 );
+router.get('/subscription/plan',subscriptionController.getSubscriptionPlanDetails.bind(subscriptionController))
 
 export default router;

@@ -22,7 +22,7 @@ import { Document } from "mongoose";
 import redis from "../../config/RedisConfig";
 import { CustomError } from "../../error/CustomError";
 import { companyRegistrationSchema } from "../../validations/CompanyValidations";
-import { ZodError } from "zod";
+import { string, ZodError } from "zod";
 import { HttpStatus } from "../../config/HttpStatusCodes";
 import { interviewerSchema } from "../../validations/InterviewerValidations";
 import { IAuthService } from "./IAuthService";
@@ -40,6 +40,7 @@ import { AUTH_MESSAGES } from "../../constants/messages/AuthMessages";
 import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 import { VALIDATION_MESSAGES } from "../../constants/messages/ValidationMessages";
 import { getUserByRoleAndEmail } from "../../helper/getUserByRoleAndEmail";
+import { uploadOnCloudinary } from "../../helper/cloudinary";
 
 type UserType = ICompany | IInterviewer | ICandidate;
 
@@ -165,7 +166,10 @@ export class AuthService implements IAuthService {
     }
   }
 
-  async registerInterviewer(interviewer: IInterviewer): Promise<IInterviewer> {
+  async registerInterviewer(
+    interviewer: IInterviewer,
+    resume: Express.Multer.File
+  ): Promise<IInterviewer> {
     const validatedData = interviewerSchema.parse(interviewer);
 
     const existingUser = await this._interviewerRepository.findByEmail(
@@ -176,6 +180,7 @@ export class AuthService implements IAuthService {
     }
 
     const hashedPassword = await hashPassword(validatedData.password);
+    const resumeUrl = await uploadOnCloudinary(resume?.path!, "raw");
 
     const validatedInterviewer: Omit<IInterviewer, keyof Document> = {
       name: validatedData.name,
@@ -192,6 +197,7 @@ export class AuthService implements IAuthService {
       isVerified: false,
       status: "pending",
       isBlocked: false,
+      resume: resumeUrl,
     };
     const newInterviewer = await this._interviewerRepository.create(
       validatedInterviewer
@@ -203,7 +209,8 @@ export class AuthService implements IAuthService {
 
   async setupInterviewerAccount(
     interviewerId: string,
-    interviewer: IInterviewer
+    interviewer: IInterviewer,
+    resume: Express.Multer.File
   ): Promise<{
     accessToken: string;
     refreshToken: string;
@@ -212,7 +219,9 @@ export class AuthService implements IAuthService {
     const findedInterviewer = await this._interviewerRepository.findById(
       interviewerId
     );
+    console.log("resumeInService", resume);
     const hashedPassword: string = await hashPassword(interviewer.password);
+    const resumeUrl = await uploadOnCloudinary(resume.path!, "raw");
     const setupedInterviewer = await this._interviewerRepository.update(
       interviewerId,
       {
@@ -220,7 +229,8 @@ export class AuthService implements IAuthService {
         email: findedInterviewer?.email,
         name: findedInterviewer?.name,
         password: hashedPassword,
-      }
+        resume: resumeUrl,
+      } 
     );
     if (!setupedInterviewer) {
       throw new CustomError(

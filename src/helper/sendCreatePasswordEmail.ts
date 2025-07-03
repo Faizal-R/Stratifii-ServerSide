@@ -7,6 +7,8 @@ import { Roles } from "../constants/roles";
 import { ICompany } from "../models/company/Company";
 import redis from "../config/RedisConfig";
 
+import { config } from "dotenv";
+config({ path: "src/.env" }) // Load environment variables from .env file
 export const sendCreatePasswordEmail = async (candidates: ICandidate[]) => {
   const html = `<div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
 
@@ -66,7 +68,7 @@ export const sendCreatePasswordEmail = async (candidates: ICandidate[]) => {
       { expiresIn: "2d" }
     );
     
-    redis.setex(`createPasswordToken:${candidate._id}`, 172800, token);
+   await redis.setex(`createPasswordToken:${candidate._id}`, 172800, token);
     const link = `${frontendBaseUrl}/create-password?token=${token}`;
      
     const html = createPasswordHtml(

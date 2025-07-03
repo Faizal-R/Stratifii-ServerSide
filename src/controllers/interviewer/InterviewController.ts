@@ -15,9 +15,11 @@ import {
 } from "../../helper/generateTokens";
 import { Roles } from "../../constants/roles";
 import { COOKIE_OPTIONS } from "../../config/CookieConfig";
+import { ISlotService } from "../../services/slot/ISlotService";
+import { IInterviewSlot } from "../../models/slot/interviewSlot";
 
 export class InterviewController implements IInterviewerController {
-  constructor(private readonly _interviewerService: IInterviewerService) {}
+  constructor(private readonly _interviewerService: IInterviewerService,private readonly _slotService:ISlotService) {}
 
   async getInterviewerProfile(request: Request, response: Response) {
     try {
@@ -88,4 +90,47 @@ export class InterviewController implements IInterviewerController {
       errorResponse(response, error);
     }
   }
+ async generateSlots(request: Request, response: Response): Promise<void> {
+    try {
+      const ruleData = request.body;
+      console.log(request.body)
+      const interviewerId = request.user?.userId;
+      const slots = await this._slotService.createRuleAndGenerateSlots({...ruleData,interviewerId,duration:ruleData.slotDuration,buffer:ruleData.bufferRate});
+      return createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        "Slots generated successfully",
+        // INTERVIEWER__SUCCESS_MESSAGES.SLOTS_GENERATED,
+        slots
+      );
+    } catch (error) {
+      console.error("Error generating slots:", error);
+      return errorResponse(response, error);
+    }
+  }
+  async getSlotsByInterviewerId(request: Request, response: Response): Promise<void> {
+  const interviewerId = request.params.id;
+  try {
+    const slots= await this._slotService.getSlotsByInterviewerId(interviewerId)
+       
+         return createResponse(
+           response,
+           HttpStatus.OK,
+           true,
+           "Slots fetched successfully",
+          //  INTERVIEWER__SUCCESS_MESSAGES.SLOTS_FETCHED,
+           slots
+         );
+    
+  } catch (error) {
+    
+    return errorResponse(response, error);
+  }
+      
+      
+
+      
+  }
+
 }

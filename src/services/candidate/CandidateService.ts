@@ -22,13 +22,13 @@ export class CandidateService implements ICandidateService {
         token,
         process.env.ACCESS_TOKEN_SECRET as string
       ) as TokenPayload;
-      console.log(decoded)
+      console.log("decoded",decoded)
       const userId = decoded.userId;
-      
+       console.log("userId",userId)
       const storedToken = await redis.get(`createPasswordToken:${userId}`);
 
-       console.log(storedToken)
-
+       console.log("storedToken",storedToken)
+        
       if (!storedToken || storedToken !== token) {
         throw new CustomError(
           "Invalid or expired token",
@@ -36,11 +36,15 @@ export class CandidateService implements ICandidateService {
         );
       }
       const hashedPassword = await hashPassword(password);
+      console.log("hashedPassword",hashedPassword)
       const avatarUrl = await uploadOnCloudinary(avatar.path);
+       console.log("avatarUrl",avatarUrl)
+
       const candidate = await this._candidateRepository.update(userId, {
         password: hashedPassword,
         avatar: avatarUrl,
       });
+      console.log("candidate",candidate)
 
       return candidate;
     } catch (error) {

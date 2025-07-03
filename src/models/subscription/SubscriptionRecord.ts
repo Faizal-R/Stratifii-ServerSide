@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface ISubscriptionRecord extends Document {
+
   subscriberId: mongoose.Types.ObjectId;
   planId: mongoose.Types.ObjectId;
   status: "active" | "expired" | "canceled" | "pending";

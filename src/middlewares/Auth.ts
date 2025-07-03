@@ -8,6 +8,7 @@ import Company, { ICompany } from "../models/company/Company";
 import Interviewer, { IInterviewer } from "../models/interviewer/Interviewer";
 import { Roles } from "../constants/roles";
 import { Candidate } from "../models";
+import { VALIDATION_MESSAGES } from "../constants/messages/ValidationMessages";
 
 // Define an interface for the decoded token payload
 export interface TokenPayload {
@@ -45,7 +46,7 @@ export async function verifyToken(
         res,
         HttpStatus.UNAUTHORIZED,
         false,
-        "Invalid or expired token."
+        VALIDATION_MESSAGES.SESSION_EXPIRED
       );
     }
    

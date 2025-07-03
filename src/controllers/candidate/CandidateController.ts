@@ -42,6 +42,7 @@ export class CandidateController implements ICandidateController {
          ERROR_MESSAGES.PASSWORD_MISMATCH
        );
      }
+     console.log("all Cleared in setupCandidateProfile")
        
      const candidate=await this._candidateService.setupCandiateProfile(avatar!,password,token)
     console.log(candidate)

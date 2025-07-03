@@ -19,7 +19,7 @@ export interface IInterviewer extends Document {
     experience: number;
     linkedinProfile: string;
     location?: string;
-    languages:{
+    languages?:{
       language:string;
       level:string;
     }[];
@@ -34,6 +34,7 @@ export interface IInterviewer extends Document {
     reviews?: ObjectId[];
     status?:TStatus
     isBlocked?:boolean
+    resume?:string |Express.Multer.File;
   }
 
   export interface IGoogleInterviewer extends Document{
@@ -73,7 +74,7 @@ const interviewerSchema: Schema = new Schema(
     location: {
       type: String,
     },
-    language: [{
+    languages: [{
       language: { type: String },
       level: { type: String },
     }],
@@ -125,6 +126,9 @@ const interviewerSchema: Schema = new Schema(
      type:Boolean,
      default:false
     },
+    resume:{
+      type:String,
+    }
   },
   {
     timestamps: true,
@@ -137,3 +141,5 @@ const Interviewer = mongoose.model<IInterviewer>(
 );
 
 export default Interviewer;
+
+

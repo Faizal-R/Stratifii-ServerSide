@@ -4,14 +4,12 @@ import { createResponse, errorResponse } from "../../helper/responseHandler";
 import { ISubscriptionPlanService } from "../../services/subscription/subscription-plan/ISubscriptionPlanService";
 import { SubscriptionPlanSchema } from "../../validations/SubscriptionValidation";
 import { HttpStatus } from "../../config/HttpStatusCodes";
-import {
-  ERROR_MESSAGES,
-  
-} from "../../constants/messages/ErrorMessages";
-import {SUBSCRIPTION_SUCCESS_MESSAGES} from "../../constants/messages/PaymentAndSubscriptionMessages";
+import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
+import { SUBSCRIPTION_SUCCESS_MESSAGES } from "../../constants/messages/PaymentAndSubscriptionMessages";
 
 import { ISubscriptionRecordService } from "../../services/subscription/subscription-record/ISubscriptionRecordService";
 import mongoose from "mongoose";
+import { ISubscriptionRecord } from "../../models/subscription/SubscriptionRecord";
 
 export class SubscriptionController implements ISubscriptionController {
   constructor(
@@ -79,9 +77,9 @@ export class SubscriptionController implements ISubscriptionController {
     response: Response
   ): Promise<void> {
     const subscriptionId = request.params.subscriptionId;
-    console.log(subscriptionId)
+    console.log(subscriptionId);
     const { updatedSubscription } = request.body;
-    console.log(request.body)
+    console.log(request.body);
 
     try {
       await this._subscriptionService?.updateSubscription(
@@ -121,29 +119,34 @@ export class SubscriptionController implements ISubscriptionController {
     request: Request,
     response: Response
   ): Promise<void> {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature,subscriptionId } =
-      request.body;
-     console.log(request.body)
-     const companyId = new mongoose.Types.ObjectId(String(request.user?.userId));
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      subscriptionId,
+    } = request.body;
+    console.log(request.body);
+    const companyId = new mongoose.Types.ObjectId(String(request.user?.userId));
 
     try {
-       const subscriptionDetails=await this._subscriptionService?.getSubscriptionById(subscriptionId)
-       console.log(subscriptionDetails)
-      const isVerifiedAndCreatedSubscriptionRecord =
-        await this._subscriptionRecordService?.subscriptionPaymentVerification(
+      const subscriptionDetails =
+        await this._subscriptionService?.getSubscriptionById(subscriptionId);
+      console.log(subscriptionDetails);
+      const { isVerified, subscriptionRecord } =
+        (await this._subscriptionRecordService?.subscriptionPaymentVerification(
           razorpay_order_id,
           razorpay_payment_id,
           razorpay_signature,
           subscriptionDetails!,
           companyId
-          
-        );
-      if (isVerifiedAndCreatedSubscriptionRecord) {
+        )) as { isVerified: boolean; subscriptionRecord: ISubscriptionRecord };
+      if (isVerified) {
         createResponse(
           response,
           HttpStatus.OK,
           true,
-          SUBSCRIPTION_SUCCESS_MESSAGES.SUBSCRIPTION_SUBSCRIBED
+          SUBSCRIPTION_SUCCESS_MESSAGES.SUBSCRIPTION_SUBSCRIBED,
+          subscriptionRecord
         );
       }
     } catch (error) {
@@ -153,5 +156,32 @@ export class SubscriptionController implements ISubscriptionController {
 
   getSubscriptionRecord(request: Request, response: Response): Promise<void> {
     throw new Error("Method not implemented.");
+  }
+
+ async  getSubscriptionPlanDetails(request:Request,response:Response):Promise<void>{
+    // const subscriptionId = request.body.comp;
+    const companyId=  request.user?.userId;
+    try {
+      const subscriptionPlanDetails =
+        await this._subscriptionRecordService?.getSubscriptionRecordDetails(companyId!);
+      if (!subscriptionPlanDetails) {
+        return createResponse(
+          response,
+          HttpStatus.NOT_FOUND,
+          false,
+          "Subscription plan not found",
+          // ERROR_MESSAGES.SUBSCRIPTION_PLAN_NOT_FOUND
+        );
+      }
+      createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        "Successfully fetched subscription plan details",
+        subscriptionPlanDetails
+      );
+    } catch (error) {
+      errorResponse(response, error);
+    }
   }
 }
