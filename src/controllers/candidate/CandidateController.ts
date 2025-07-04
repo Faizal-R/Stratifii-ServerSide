@@ -10,6 +10,7 @@ import {
 } from "../../constants/messages/AuthMessages";
 import  { ERROR_MESSAGES}from "../../constants/messages//ErrorMessages"
 import {PAYMENT_SUCCESS_MESSAGES} from "../../constants/messages/PaymentAndSubscriptionMessages"
+import { CANDIDATE_SUCCESS_MESSAGE } from "../../constants/messages/UserProfileMessages";
 
 
 export class CandidateController implements ICandidateController {
@@ -57,5 +58,41 @@ export class CandidateController implements ICandidateController {
     console.log("candidate error",error);
     errorResponse(response, error);
    }
+  }
+  async getCandidateProfile(
+    request: Request,
+    response: Response
+  ): Promise<void> {
+    try {
+      const candidateId = request.params.id;
+      if (!candidateId) {
+        return createResponse(
+          response,
+          HttpStatus.BAD_REQUEST,
+          false,
+          ERROR_MESSAGES.INVALID_INPUT
+        );
+      }
+      const candidate = await this._candidateService.getCandidateProfile(candidateId);
+      if (!candidate) {
+        return createResponse(
+          response,
+          HttpStatus.NOT_FOUND,
+          false,
+          "Candidate not found",
+          // ERROR_MESSAGES.CANDIDATE_NOT_FOUND
+        );
+      }
+      return createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        CANDIDATE_SUCCESS_MESSAGE.CANDIDATE_PROFILE_FETCHED,
+        candidate
+      );
+    } catch (error) {
+      console.log("Error in getCandidateProfile", error);
+      errorResponse(response, error);
+    }
   }
 }

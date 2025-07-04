@@ -11,6 +11,7 @@ const candidateController=new CandidateController(candidateService)
 
 
 router.post('/setup',uploader.single('candidateAvatar'),candidateController.setupCandidateProfile.bind(candidateController))
+router.get('/profile/:id',candidateController.getCandidateProfile.bind(candidateController))
 
 
 

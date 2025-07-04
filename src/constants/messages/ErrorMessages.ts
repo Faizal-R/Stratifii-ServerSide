@@ -6,5 +6,4 @@ export enum ERROR_MESSAGES {
     NOT_FOUND = "The requested resource could not be found.",
     INVALID_INPUT = "The request contains invalid data.",
     PASSWORD_MISMATCH = "Passwords do not match. Please try again.",
-  
   }

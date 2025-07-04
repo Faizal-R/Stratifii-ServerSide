@@ -22,5 +22,6 @@ export enum AUTH_MESSAGES {
   INTERVIEWER_ALREADY_EXISTS = "This email is already associated with an existing company.",
   USER_NOT_VERIFIED = " Looks like your account isn’t verified yet. Please verify your account to continue.",
   VERIFICATION_CODE_SENT="A verification code has been sent to your email. Please use it to verify your account.",
+  
 
 }

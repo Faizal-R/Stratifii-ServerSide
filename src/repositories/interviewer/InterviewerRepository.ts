@@ -8,6 +8,6 @@ export class InterviewerRepository extends BaseRepository<IInterviewer> implemen
         super(Interviewer)
     }
    async findByEmail(email: string): Promise<IInterviewer | null> {
-        return Interviewer.findOne({email}).exec()
+        return await Interviewer.findOne({email}).exec()
     }
 }

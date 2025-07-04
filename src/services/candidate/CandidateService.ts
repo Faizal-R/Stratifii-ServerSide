@@ -58,4 +58,26 @@ export class CandidateService implements ICandidateService {
       );
     }
   }
+  async getCandidateProfile(candidateId: string): Promise<ICandidate | null> {
+    try {
+      const candidate = await this._candidateRepository.findById(candidateId);
+      if (!candidate) {
+        throw new CustomError(
+          "Candidate not found",
+          // ERROR_MESSAGES.CANDIDATE_NOT_FOUND,
+          HttpStatus.NOT_FOUND
+        );
+      }
+      return candidate;
+    } catch (error) {
+      console.log("error in getCandidateProfile", error);
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      throw new CustomError(
+        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
 }

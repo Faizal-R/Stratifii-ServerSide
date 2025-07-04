@@ -12,9 +12,15 @@ export enum COMPANY_SUCCESS_MESSAGES {
     CURRENT_PASSWORD_INCORRECT = "Your current password is invalid. Kindly re-enter the correct password",
     PASSWORD_CHANGED = "Password changed successfully.",
   }
+  export enum CANDIDATE_SUCCESS_MESSAGE{
+    
+    CANDIDATE_PROFILE_FETCHED = "Candidate profile fetched successfully",
+  }
   
   export enum ADMIN_SUCCESS_MESSAGES{
     ADMIN_USER_UPDATED = "Admin user updated successfully",
     ADMIN_USER_FETCHED = "Admin user fetched successfully",
   }
+
+
   

@@ -24,6 +24,7 @@ const extractDetailsFromPDF = async (filePath: string): Promise<ExtractedDetails
 
   const emails = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}/g) || [];
   const names = text.match(/[A-Z][a-z]+\s[A-Z][a-z]+/g) || [];
+  console.log("names", names);
 
   return {
     name: names[0] || '',
