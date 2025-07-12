@@ -16,11 +16,11 @@ import { storeRefreshToken } from "../../helper/handleRefreshToken";
 import { sendEmail } from "../../helper/EmailService";
 import { interviewerAccountRejectionHtml } from "../../helper/wrapHtml";
 import { inject, injectable } from "inversify";
-import { DI_REPOSITORIES, DI_SERVICES } from "../../di/types";
+import { DiRepositories, DiServices } from "../../di/types";
 
 @injectable()
 export class AdminService implements IAdminService {
-  constructor(@inject(DI_REPOSITORIES.ADMIN_REPOSITORY) private readonly _adminRepository: IAdminRepository) {}
+  constructor(@inject(DiRepositories.AdminRepository) private readonly _adminRepository: IAdminRepository) {}
   async getAllCompanies(status: string): Promise<ICompany[] | []> {
     try {
       const companies = await this._adminRepository.getAllCompanies(status);

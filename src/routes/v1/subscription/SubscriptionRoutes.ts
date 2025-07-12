@@ -3,11 +3,11 @@ import { Roles } from "../../../constants/roles";
 import { checkRole, verifyToken } from "../../../middlewares/Auth";
 import { resolve } from "../../../di";
 import { ISubscriptionController } from "../../../controllers/subscription/ISubscriptonController";
-import { DI_CONTROLLERS } from "../../../di/types";
+import { DiControllers } from "../../../di/types";
 const router = Router();
 
 const subscriptionPlanController = resolve<ISubscriptionController>(
-  DI_CONTROLLERS.SUBSCRIPTION_CONTROLLER
+DiControllers.SubscriptionController
 );
 
 router.post(

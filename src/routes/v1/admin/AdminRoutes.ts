@@ -3,11 +3,11 @@ const router = Router();
 import { checkRole, verifyToken } from "../../../middlewares/Auth";
 import { Roles } from "../../../constants/roles";
 import { resolve } from "../../../di";
-import { DI_CONTROLLERS } from "../../../di/types";
+import { DiControllers } from "../../../di/types";
 import { IAdminController } from "../../../controllers/admin/IAdminController";
 
 const adminController = resolve<IAdminController>(
-  DI_CONTROLLERS.ADMIN_CONTROLLER
+  DiControllers.AdminController
 );
 
 router.post("/signin", adminController.signin.bind(adminController));

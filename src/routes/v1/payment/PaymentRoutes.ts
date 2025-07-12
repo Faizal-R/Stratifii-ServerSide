@@ -5,12 +5,12 @@ import { verifyToken } from "../../../middlewares/Auth";
 
 import { resolve } from "../../../di";
 import { IPaymentTransactionController } from "../../../controllers/payment/IPaymentTransactionController";
-import { DI_CONTROLLERS } from "../../../di/types";
+import { DiControllers } from "../../../di/types";
 
 const router = Router();
 
 const paymentTransactionController = resolve<IPaymentTransactionController>(
-  DI_CONTROLLERS.PAYMENT_TRANSACTION_CONTROLLER
+ DiControllers.PaymentTransactionController
 );
 
 router.get(

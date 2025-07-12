@@ -1,5 +1,5 @@
-import container from "."
-import { DI_EXTERNAL_SERVICE, DI_SERVICES } from "./types"
+import container from ".";
+import { DiExternalService, DiServices } from "./types";
 import redis from "../config/RedisConfig";
 
 import { CandidateService } from "../services/candidate/CandidateService";
@@ -14,18 +14,17 @@ import { InterviewerService } from "../services/interviewer/InterviewerService";
 import { SlotService } from "../services/slot/SlotService";
 import Redis from "ioredis";
 
+// Bind services to container
+container.bind(DiServices.CandidateService).to(CandidateService).inSingletonScope();
+container.bind(DiServices.CompanyService).to(CompanyService).inSingletonScope();
+container.bind(DiServices.JobService).to(JobService).inSingletonScope();
+container.bind(DiServices.SubscriptionPlanService).to(SubscriptionPlanService).inSingletonScope();
+container.bind(DiServices.SubscriptionRecordService).to(SubscriptionRecordService).inSingletonScope();
+container.bind(DiServices.AdminService).to(AdminService).inSingletonScope();
+container.bind(DiServices.AuthService).to(AuthService).inSingletonScope();
+container.bind(DiServices.PaymentTransactionService).to(PaymentTransactionService).inSingletonScope();
+container.bind(DiServices.InterviewerService).to(InterviewerService).inSingletonScope();  
+container.bind(DiServices.SlotService).to(SlotService).inSingletonScope();
 
-container.bind(DI_SERVICES.CANDIDATE_SERVICE).to(CandidateService).inSingletonScope();
-container.bind(DI_SERVICES.COMPANY_SERVICE).to(CompanyService).inSingletonScope();
-container.bind(DI_SERVICES.JOB_SERVICE).to(JobService).inSingletonScope();
-container.bind(DI_SERVICES.SUBSCRIPTION_PLAN_SERVICE).to(SubscriptionPlanService).inSingletonScope();
-container.bind(DI_SERVICES.SUBSCRIPTION_RECORD_SERVICE).to(SubscriptionRecordService).inSingletonScope();
-container.bind(DI_SERVICES.ADMIN_SERVICE).to(AdminService).inSingletonScope();
-container.bind(DI_SERVICES.AUTH_SERVICE).to(AuthService).inSingletonScope();
-container.bind(DI_SERVICES.PAYMENT_TRANSACTION_SERVICE).to(PaymentTransactionService).inSingletonScope();
-container.bind(DI_SERVICES.INTERVIEWER_SERVICE).to(InterviewerService).inSingletonScope();  
-container.bind(DI_SERVICES.SLOT_SERVICE).to(SlotService).inSingletonScope();
-
-//External Service
-
-container.bind<Redis>(DI_EXTERNAL_SERVICE.REDIS).toConstantValue(redis)
+// External service
+container.bind<Redis>(DiExternalService.Redis).toConstantValue(redis);

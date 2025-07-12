@@ -5,10 +5,10 @@ import { checkBlockedUser } from "../../../middlewares/checkBlockedUser";
 import { uploader } from "../../../middlewares/multer";
 
 import { resolve } from "../../../di";
-import { DI_CONTROLLERS } from "../../../di/types";
+import { DiControllers } from "../../../di/types";
 import { IAuthController } from "../../../controllers/auth/IAuthController";
 
-const authController = resolve<IAuthController>(DI_CONTROLLERS.AUTH_CONTROLLER);
+const authController = resolve<IAuthController>(DiControllers.AuthController);
 
 router.post(
   "/signin",

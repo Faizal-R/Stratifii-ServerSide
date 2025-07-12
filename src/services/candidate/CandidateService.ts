@@ -10,12 +10,12 @@ import { ICandidateRepository } from "../../repositories/candidate/ICandidateRep
 import { comparePassword, hashPassword } from "../../utils/hash";
 import { ICandidateService } from "./ICandidateService";
 import jwt from "jsonwebtoken";
-import { DI_REPOSITORIES } from "../../di/types";
+import { DiRepositories } from "../../di/types";
 
 @injectable()
 export class CandidateService implements ICandidateService {
   constructor(
-    @inject(DI_REPOSITORIES.CANDIDATE_REPOSITORY)
+    @inject(DiRepositories.CandidateRepository)
     private readonly _candidateRepository: ICandidateRepository
   ) {}
   async setupCandiateProfile(

@@ -8,14 +8,14 @@ import { ADMIN_SUCCESS_MESSAGES } from "../../constants/messages/AdminMessages";
 import { Roles } from "../../constants/roles";
 import { COOKIE_OPTIONS } from "../../config/CookieConfig";
 import { inject, injectable } from "inversify";
-import { DI_SERVICES } from "../../di/types";
+import { DiServices } from "../../di/types";
 import { adminLoginSchema } from "../../validations/AdminValidation";
 import { ZodError } from "zod";
 
 @injectable()
 export class AdminController implements IAdminController {
   constructor(
-    @inject(DI_SERVICES.ADMIN_SERVICE)
+    @inject(DiServices.AdminService)
     private readonly _adminService: IAdminService
   ) {}
   async signin(request: Request, response: Response): Promise<void> {

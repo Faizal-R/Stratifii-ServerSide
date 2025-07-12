@@ -45,24 +45,28 @@ import { ISubscriptionRecordRepository } from "../../repositories/subscription/s
 import { ISubscriptionPlanService } from "../subscription/subscription-plan/ISubscriptionPlanService";
 import { ISubscriptionRecord } from "../../models/subscription/SubscriptionRecord";
 import { inject, injectable } from "inversify";
-import { DI_REPOSITORIES } from "../../di/types";
+import { DiRepositories } from "../../di/types";
 
 type UserType = ICompany | IInterviewer | ICandidate;
 
 @injectable()
 export class AuthService implements IAuthService {
-  constructor(
-    @inject(DI_REPOSITORIES.INTERVIEWER_REPOSITORY)
-    private readonly _interviewerRepository: IInterviewerRepository,
-    @inject(DI_REPOSITORIES.CANDIDATE_REPOSITORY)
-    private readonly _candidateRepository: ICandidateRepository,
-    @inject(DI_REPOSITORIES.COMPANY_REPOSITORY)
-    private readonly _companyRepository: ICompanyRepository,
-    @inject(DI_REPOSITORIES.AUTH_REPOSITORY)
-    private readonly _otpRepository: IOtpRepository,
-    @inject(DI_REPOSITORIES.SUBSCRIPTION_RECORD_REPOSITORY)
-    private readonly _subscriptionRecord: ISubscriptionRecordRepository
-  ) {}
+constructor(
+  @inject(DiRepositories.InterviewerRepository)
+  private readonly _interviewerRepository: IInterviewerRepository,
+
+  @inject(DiRepositories.CandidateRepository)
+  private readonly _candidateRepository: ICandidateRepository,
+
+  @inject(DiRepositories.CompanyRepository)
+  private readonly _companyRepository: ICompanyRepository,
+
+  @inject(DiRepositories.AuthRepository)
+  private readonly _otpRepository: IOtpRepository,
+
+  @inject(DiRepositories.SubscriptionRecordRepository)
+  private readonly _subscriptionRecord: ISubscriptionRecordRepository
+) {}
 
   async login(
     role: Roles,

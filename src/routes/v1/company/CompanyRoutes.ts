@@ -5,19 +5,19 @@ import { uploader } from "../../../middlewares/multer";
 import { ensureActiveSubscription } from "../../../middlewares/subscriptionExpiry";
 import { resolve } from "../../../di";
 import { ICompanyController } from "../../../controllers/company/ICompanyController";
-import { DI_CONTROLLERS } from "../../../di/types";
+import { DiControllers } from "../../../di/types";
 import { IJobController } from "../../../controllers/job/IJobController";
 import { ISubscriptionController } from "../../../controllers/subscription/ISubscriptonController";
 const router = Router();
 
 const companyController = resolve<ICompanyController>(
-  DI_CONTROLLERS.COMPANY_CONTROLLER
+  DiControllers.CompanyController
 );
 
-const jobController = resolve<IJobController>(DI_CONTROLLERS.JOB_CONTROLLER);
+const jobController = resolve<IJobController>(DiControllers.JobController);
 
 const subscriptionController = resolve<ISubscriptionController>(
-  DI_CONTROLLERS.SUBSCRIPTION_CONTROLLER
+  DiControllers.SubscriptionController
 );
 
 //company profile

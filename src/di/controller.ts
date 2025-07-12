@@ -1,6 +1,7 @@
-// import container from "./index";
-import { DI_CONTROLLERS } from "./types";
 import container from ".";
+import { DiControllers } from "./types";
+
+// Controller classes
 import { AuthController } from "../controllers/auth/AuthController";
 import { AdminController } from "../controllers/admin/AdminController";
 import { CompanyController } from "../controllers/company/CompanyController";
@@ -10,14 +11,22 @@ import { PaymentTransactionController } from "../controllers/payment/PaymentTran
 import { CandidateController } from "../controllers/candidate/CandidateController";
 import { SubscriptionController } from "../controllers/subscription/SubscriptionController";
 
+// Interfaces
+import { IAuthController } from "../controllers/auth/IAuthController";
 import { IAdminController } from "../controllers/admin/IAdminController";
+import { ICompanyController } from "../controllers/company/ICompanyController";
+import { IJobController } from "../controllers/job/IJobController";
+import { IInterviewerController } from "../controllers/interviewer/IInterviewerController";
+import { IPaymentTransactionController } from "../controllers/payment/IPaymentTransactionController";
+import { ICandidateController } from "../controllers/candidate/ICandidateController";
+import { ISubscriptionController } from "../controllers/subscription/ISubscriptonController";
 
-
-container.bind(DI_CONTROLLERS.AUTH_CONTROLLER).to(AuthController)
-container.bind<IAdminController>(DI_CONTROLLERS.ADMIN_CONTROLLER).to(AdminController)
-container.bind(DI_CONTROLLERS.COMPANY_CONTROLLER).to(CompanyController)
-container.bind(DI_CONTROLLERS.JOB_CONTROLLER).to(JobController)
-container.bind(DI_CONTROLLERS.INTERVIEWER_CONTROLLER).to(InterviewerController)
-container.bind(DI_CONTROLLERS.PAYMENT_TRANSACTION_CONTROLLER).to(PaymentTransactionController)
-container.bind(DI_CONTROLLERS.CANDIDATE_CONTROLLER).to(CandidateController)
-container.bind(DI_CONTROLLERS.SUBSCRIPTION_CONTROLLER).to(SubscriptionController)
+// Bind controllers with interfaces
+container.bind<IAuthController>(DiControllers.AuthController).to(AuthController);
+container.bind<IAdminController>(DiControllers.AdminController).to(AdminController);
+container.bind<ICompanyController>(DiControllers.CompanyController).to(CompanyController);
+container.bind<IJobController>(DiControllers.JobController).to(JobController);
+container.bind<IInterviewerController>(DiControllers.InterviewerController).to(InterviewerController);
+container.bind<IPaymentTransactionController>(DiControllers.PaymentTransactionController).to(PaymentTransactionController);
+container.bind<ICandidateController>(DiControllers.CandidateController).to(CandidateController);
+container.bind<ISubscriptionController>(DiControllers.SubscriptionController).to(SubscriptionController);

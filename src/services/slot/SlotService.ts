@@ -4,16 +4,18 @@ import { ISlotGenerationRepository } from "../../repositories/slot/slotGeneratio
 import { ISlotService } from "./ISlotService";
 import { IInterviewSlot } from "../../models/slot/interviewSlot"; // Assuming you have this interface
 import { inject, injectable } from "inversify";
-import { DI_REPOSITORIES } from "../../di/types";
+import { DiRepositories } from "../../di/types";
 
 @injectable()
 export class SlotService implements ISlotService {
-  constructor(
-    @inject(DI_REPOSITORIES.SLOT_GENERATION_REPOSITORY)
-    private readonly _slotGenerationRepository: ISlotGenerationRepository,
-    @inject(DI_REPOSITORIES.INTERVIEW_SLOT_REPOSITORY)
-    private readonly _interviewSlotRepository: IInterviewSlotRepository
-  ) {}
+constructor(
+  @inject(DiRepositories.SlotGenerationRepository)
+  private readonly _slotGenerationRepository: ISlotGenerationRepository,
+
+  @inject(DiRepositories.InterviewSlotRepository)
+  private readonly _interviewSlotRepository: IInterviewSlotRepository
+) {}
+
 
   // Step 1: Create a rule and generate slots based on it
   async createRuleAndGenerateSlots(

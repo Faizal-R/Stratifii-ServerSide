@@ -18,7 +18,7 @@ import { IDelegatedCandidateRepository } from "../../repositories/candidate/cand
 import { ICandidateRepository } from "../../repositories/candidate/ICandidateRepository";
 import { ICompanyRepository } from "../../repositories/company/ICompanyRepository";
 import { inject, injectable } from "inversify";
-import { DI_REPOSITORIES } from "../../di/types";
+import { DiRepositories } from "../../di/types";
 
 export interface IPaymentVerificationDetails {
   razorpay_order_id: string;
@@ -30,13 +30,23 @@ export interface IPaymentVerificationDetails {
 }
 @injectable()
 export class PaymentTransactionService implements IPaymentTransactionService {
-  constructor(
-  @inject(DI_REPOSITORIES.PAYMENT_TRANSACTION_REPOSITORY)  private readonly _paymentTransactionRepository: IPaymentTransactionRepository,
-  @inject(DI_REPOSITORIES.JOB_REPOSITORY)  private readonly _jobRepository: IJobRepository,
-  @inject(DI_REPOSITORIES.DELEGATED_CANDIDATE_REPOSITORY)  private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository,
-  @inject(DI_REPOSITORIES.CANDIDATE_REPOSITORY)  private readonly _candidateRepository: ICandidateRepository,
-  @inject(DI_REPOSITORIES.COMPANY_REPOSITORY)  private readonly _companyRepository: ICompanyRepository
-  ) {}
+constructor(
+  @inject(DiRepositories.PaymentTransactionRepository)
+  private readonly _paymentTransactionRepository: IPaymentTransactionRepository,
+
+  @inject(DiRepositories.JobRepository)
+  private readonly _jobRepository: IJobRepository,
+
+  @inject(DiRepositories.DelegatedCandidateRepository)
+  private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository,
+
+  @inject(DiRepositories.CandidateRepository)
+  private readonly _candidateRepository: ICandidateRepository,
+
+  @inject(DiRepositories.CompanyRepository)
+  private readonly _companyRepository: ICompanyRepository
+) {}
+
   calculatePayment(candidatesCount: number): ICalculatePaymentResponse {
     const pricePerInterview = PaymentConfig.RATE_PER_CANDIDATE;
     const subTotal = candidatesCount * pricePerInterview;

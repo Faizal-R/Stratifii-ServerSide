@@ -9,12 +9,12 @@ import { uploadOnCloudinary } from "../../helper/cloudinary";
 import { comparePassword, hashPassword } from "../../utils/hash";
 import { USER_COMMON_MESSAGES } from "../../constants/messages/UserProfileMessages";
 import { inject, injectable } from "inversify";
-import { DI_REPOSITORIES } from "../../di/types";
+import { DiRepositories } from "../../di/types";
 
 @injectable()
 export class CompanyService implements ICompanyService {
   constructor(
-    @inject(DI_REPOSITORIES.COMPANY_REPOSITORY)
+    @inject(DiRepositories.CompanyRepository)
     private _companyRepository: ICompanyRepository
   ) {}
 

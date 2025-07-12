@@ -4,11 +4,11 @@ import { checkBlockedUser } from "../../../middlewares/checkBlockedUser";
 import { Roles } from "../../../constants/roles";
 import { resolve } from "../../../di";
 import { IInterviewerController } from "../../../controllers/interviewer/IInterviewerController";
-import { DI_CONTROLLERS } from "../../../di/types";
+import { DiControllers } from "../../../di/types";
 const router = Router();
 
 const interviewerController = resolve<IInterviewerController>(
-  DI_CONTROLLERS.INTERVIEWER_CONTROLLER
+ DiControllers.InterviewerController
 );
 
 router.get(

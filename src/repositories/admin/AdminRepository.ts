@@ -8,7 +8,7 @@ import { BaseRepository } from "../base/BaseRepository";
 import { ICompanyRepository } from "../company/ICompanyRepository";
 import { IInterviewerRepository } from "../interviewer/IInterviewerRepository";
 import { IAdminRepository } from "./IAdminRepository";
-import { DI_REPOSITORIES } from "../../di/types";
+import { DiRepositories } from "../../di/types";
 
 @injectable()
 export class AdminRepository
@@ -16,8 +16,8 @@ export class AdminRepository
   implements IAdminRepository
 {
   constructor(
-  @inject(DI_REPOSITORIES.COMPANY_REPOSITORY)  private _companyRepository: ICompanyRepository,
-  @inject(DI_REPOSITORIES.INTERVIEWER_REPOSITORY)  private _interviewerRepository: IInterviewerRepository
+  @inject(DiRepositories.CompanyRepository)  private _companyRepository: ICompanyRepository,
+  @inject(DiRepositories.InterviewerRepository)  private _interviewerRepository: IInterviewerRepository
   ) {
     super(Admin);
   }

@@ -2,13 +2,13 @@
 import { Redis } from 'ioredis';
 import { IOtpRepository } from './IOtpRepository';
 import { inject, injectable } from 'inversify';
-import { DI_EXTERNAL_SERVICE } from '../../di/types';
+import { DiExternalService } from '../../di/types';
 
 @injectable()
 export class OtpRepository implements IOtpRepository {
   private readonly keyPrefix: string = 'otp:';
   constructor(
-    @inject(DI_EXTERNAL_SERVICE.REDIS)
+    @inject(DiExternalService.Redis)
     private readonly redisClient: Redis,
 
   ) {}

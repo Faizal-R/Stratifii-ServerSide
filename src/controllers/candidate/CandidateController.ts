@@ -12,11 +12,11 @@ import  { ERROR_MESSAGES}from "../../constants/messages//ErrorMessages"
 // import {PAYMENT_MESSAGES} from "../../constants/messages/PaymentAndSubscriptionMessages"
 import { CANDIDATE_SUCCESS_MESSAGE } from "../../constants/messages/UserProfileMessages";
 import { inject, injectable } from "inversify";
-import { DI_SERVICES } from "../../di/types";
+import { DiServices } from "../../di/types";
 
 @injectable()
 export class CandidateController implements ICandidateController {
-  constructor(@inject(DI_SERVICES.CANDIDATE_SERVICE) private readonly _candidateService: ICandidateService) {}
+  constructor(@inject(DiServices.CandidateService) private readonly _candidateService: ICandidateService) {}
   async setupCandidateProfile(
     request: Request,
     response: Response

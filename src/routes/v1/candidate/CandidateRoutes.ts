@@ -3,11 +3,11 @@ import { Router } from "express";
 import { uploader } from "../../../middlewares/multer";
 import { resolve } from "../../../di";
 import { ICandidateController } from "../../../controllers/candidate/ICandidateController";
-import { DI_CONTROLLERS } from "../../../di/types";
+import { DiControllers } from "../../../di/types";
 const router = Router();
 
 const candidateController = resolve<ICandidateController>(
-  DI_CONTROLLERS.CANDIDATE_CONTROLLER
+  DiControllers.CandidateController
 );
 
 router.post(

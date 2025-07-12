@@ -19,11 +19,11 @@ import {
 import { VALIDATION_MESSAGES } from "../../constants/messages/ValidationMessages";
 import { INTERVIEWER__SUCCESS_MESSAGES } from "../../constants/messages/UserProfileMessages";
 import { inject, injectable } from "inversify";
-import { DI_SERVICES } from "../../di/types";
+import { DiServices } from "../../di/types";
 @injectable()
 export class AuthController implements IAuthController {
   constructor(
-    @inject(DI_SERVICES.AUTH_SERVICE)
+    @inject(DiServices.AuthService)
     private readonly _authService: IAuthService
   ) {}
 

@@ -10,18 +10,21 @@ import { ICandidateRepository } from "../../repositories/candidate/ICandidateRep
 import { Types } from "mongoose";
 import { IDelegatedCandidateRepository } from "../../repositories/candidate/candidateDelegation/IDelegatedCandidateRepository";
 import { inject, injectable } from "inversify";
-import { DI_REPOSITORIES } from "../../di/types";
+import { DiRepositories } from "../../di/types";
 
 injectable();
 export class JobService implements IJobService {
-  constructor(
-    @inject(DI_REPOSITORIES.JOB_REPOSITORY)
-    private readonly _jobRepository: IJobRepository,
-    @inject(DI_REPOSITORIES.CANDIDATE_REPOSITORY)
-    private readonly _candidateRepository: ICandidateRepository,
-    @inject(DI_REPOSITORIES.DELEGATED_CANDIDATE_REPOSITORY)
-    private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository
-  ) {}
+constructor(
+  @inject(DiRepositories.JobRepository)
+  private readonly _jobRepository: IJobRepository,
+
+  @inject(DiRepositories.CandidateRepository)
+  private readonly _candidateRepository: ICandidateRepository,
+
+  @inject(DiRepositories.DelegatedCandidateRepository)
+  private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository
+) {}
+
 
   getJobById(jobId: string): Promise<IJob | null> {
     throw new Error("Method not implemented.");

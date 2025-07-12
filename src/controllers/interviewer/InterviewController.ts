@@ -18,14 +18,15 @@ import { COOKIE_OPTIONS } from "../../config/CookieConfig";
 import { ISlotService } from "../../services/slot/ISlotService";
 import { IInterviewSlot } from "../../models/slot/interviewSlot";
 import { inject, injectable } from "inversify";
-import { DI_SERVICES } from "../../di/types";
+import { DiServices } from "../../di/types";
 
 @injectable()
 export class InterviewerController implements IInterviewerController {
   constructor(
-    @inject(DI_SERVICES.INTERVIEWER_SERVICE)
+    @inject(DiServices.InterviewerService)
     private readonly _interviewerService: IInterviewerService,
-   @inject(DI_SERVICES.SLOT_SERVICE) private readonly _slotService: ISlotService
+    @inject(DiServices.SlotService)
+    private readonly _slotService: ISlotService
   ) {}
 
   async getInterviewerProfile(request: Request, response: Response) {

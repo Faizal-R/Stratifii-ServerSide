@@ -12,16 +12,18 @@ import mongoose, { Types } from "mongoose";
 import { ICompanyRepository } from "../../../repositories/company/ICompanyRepository";
 import { ISubscriptionRecord } from "../../../models/subscription/SubscriptionRecord";
 import { inject, injectable } from "inversify";
-import { DI_REPOSITORIES } from "../../../di/types";
+import { DiRepositories } from "../../../di/types";
 
 injectable();
 export class SubscriptionRecordService implements ISubscriptionRecordService {
   constructor(
-    @inject(DI_REPOSITORIES.SUBSCRIPTION_RECORD_REPOSITORY)
-    private readonly _subscriptionRepository: ISubscriptionRecordRepository,
-    @inject(DI_REPOSITORIES.COMPANY_REPOSITORY)
-    private readonly _companyRepository: ICompanyRepository
-  ) {}
+  @inject(DiRepositories.SubscriptionRecordRepository)
+  private readonly _subscriptionRepository: ISubscriptionRecordRepository,
+
+  @inject(DiRepositories.CompanyRepository)
+  private readonly _companyRepository: ICompanyRepository
+) {}
+
   async createPaymentOrder(amount: number): Promise<Orders.RazorpayOrder> {
     try {
       const options = {
