@@ -1,29 +1,14 @@
 import { Router } from "express";
-import { InterviewerRepository } from "../../../repositories/interviewer/InterviewerRepository";
-import { CandidateRepository } from "../../../repositories/candidate/CandidateRepository";
-import { CompanyRepository } from "../../../repositories/company/CompanyRepository";
-import { AuthService } from "../../../services/auth/AuthService";
-import { AuthController } from "../../../controllers/auth/AuthController";
-import { OtpRepository } from "../../../repositories/auth/OtpRepository";
 
 const router = Router();
-import redis from "../../../config/RedisConfig";
 import { checkBlockedUser } from "../../../middlewares/checkBlockedUser";
 import { uploader } from "../../../middlewares/multer";
 
-const interviwerRepository = new InterviewerRepository();
-const candidateRepository = new CandidateRepository();
-const companyRepository = new CompanyRepository();
-const otpRepository = new OtpRepository(redis);
+import { resolve } from "../../../di";
+import { DI_CONTROLLERS } from "../../../di/types";
+import { IAuthController } from "../../../controllers/auth/IAuthController";
 
-const authService = new AuthService(
-  interviwerRepository,
-  candidateRepository,
-  companyRepository,
-  otpRepository
-);
-
-const authController = new AuthController(authService);
+const authController = resolve<IAuthController>(DI_CONTROLLERS.AUTH_CONTROLLER);
 
 router.post(
   "/signin",
@@ -74,6 +59,6 @@ router.post(
   authController.refreshAccessToken.bind(authController)
 );
 
-router.post('/signout',authController.signout.bind(authController))
+router.post("/signout", authController.signout.bind(authController));
 
 export default router;

@@ -10,12 +10,16 @@ import { ISubscriptionPlan } from "../../../models/subscription/SubscriptionPlan
 import crypto from "crypto";
 import mongoose, { Types } from "mongoose";
 import { ICompanyRepository } from "../../../repositories/company/ICompanyRepository";
-import { Type } from "typescript";
 import { ISubscriptionRecord } from "../../../models/subscription/SubscriptionRecord";
+import { inject, injectable } from "inversify";
+import { DI_REPOSITORIES } from "../../../di/types";
 
+injectable();
 export class SubscriptionRecordService implements ISubscriptionRecordService {
   constructor(
+    @inject(DI_REPOSITORIES.SUBSCRIPTION_RECORD_REPOSITORY)
     private readonly _subscriptionRepository: ISubscriptionRecordRepository,
+    @inject(DI_REPOSITORIES.COMPANY_REPOSITORY)
     private readonly _companyRepository: ICompanyRepository
   ) {}
   async createPaymentOrder(amount: number): Promise<Orders.RazorpayOrder> {
@@ -113,7 +117,11 @@ export class SubscriptionRecordService implements ISubscriptionRecordService {
       );
     }
   }
-  getSubscriptionRecordDetails(companyId: string): Promise<ISubscriptionRecord | null> {
-   return this._subscriptionRepository.getSubscriptionRecordDetailsByCompanyId(companyId)  
+  getSubscriptionRecordDetails(
+    companyId: string
+  ): Promise<ISubscriptionRecord | null> {
+    return this._subscriptionRepository.getSubscriptionRecordDetailsByCompanyId(
+      companyId
+    );
   }
 }

@@ -4,13 +4,14 @@ import {
   IGoogleInterviewer,
   IInterviewer,
 } from "../../models/interviewer/Interviewer";
+import { ISubscriptionRecord } from "../../models/subscription/SubscriptionRecord";
 type IUser = ICompany | ICandidate | IInterviewer;
 export interface IAuthService {
   login(
     email: string,
     password: string,
     role: string
-  ): Promise<{ accessToken: string; refreshToken: string; user: IUser }>;
+  ): Promise<{ accessToken: string; refreshToken: string; user: IUser ,subscriptionDetails?:ISubscriptionRecord|null}>;
 
   registerCompany(company: ICompany): Promise<ICompany>;
 

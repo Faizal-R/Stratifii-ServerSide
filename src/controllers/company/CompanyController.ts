@@ -5,9 +5,12 @@ import { createResponse, errorResponse } from "../../helper/responseHandler";
 import { HttpStatus } from "../../config/HttpStatusCodes";
 import { COMPANY_SUCCESS_MESSAGES, USER_COMMON_MESSAGES } from "../../constants/messages/UserProfileMessages";
 import { CompanyProfileSchema } from "../../validations/CompanyValidations";
+import { inject, injectable } from "inversify";
+import { DI_SERVICES } from "../../di/types";
 
+@injectable()
 export class CompanyController implements ICompanyController {
-  constructor(private readonly _companyService: ICompanyService) {}
+  constructor(@inject(DI_SERVICES.COMPANY_SERVICE) private readonly _companyService: ICompanyService) {}
 
   async getCompanyById(request: Request, response: Response) {
     try {

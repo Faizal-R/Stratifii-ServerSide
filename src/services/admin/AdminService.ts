@@ -13,10 +13,15 @@ import { ICompany } from "../../models/company/Company";
 import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 import { IInterviewer } from "../../models/interviewer/Interviewer";
 import { storeRefreshToken } from "../../helper/handleRefreshToken";
+import { sendEmail } from "../../helper/EmailService";
+import { interviewerAccountRejectionHtml } from "../../helper/wrapHtml";
+import { inject, injectable } from "inversify";
+import { DI_REPOSITORIES, DI_SERVICES } from "../../di/types";
 
+@injectable()
 export class AdminService implements IAdminService {
-  constructor(private readonly _adminRepository: IAdminRepository) {}
-  async getAllCompanies(status:string): Promise<ICompany[] | []> {
+  constructor(@inject(DI_REPOSITORIES.ADMIN_REPOSITORY) private readonly _adminRepository: IAdminRepository) {}
+  async getAllCompanies(status: string): Promise<ICompany[] | []> {
     try {
       const companies = await this._adminRepository.getAllCompanies(status);
       return companies;
@@ -27,13 +32,15 @@ export class AdminService implements IAdminService {
       );
     }
   }
-  async getAllInterivewers(status:string): Promise<IInterviewer[] | []> {
+  async getAllInterivewers(status: string): Promise<IInterviewer[] | []> {
     try {
-      console.log(status)
-      const interviewers = await this._adminRepository.getAllInterviewers(status);
+      console.log(status);
+      const interviewers = await this._adminRepository.getAllInterviewers(
+        status
+      );
       return interviewers;
     } catch (error) {
-      console.log(error)
+      console.log(error);
       throw new CustomError(
         ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
         HttpStatus.INTERNAL_SERVER_ERROR
@@ -51,20 +58,17 @@ export class AdminService implements IAdminService {
       console.log(admin?.password, password);
       console.log(isPassMatch);
       if (!admin || !isPassMatch) {
-        throw new CustomError(
-          " or password",
-          HttpStatus.BAD_REQUEST
-        );
+        throw new CustomError("Incorrect Email or password", HttpStatus.BAD_REQUEST);
       }
-      const accessToken = await generateAccessToken(
-        {userId:admin._id as string,
-       role: Roles.ADMIN}
-      );
-      const refreshToken = await generateRefreshToken(
-        {userId:admin._id as string,
-        role:Roles.ADMIN}
-      );
-      await storeRefreshToken(admin._id as string,refreshToken)
+      const accessToken = await generateAccessToken({
+        userId: admin._id as string,
+        role: Roles.ADMIN,
+      });
+      const refreshToken = await generateRefreshToken({
+        userId: admin._id as string,
+        role: Roles.ADMIN,
+      });
+      await storeRefreshToken(admin._id as string, refreshToken);
       return { accessToken, refreshToken };
     } catch (error) {
       console.log(error);
@@ -78,37 +82,11 @@ export class AdminService implements IAdminService {
     }
   }
 
-  async updateCompanyStatus(companyId: string): Promise<ICompany|null> {
+  async updateCompanyStatus(companyId: string): Promise<ICompany | null> {
     try {
-     let updatedCompany= await this._adminRepository.updateCompanyStatus(companyId);
-     return updatedCompany;
-    } catch (error) {
-      if (error instanceof CustomError) throw error;
-      throw new CustomError(
-        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
-        HttpStatus.INTERNAL_SERVER_ERROR
+      let updatedCompany = await this._adminRepository.updateCompanyStatus(
+        companyId
       );
-    }
-  }
-  async updateInterviewerStatus(interviewerId: string): Promise<IInterviewer|null> {
-    try {
-     let updatedInviewer= await this._adminRepository.updateInterviewerStatus(interviewerId);
-     return updatedInviewer;
-    } catch (error) {
-      if (error instanceof CustomError) throw error;
-      throw new CustomError(
-        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
-
-   async handleCompanyVerification(
-    companyId: string,
-    isApproved: boolean
-  ): Promise<ICompany | null> {
-    try {
-       const updatedCompany=await this._adminRepository.updateCompanyVerificationStatus(companyId,isApproved)
       return updatedCompany;
     } catch (error) {
       if (error instanceof CustomError) throw error;
@@ -118,12 +96,66 @@ export class AdminService implements IAdminService {
       );
     }
   }
-   async handleInterviewerVerification(
-    interviewerId: string,
-    isApproved: boolean
+  async updateInterviewerStatus(
+    interviewerId: string
   ): Promise<IInterviewer | null> {
     try {
-       const updatedInterviewer=await this._adminRepository.updateInterviewerVerificationStatus(interviewerId,isApproved)
+      let updatedInviewer = await this._adminRepository.updateInterviewerStatus(
+        interviewerId
+      );
+      return updatedInviewer;
+    } catch (error) {
+      if (error instanceof CustomError) throw error;
+      throw new CustomError(
+        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async handleCompanyVerification(
+    companyId: string,
+    isApproved: boolean
+  ): Promise<ICompany | null> {
+    try {
+      const updatedCompany =
+        await this._adminRepository.updateCompanyVerificationStatus(
+          companyId,
+          isApproved
+        );
+      return updatedCompany;
+    } catch (error) {
+      if (error instanceof CustomError) throw error;
+      throw new CustomError(
+        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+  async handleInterviewerVerification(
+    interviewerId: string,
+    isApproved: boolean,
+    interviewerName: string,
+    interviewerEmail: string,
+    reasonForRejection?: string
+  ): Promise<IInterviewer | null> {
+    try {
+      const updatedInterviewer =
+        await this._adminRepository.updateInterviewerVerificationStatus(
+          interviewerId,
+          isApproved
+        );
+      if (!isApproved) {
+        const htmlContent = interviewerAccountRejectionHtml(
+          interviewerName,
+          reasonForRejection
+        );
+        await sendEmail(
+          interviewerEmail,
+          htmlContent,
+          "Account Verification Status"
+        );
+      }
       return updatedInterviewer;
     } catch (error) {
       if (error instanceof CustomError) throw error;

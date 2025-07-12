@@ -8,6 +8,7 @@ export interface IAdminController {
   updateCompanyStatus(request: Request, response: Response): Promise<void>;
 
   getAllInterviewers(request: Request, response: Response): Promise<void>;
+  updateInterviewerStatus(request:Request,response:Response):Promise<void>
 
   updateCompanyVerificationStatus(
     request: Request,

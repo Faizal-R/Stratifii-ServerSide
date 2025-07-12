@@ -18,14 +18,19 @@ import {
 } from "../../helper/handleRefreshToken";
 import { VALIDATION_MESSAGES } from "../../constants/messages/ValidationMessages";
 import { INTERVIEWER__SUCCESS_MESSAGES } from "../../constants/messages/UserProfileMessages";
-
+import { inject, injectable } from "inversify";
+import { DI_SERVICES } from "../../di/types";
+@injectable()
 export class AuthController implements IAuthController {
-  constructor(private readonly _authService: IAuthService) { }
+  constructor(
+    @inject(DI_SERVICES.AUTH_SERVICE)
+    private readonly _authService: IAuthService
+  ) {}
 
   async login(request: Request, response: Response): Promise<void> {
     try {
       const { role, email, password } = request.body;
-      console.log(request.body)
+      console.log(request.body);
 
       // Validate request body
       if (!role || !email || !password) {
@@ -48,15 +53,16 @@ export class AuthController implements IAuthController {
       }
 
       // Authenticate user
-      const { accessToken, refreshToken, user } = await this._authService.login(
-        role,
-        email,
-        password
-      );
+      const {
+        accessToken,
+        refreshToken,
+        user,
+        subscriptionDetails: subscription,
+      } = await this._authService.login(role, email, password);
 
       // Set refresh token as an HTTP-only cookie
       response.cookie(`${role}RefreshToken`, refreshToken, COOKIE_OPTIONS);
-      console.log
+      console.log;
       // Send success response
       return createResponse(
         response,
@@ -66,6 +72,7 @@ export class AuthController implements IAuthController {
         {
           accessToken,
           user,
+          subscription,
         }
       );
     } catch (error) {
@@ -97,7 +104,7 @@ export class AuthController implements IAuthController {
   async registerInterviewer(request: Request, response: Response) {
     try {
       const interviewer: IInterviewer = JSON.parse(request.body.data);
-      
+
       const newInterviewer = await this._authService.registerInterviewer(
         interviewer,
         request.file
@@ -110,7 +117,7 @@ export class AuthController implements IAuthController {
         newInterviewer
       );
     } catch (error) {
-      console.log(error)
+      console.log(error);
       if (error instanceof Error)
         createResponse(
           response,
@@ -129,7 +136,7 @@ export class AuthController implements IAuthController {
     const { interviewer, interviewerId } = JSON.parse(request.body.data);
     const resume = request.file as Express.Multer.File;
     console.log("resumeRequest", request.file);
-   
+
     try {
       const { accessToken, refreshToken, setupedInterviewer } =
         await this._authService.setupInterviewerAccount(
@@ -137,7 +144,11 @@ export class AuthController implements IAuthController {
           interviewer,
           resume
         );
-      response.cookie(`${Roles.INTERVIEWER}RefreshToken`, refreshToken, COOKIE_OPTIONS);
+      response.cookie(
+        `${Roles.INTERVIEWER}RefreshToken`,
+        refreshToken,
+        COOKIE_OPTIONS
+      );
       createResponse(
         response,
         HttpStatus.OK,
@@ -206,8 +217,12 @@ export class AuthController implements IAuthController {
           { user }
         );
       }
-      
-      response.cookie(`${Roles.INTERVIEWER}RefreshToken`, refreshToken, COOKIE_OPTIONS);
+
+      response.cookie(
+        `${Roles.INTERVIEWER}RefreshToken`,
+        refreshToken,
+        COOKIE_OPTIONS
+      );
 
       return createResponse(
         response,
@@ -294,17 +309,18 @@ export class AuthController implements IAuthController {
 
   async refreshAccessToken(request: Request, response: Response) {
     try {
-      const incomingRole=request.body.role
+      const incomingRole = request.body.role;
 
-      const incomingRefreshToken = request.cookies[`${incomingRole}RefreshToken`];
-      console.log(request.cookies)
+      const incomingRefreshToken =
+        request.cookies[`${incomingRole}RefreshToken`];
+      console.log(request.cookies);
       if (!incomingRefreshToken) {
         throw new CustomError(
           ERROR_MESSAGES.INVALID_INPUT,
           HttpStatus.UNAUTHORIZED
         );
       }
-      const { userId,role } = (await jwt.verify(
+      const { userId, role } = (await jwt.verify(
         incomingRefreshToken,
         process.env.REFRESH_TOKEN_SECRET as string
       )) as TokenPayload;

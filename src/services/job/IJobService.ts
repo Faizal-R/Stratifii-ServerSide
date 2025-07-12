@@ -1,5 +1,5 @@
 import { Multer } from "multer";
-import { ICandidateJob, IJob } from "../../models/job/Job";
+import {  IJob } from "../../models/job/Job";
 import { Types } from "mongoose";
 import { ICandidate } from "../../models/candidate/Candidate";
 
@@ -10,9 +10,9 @@ export interface IJobService {
   updateJob(job: IJob): Promise<IJob | null>;
   deleteJob(jobId: string): Promise<boolean>;
   createCandidatesFromResumesAndAddToJob(
-    jobId: string,
+    jobId: Types.ObjectId,
     resumes: Express.Multer.File[],
     companyId: Types.ObjectId
-  ): Promise<ICandidateJob[]>;
-  getCandidatesByJobId(jobId: string): Promise<ICandidateJob[] | []>;
+  ): Promise<Types.ObjectId[]>;
+  getCandidatesByJobId(jobId: string): Promise<any[] | []>;
 }

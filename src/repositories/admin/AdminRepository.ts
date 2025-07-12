@@ -1,3 +1,5 @@
+import { inject, injectable } from "inversify";
+import { HttpStatus } from "../../config/HttpStatusCodes";
 import { CustomError } from "../../error/CustomError";
 import Admin, { IAdmin } from "../../models/admin/Admin";
 import { ICompany } from "../../models/company/Company";
@@ -6,14 +8,16 @@ import { BaseRepository } from "../base/BaseRepository";
 import { ICompanyRepository } from "../company/ICompanyRepository";
 import { IInterviewerRepository } from "../interviewer/IInterviewerRepository";
 import { IAdminRepository } from "./IAdminRepository";
+import { DI_REPOSITORIES } from "../../di/types";
 
+@injectable()
 export class AdminRepository
   extends BaseRepository<IAdmin>
   implements IAdminRepository
 {
   constructor(
-    private _companyRepository: ICompanyRepository,
-    private _interviewerRepository: IInterviewerRepository
+  @inject(DI_REPOSITORIES.COMPANY_REPOSITORY)  private _companyRepository: ICompanyRepository,
+  @inject(DI_REPOSITORIES.INTERVIEWER_REPOSITORY)  private _interviewerRepository: IInterviewerRepository
   ) {
     super(Admin);
   }
@@ -67,7 +71,7 @@ export class AdminRepository
     try {
       const existingInterviewer = await this._interviewerRepository.findById(interviewerId);
       if (!existingInterviewer) {
-         throw new CustomError("Interviewer not found", 404);
+         throw new CustomError("Interviewer not found", HttpStatus.NOT_FOUND);
        
       }
       const updatedInterviewer = await this._interviewerRepository.update(

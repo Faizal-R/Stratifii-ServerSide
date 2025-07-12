@@ -1,21 +1,23 @@
 import { Router } from "express";
-import { CandidateService } from "../../../services/candidate/CandidateService";
-import { CandidateRepository } from "../../../repositories/candidate/CandidateRepository";
-import { CandidateController } from "../../../controllers/candidate/CandidateController";
+
 import { uploader } from "../../../middlewares/multer";
-const router=Router()
+import { resolve } from "../../../di";
+import { ICandidateController } from "../../../controllers/candidate/ICandidateController";
+import { DI_CONTROLLERS } from "../../../di/types";
+const router = Router();
 
-const candidateRepository=new CandidateRepository();
-const candidateService=new CandidateService(candidateRepository)
-const candidateController=new CandidateController(candidateService)
+const candidateController = resolve<ICandidateController>(
+  DI_CONTROLLERS.CANDIDATE_CONTROLLER
+);
 
+router.post(
+  "/setup",
+  uploader.single("candidateAvatar"),
+  candidateController.setupCandidateProfile.bind(candidateController)
+);
+router.get(
+  "/profile/:id",
+  candidateController.getCandidateProfile.bind(candidateController)
+);
 
-router.post('/setup',uploader.single('candidateAvatar'),candidateController.setupCandidateProfile.bind(candidateController))
-router.get('/profile/:id',candidateController.getCandidateProfile.bind(candidateController))
-
-
-
-
-
-
-export default router
+export default router;

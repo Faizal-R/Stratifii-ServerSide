@@ -14,9 +14,13 @@ import { Roles } from "../../constants/roles";
 import { storeRefreshToken } from "../../helper/handleRefreshToken";
 import { comparePassword, hashPassword } from "../../utils/hash";
 import { USER_COMMON_MESSAGES } from "../../constants/messages/UserProfileMessages";
+import { inject, injectable } from "inversify";
+import { DI_REPOSITORIES } from "../../di/types";
 
+@injectable()
 export class InterviewerService implements IInterviewerService {
   constructor(
+    @inject(DI_REPOSITORIES.INTERVIEWER_REPOSITORY)
     private readonly _interviewerRepository: IInterviewerRepository
   ) {}
   async getInterviewerById(

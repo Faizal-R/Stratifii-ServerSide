@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
 import { sendEmail } from "./EmailService";
 import { createPasswordHtml } from "./wrapHtml";
-import { generateAccessToken } from "./generateTokens";
 import { ICandidate } from "../models/candidate/Candidate";
 import { Roles } from "../constants/roles";
 import { ICompany } from "../models/company/Company";
@@ -9,7 +8,7 @@ import redis from "../config/RedisConfig";
 
 import { config } from "dotenv";
 config({ path: "src/.env" }) // Load environment variables from .env file
-export const sendCreatePasswordEmail = async (candidates: ICandidate[]) => {
+export const sendCreatePasswordEmail = async (candidates: ICandidate[],companyName:string) => {
   const html = `<div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
 
   <h2 style="color: #0b5ed7;">Action Required - Complete Your Account Setup for Your Interview Process</h2>
@@ -73,7 +72,7 @@ export const sendCreatePasswordEmail = async (candidates: ICandidate[]) => {
      
     const html = createPasswordHtml(
       candidate.name,
-      (candidate.companyId as ICompany).companyName,
+    companyName,
       link
     );
     await sendEmail(

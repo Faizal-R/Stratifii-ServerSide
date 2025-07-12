@@ -1,39 +1,36 @@
-
 import { Router } from "express";
-import { SubscriptionPlanRepository } from "../../../repositories/subscription/subscription-plan/SubscriptionPlanRepository";
-import { SubscriptionPlanService } from "../../../services/subscription/subscription-plan/SubscriptionPlanService";
-import { SubscriptionController } from "../../../controllers/subscription/SubscriptionController";
 import { Roles } from "../../../constants/roles";
 import { checkRole, verifyToken } from "../../../middlewares/Auth";
+import { resolve } from "../../../di";
+import { ISubscriptionController } from "../../../controllers/subscription/ISubscriptonController";
+import { DI_CONTROLLERS } from "../../../di/types";
 const router = Router();
-const subscriptionPlanRepository = new SubscriptionPlanRepository();
-const subscriptionPlanService = new SubscriptionPlanService(
-  subscriptionPlanRepository
-);
-const subscriptionPlanController = new SubscriptionController(
-  subscriptionPlanService
-);
 
+const subscriptionPlanController = resolve<ISubscriptionController>(
+  DI_CONTROLLERS.SUBSCRIPTION_CONTROLLER
+);
 
 router.post(
-    "/",
-    verifyToken,
-    checkRole([Roles.ADMIN]),
-    subscriptionPlanController.createSubscription.bind(subscriptionPlanController)
-  );
-  
-  router.get(
-    "/",
-    verifyToken,
-    checkRole([Roles.ADMIN,Roles.COMPANY]),
-    subscriptionPlanController.getAllSubscriptions.bind(subscriptionPlanController)
-  );
-  
-  router.put(
-    "/:subscriptionId",
-    verifyToken,
-    checkRole([Roles.ADMIN]),
-    subscriptionPlanController.updateSubscription.bind(subscriptionPlanController)
-  );
+  "/",
+  verifyToken,
+  checkRole([Roles.ADMIN]),
+  subscriptionPlanController.createSubscription.bind(subscriptionPlanController)
+);
 
-  export default router
+router.get(
+  "/",
+  verifyToken,
+  checkRole([Roles.ADMIN, Roles.COMPANY]),
+  subscriptionPlanController.getAllSubscriptions.bind(
+    subscriptionPlanController
+  )
+);
+
+router.put(
+  "/:subscriptionId",
+  verifyToken,
+  checkRole([Roles.ADMIN]),
+  subscriptionPlanController.updateSubscription.bind(subscriptionPlanController)
+);
+
+export default router;

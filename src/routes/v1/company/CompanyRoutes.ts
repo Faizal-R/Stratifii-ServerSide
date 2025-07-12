@@ -1,53 +1,23 @@
 import { Router } from "express";
-import { CompanyRepository } from "../../../repositories/company/CompanyRepository";
-import { CompanyService } from "../../../services/company/CompanySerive";
-import { CompanyController } from "../../../controllers/company/CompanyController";
+
 import { checkRole, verifyToken } from "../../../middlewares/Auth";
-import { checkBlockedUser } from "../../../middlewares/checkBlockedUser";
-import { JobRepository } from "../../../repositories/job/JobRepository";
-import { JobService } from "../../../services/job/JobService";
-import { JobController } from "../../../controllers/job/JobController";
-import { Roles } from "../../../constants/roles";
 import { uploader } from "../../../middlewares/multer";
-import Interviewer, {
-  IInterviewer,
-} from "../../../models/interviewer/Interviewer";
-import { Candidate, Company } from "../../../models";
-import { ICompany } from "../../../models/company/Company";
-import { createResponse } from "../../../helper/responseHandler";
-import { SubscriptionRecordRepository } from "../../../repositories/subscription/subscription-record/SubscriptionRecordRepository";
-import { SubscriptionRecordService } from "../../../services/subscription/subscription-record/SubscriptionRecordService";
-import { SubscriptionController } from "../../../controllers/subscription/SubscriptionController";
-import { ISubscriptionPlanService } from "../../../services/subscription/subscription-plan/ISubscriptionPlanService";
-import { SubscriptionPlanRepository } from "../../../repositories/subscription/subscription-plan/SubscriptionPlanRepository";
-import { SubscriptionPlanService } from "../../../services/subscription/subscription-plan/SubscriptionPlanService";
-import { CandidateRepository } from "../../../repositories/candidate/CandidateRepository";
 import { ensureActiveSubscription } from "../../../middlewares/subscriptionExpiry";
+import { resolve } from "../../../di";
+import { ICompanyController } from "../../../controllers/company/ICompanyController";
+import { DI_CONTROLLERS } from "../../../di/types";
+import { IJobController } from "../../../controllers/job/IJobController";
+import { ISubscriptionController } from "../../../controllers/subscription/ISubscriptonController";
 const router = Router();
 
-const companyRepository = new CompanyRepository();
-const companyService = new CompanyService(companyRepository);
-const companyController = new CompanyController(companyService);
-
-const jobRespository = new JobRepository();
-const candidateRepository = new CandidateRepository();
-const jobService = new JobService(jobRespository, candidateRepository);
-const jobController = new JobController(jobService);
-
-const subscriptionRepository = new SubscriptionRecordRepository();
-const subscriptionService = new SubscriptionRecordService(
-  subscriptionRepository,
-  companyRepository
+const companyController = resolve<ICompanyController>(
+  DI_CONTROLLERS.COMPANY_CONTROLLER
 );
 
-const subscriptionPlanRepository = new SubscriptionPlanRepository();
-const subscriptionPlanService = new SubscriptionPlanService(
-  subscriptionPlanRepository
-);
+const jobController = resolve<IJobController>(DI_CONTROLLERS.JOB_CONTROLLER);
 
-const subscriptionController = new SubscriptionController(
-  subscriptionPlanService,
-  subscriptionService
+const subscriptionController = resolve<ISubscriptionController>(
+  DI_CONTROLLERS.SUBSCRIPTION_CONTROLLER
 );
 
 //company profile
@@ -73,7 +43,11 @@ router.get(
 
   jobController.getAllJobs.bind(jobController)
 );
-router.post("/jobs",ensureActiveSubscription, jobController.createJob.bind(jobController));
+router.post(
+  "/jobs",
+  ensureActiveSubscription,
+  jobController.createJob.bind(jobController)
+);
 router.put(
   "/jobs",
 
@@ -110,8 +84,10 @@ router.post(
   subscriptionController.subscriptionPaymentVerificationAndCreateSubscriptionRecord.bind(
     subscriptionController
   )
-
 );
-router.get('/subscription/plan',subscriptionController.getSubscriptionPlanDetails.bind(subscriptionController))
+router.get(
+  "/subscription/plan",
+  subscriptionController.getSubscriptionPlanDetails.bind(subscriptionController)
+);
 
 export default router;

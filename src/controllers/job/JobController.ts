@@ -6,9 +6,12 @@ import { HttpStatus } from "../../config/HttpStatusCodes";
 import { JOB_SUCCESS_MESSAGES } from "../../constants/messages";
 import { IJobController } from "./IJobController";
 import mongoose from "mongoose";
+import { inject, injectable } from "inversify";
+import { DI_SERVICES } from "../../di/types";
 
+@injectable()
 export class JobController implements IJobController {
-  constructor(private readonly _jobService: IJobService) {}
+  constructor(@inject(DI_SERVICES.JOB_SERVICE) private readonly _jobService: IJobService) {}
   getJobById(request: Request, response: Response): Promise<void> {
     throw new Error("Method not implemented.");
   }
@@ -88,11 +91,12 @@ export class JobController implements IJobController {
     request: Request,
     response: Response
   ): Promise<void> {
-    const { jobId } = request.params;
-    console.log(jobId, request.params);
+    const { jobId:SJobId } = request.params;
+    console.log(SJobId, request.params);
     const resumes = request.files as Express.Multer.File[];
     try {
       const companyId = new mongoose.Types.ObjectId(request.user?.userId);
+      const jobId=new mongoose.Types.ObjectId(SJobId)
       console.log(resumes);
       const candidates =
         await this._jobService.createCandidatesFromResumesAndAddToJob(

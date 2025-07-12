@@ -2,7 +2,9 @@ import { ICompany } from "../../models/company/Company";
 import { Company } from "../../models";
 import { BaseRepository } from "../base/BaseRepository";
 import { ICompanyRepository } from "./ICompanyRepository";
+import { injectable } from "inversify";
 
+@injectable()
 export class CompanyRepository extends BaseRepository<ICompany> implements ICompanyRepository{
     constructor(){
         super(Company)

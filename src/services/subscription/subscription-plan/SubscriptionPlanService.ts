@@ -1,12 +1,16 @@
+import { inject, injectable } from "inversify";
 import { HttpStatus } from "../../../config/HttpStatusCodes";
 import { ERROR_MESSAGES } from "../../../constants/messages/ErrorMessages";
 import { CustomError } from "../../../error/CustomError";
 import { ISubscriptionPlan } from "../../../models/subscription/SubscriptionPlan";
 import { ISubscriptionPlanRepository } from "../../../repositories/subscription/subscription-plan/ISubscriptionPlanRepository";
 import { ISubscriptionPlanService } from "./ISubscriptionPlanService";
+import { DI_REPOSITORIES } from "../../../di/types";
 
+@injectable()
 export class SubscriptionPlanService implements ISubscriptionPlanService {
   constructor(
+    @inject(DI_REPOSITORIES.SUBSCRIPTION_PLAN_REPOSITORY)
     private readonly _subscriptionPlanRepository: ISubscriptionPlanRepository
   ) {}
 

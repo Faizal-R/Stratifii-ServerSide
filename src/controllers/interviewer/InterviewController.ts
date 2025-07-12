@@ -17,9 +17,16 @@ import { Roles } from "../../constants/roles";
 import { COOKIE_OPTIONS } from "../../config/CookieConfig";
 import { ISlotService } from "../../services/slot/ISlotService";
 import { IInterviewSlot } from "../../models/slot/interviewSlot";
+import { inject, injectable } from "inversify";
+import { DI_SERVICES } from "../../di/types";
 
-export class InterviewController implements IInterviewerController {
-  constructor(private readonly _interviewerService: IInterviewerService,private readonly _slotService:ISlotService) {}
+@injectable()
+export class InterviewerController implements IInterviewerController {
+  constructor(
+    @inject(DI_SERVICES.INTERVIEWER_SERVICE)
+    private readonly _interviewerService: IInterviewerService,
+   @inject(DI_SERVICES.SLOT_SERVICE) private readonly _slotService: ISlotService
+  ) {}
 
   async getInterviewerProfile(request: Request, response: Response) {
     try {
@@ -90,12 +97,17 @@ export class InterviewController implements IInterviewerController {
       errorResponse(response, error);
     }
   }
- async generateSlots(request: Request, response: Response): Promise<void> {
+  async generateSlots(request: Request, response: Response): Promise<void> {
     try {
       const ruleData = request.body;
-      console.log(request.body)
+      console.log(request.body);
       const interviewerId = request.user?.userId;
-      const slots = await this._slotService.createRuleAndGenerateSlots({...ruleData,interviewerId,duration:ruleData.slotDuration,buffer:ruleData.bufferRate});
+      const slots = await this._slotService.createRuleAndGenerateSlots({
+        ...ruleData,
+        interviewerId,
+        duration: ruleData.slotDuration,
+        buffer: ruleData.bufferRate,
+      });
       return createResponse(
         response,
         HttpStatus.OK,
@@ -109,28 +121,26 @@ export class InterviewController implements IInterviewerController {
       return errorResponse(response, error);
     }
   }
-  async getSlotsByInterviewerId(request: Request, response: Response): Promise<void> {
-  const interviewerId = request.params.id;
-  try {
-    const slots= await this._slotService.getSlotsByInterviewerId(interviewerId)
-       
-         return createResponse(
-           response,
-           HttpStatus.OK,
-           true,
-           "Slots fetched successfully",
-          //  INTERVIEWER__SUCCESS_MESSAGES.SLOTS_FETCHED,
-           slots
-         );
-    
-  } catch (error) {
-    
-    return errorResponse(response, error);
-  }
-      
-      
+  async getSlotsByInterviewerId(
+    request: Request,
+    response: Response
+  ): Promise<void> {
+    const interviewerId = request.params.id;
+    try {
+      const slots = await this._slotService.getSlotsByInterviewerId(
+        interviewerId
+      );
 
-      
+      return createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        "Slots fetched successfully",
+        //  INTERVIEWER__SUCCESS_MESSAGES.SLOTS_FETCHED,
+        slots
+      );
+    } catch (error) {
+      return errorResponse(response, error);
+    }
   }
-
 }

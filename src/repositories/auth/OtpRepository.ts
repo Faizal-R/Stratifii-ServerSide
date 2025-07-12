@@ -1,14 +1,17 @@
 
 import { Redis } from 'ioredis';
 import { IOtpRepository } from './IOtpRepository';
+import { inject, injectable } from 'inversify';
+import { DI_EXTERNAL_SERVICE } from '../../di/types';
 
+@injectable()
 export class OtpRepository implements IOtpRepository {
-  private readonly redisClient: Redis;
   private readonly keyPrefix: string = 'otp:';
-  
-  constructor(redisClient: Redis) {
-    this.redisClient = redisClient;
-  }
+  constructor(
+    @inject(DI_EXTERNAL_SERVICE.REDIS)
+    private readonly redisClient: Redis,
+
+  ) {}
   
   /**
    * Generate a Redis key for storing OTP by userId

@@ -21,6 +21,8 @@ const AdminSchema: Schema = new Schema({
     timestamps: true
 });
 
+
+
 const Admin = mongoose.model<IAdmin>('Admin', AdminSchema);
 export default Admin;
 

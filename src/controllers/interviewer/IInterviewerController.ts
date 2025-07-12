@@ -5,5 +5,6 @@ export interface IInterviewerController{
     updateInterviewerProfile(request: Request, response: Response): Promise<void>;
     changePassword(request: Request, response: Response): Promise<void>;
     getSlotsByInterviewerId(request: Request, response: Response): Promise<void>;
+    generateSlots(request: Request, response: Response): Promise<void>;
     
 }

@@ -3,20 +3,21 @@ import { IAdminService } from "../../services/admin/IAdminService";
 import { IAdminController } from "./IAdminController";
 import { Request, Response } from "express";
 import { HttpStatus } from "../../config/HttpStatusCodes";
-import z from "zod";
-import { AUTH_MESSAGES } from "../../constants/messages/AuthMessages";
+
 import { ADMIN_SUCCESS_MESSAGES } from "../../constants/messages/AdminMessages";
 import { Roles } from "../../constants/roles";
 import { COOKIE_OPTIONS } from "../../config/CookieConfig";
-import { storeRefreshToken } from "../../helper/handleRefreshToken";
+import { inject, injectable } from "inversify";
+import { DI_SERVICES } from "../../di/types";
+import { adminLoginSchema } from "../../validations/AdminValidation";
+import { ZodError } from "zod";
 
-const adminLoginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1, "Password is required"),
-});
-
+@injectable()
 export class AdminController implements IAdminController {
-  constructor(private readonly _adminService: IAdminService) {}
+  constructor(
+    @inject(DI_SERVICES.ADMIN_SERVICE)
+    private readonly _adminService: IAdminService
+  ) {}
   async signin(request: Request, response: Response): Promise<void> {
     try {
       const { email, password } = request.body;
@@ -42,7 +43,7 @@ export class AdminController implements IAdminController {
         accessToken
       );
     } catch (error) {
-      if (error instanceof z.ZodError) {
+      if (error instanceof ZodError) {
         return createResponse(
           response,
           HttpStatus.BAD_REQUEST,
@@ -169,7 +170,12 @@ export class AdminController implements IAdminController {
     response: Response
   ): Promise<void> {
     const { interviewerId } = request.params;
-    const { isApproved } = request.body;
+    const {
+      isApproved,
+      interviewerName,
+      interviewerEmail,
+      reasonForRejection,
+    } = request.body;
     if (!interviewerId) {
       return createResponse(
         response,
@@ -183,7 +189,10 @@ export class AdminController implements IAdminController {
       const updatedInterviewer =
         await this._adminService.handleInterviewerVerification(
           interviewerId,
-          isApproved
+          isApproved,
+          interviewerName,
+          interviewerEmail,
+          reasonForRejection
         );
       return createResponse(
         response,

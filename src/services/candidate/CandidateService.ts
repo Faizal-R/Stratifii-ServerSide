@@ -1,3 +1,4 @@
+import { inject, injectable } from "inversify";
 import { HttpStatus } from "../../config/HttpStatusCodes";
 import redis from "../../config/RedisConfig";
 import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
@@ -9,26 +10,33 @@ import { ICandidateRepository } from "../../repositories/candidate/ICandidateRep
 import { comparePassword, hashPassword } from "../../utils/hash";
 import { ICandidateService } from "./ICandidateService";
 import jwt from "jsonwebtoken";
+import { DI_REPOSITORIES } from "../../di/types";
 
+@injectable()
 export class CandidateService implements ICandidateService {
-  constructor(private readonly _candidateRepository: ICandidateRepository) {}
+  constructor(
+    @inject(DI_REPOSITORIES.CANDIDATE_REPOSITORY)
+    private readonly _candidateRepository: ICandidateRepository
+  ) {}
   async setupCandiateProfile(
     avatar: Express.Multer.File,
     password: string,
     token: string
   ): Promise<ICandidate | null> {
     try {
+      console.log("Line Number 21 in CandidateService.ts");
+      console.log(token === process.env.ACCESS_TOKEN_SECRET);
       const decoded = jwt.verify(
         token,
         process.env.ACCESS_TOKEN_SECRET as string
       ) as TokenPayload;
-      console.log("decoded",decoded)
+      console.log("decoded", decoded);
       const userId = decoded.userId;
-       console.log("userId",userId)
+      console.log("userId", userId);
       const storedToken = await redis.get(`createPasswordToken:${userId}`);
 
-       console.log("storedToken",storedToken)
-        
+      console.log("storedToken", storedToken);
+
       if (!storedToken || storedToken !== token) {
         throw new CustomError(
           "Invalid or expired token",
@@ -36,19 +44,19 @@ export class CandidateService implements ICandidateService {
         );
       }
       const hashedPassword = await hashPassword(password);
-      console.log("hashedPassword",hashedPassword)
+      console.log("hashedPassword", hashedPassword);
       const avatarUrl = await uploadOnCloudinary(avatar.path);
-       console.log("avatarUrl",avatarUrl)
+      console.log("avatarUrl", avatarUrl);
 
       const candidate = await this._candidateRepository.update(userId, {
         password: hashedPassword,
         avatar: avatarUrl,
       });
-      console.log("candidate",candidate)
+      console.log("candidate", candidate);
 
       return candidate;
     } catch (error) {
-      console.log(error)
+      console.log(error);
       if (error instanceof CustomError) {
         throw error;
       }

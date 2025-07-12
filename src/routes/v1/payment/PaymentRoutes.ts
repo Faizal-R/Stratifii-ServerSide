@@ -2,21 +2,15 @@ import { Router } from "express";
 
 import { checkBlockedUser } from "../../../middlewares/checkBlockedUser";
 import { verifyToken } from "../../../middlewares/Auth";
-import { PaymentTransactionRepository } from "../../../repositories/payment/PaymentTransaction";
-import { PaymentTransactionService } from "../../../services/payment/PaymentTransactionService";
-import { PaymentTransactionController } from "../../../controllers/payment/PaymentTransactionController";
-import { JobRepository } from "../../../repositories/job/JobRepository";
+
+import { resolve } from "../../../di";
+import { IPaymentTransactionController } from "../../../controllers/payment/IPaymentTransactionController";
+import { DI_CONTROLLERS } from "../../../di/types";
 
 const router = Router();
 
-const paymentTransactionRepository = new PaymentTransactionRepository();
-const jobRespository = new JobRepository();
-const paymentTransactionService = new PaymentTransactionService(
-  paymentTransactionRepository,
-  jobRespository
-);
-const paymentTransactionController = new PaymentTransactionController(
-  paymentTransactionService
+const paymentTransactionController = resolve<IPaymentTransactionController>(
+  DI_CONTROLLERS.PAYMENT_TRANSACTION_CONTROLLER
 );
 
 router.get(

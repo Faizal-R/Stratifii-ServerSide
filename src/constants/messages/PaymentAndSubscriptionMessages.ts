@@ -14,9 +14,10 @@ export enum SUBSCRIPTION_SUCCESS_MESSAGES {
   }
   
   
-  export enum PAYMENT_SUCCESS_MESSAGES  {
+  export enum PAYMENT_MESSAGES{
     PAYMENT_CALCULATED = "Payment calculated successfully",
     PAYMENT_ORDER_CREATED = "Payment order created successfully",
     PAYMENT_VERIFIED_AND_PAYMENT_RECORDED = "Payment verified and recorded successfully",
+    PAYMENT_VERIFICATION_FAILED="Payment Verification Failed ",
   };
   

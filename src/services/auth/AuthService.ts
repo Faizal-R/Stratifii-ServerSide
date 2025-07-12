@@ -41,22 +41,39 @@ import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 import { VALIDATION_MESSAGES } from "../../constants/messages/ValidationMessages";
 import { getUserByRoleAndEmail } from "../../helper/getUserByRoleAndEmail";
 import { uploadOnCloudinary } from "../../helper/cloudinary";
+import { ISubscriptionRecordRepository } from "../../repositories/subscription/subscription-record/ISubscriptionRecordRepository";
+import { ISubscriptionPlanService } from "../subscription/subscription-plan/ISubscriptionPlanService";
+import { ISubscriptionRecord } from "../../models/subscription/SubscriptionRecord";
+import { inject, injectable } from "inversify";
+import { DI_REPOSITORIES } from "../../di/types";
 
 type UserType = ICompany | IInterviewer | ICandidate;
 
+@injectable()
 export class AuthService implements IAuthService {
   constructor(
+    @inject(DI_REPOSITORIES.INTERVIEWER_REPOSITORY)
     private readonly _interviewerRepository: IInterviewerRepository,
+    @inject(DI_REPOSITORIES.CANDIDATE_REPOSITORY)
     private readonly _candidateRepository: ICandidateRepository,
+    @inject(DI_REPOSITORIES.COMPANY_REPOSITORY)
     private readonly _companyRepository: ICompanyRepository,
-    private readonly _otpRepository: IOtpRepository
+    @inject(DI_REPOSITORIES.AUTH_REPOSITORY)
+    private readonly _otpRepository: IOtpRepository,
+    @inject(DI_REPOSITORIES.SUBSCRIPTION_RECORD_REPOSITORY)
+    private readonly _subscriptionRecord: ISubscriptionRecordRepository
   ) {}
 
   async login(
     role: Roles,
     email: string,
     password: string
-  ): Promise<{ accessToken: string; refreshToken: string; user: UserType }> {
+  ): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    user: UserType;
+    subscriptionDetails?: ISubscriptionRecord | null;
+  }> {
     let user: UserType | null | undefined;
 
     switch (role) {
@@ -109,7 +126,17 @@ export class AuthService implements IAuthService {
     });
 
     await storeRefreshToken(user._id as string, refreshToken);
-    return { accessToken, refreshToken, user };
+
+    let subscriptionDetails: ISubscriptionRecord | null = null;
+
+    if (role == Roles.COMPANY) {
+      subscriptionDetails =
+        await this._subscriptionRecord.getSubscriptionRecordDetailsByCompanyId(
+          user._id as string
+        );
+    }
+
+    return { accessToken, refreshToken, user, subscriptionDetails };
   }
 
   async sendVerificationCode(email: string) {
@@ -230,7 +257,7 @@ export class AuthService implements IAuthService {
         name: findedInterviewer?.name,
         password: hashedPassword,
         resume: resumeUrl,
-      } 
+      }
     );
     if (!setupedInterviewer) {
       throw new CustomError(

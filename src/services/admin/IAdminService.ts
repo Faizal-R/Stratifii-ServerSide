@@ -11,6 +11,6 @@ export interface IAdminService{
     updateInterviewerStatus(interviewerId:string):Promise<IInterviewer|null>
 
     handleCompanyVerification(companyId:string,isApproved:boolean): Promise<ICompany|null>
-    handleInterviewerVerification(interviewerId:string,isApproved:boolean): Promise<IInterviewer|null>
+    handleInterviewerVerification(interviewerId:string,isApproved:boolean,interviewerName:string,interviewerEmail:string,reasonForRejection?:string): Promise<IInterviewer|null>
     
 }  

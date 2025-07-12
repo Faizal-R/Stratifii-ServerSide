@@ -1,27 +1,14 @@
 import { Router } from "express";
 const router = Router();
-import { AdminController } from "../../../controllers/admin/AdminController";
-import { AdminService } from "../../../services/admin/AdminService";
-import { AdminRepository } from "../../../repositories/admin/AdminRepository";
-import { CompanyRepository } from "../../../repositories/company/CompanyRepository";
-import { InterviewerRepository } from "../../../repositories/interviewer/InterviewerRepository";
 import { checkRole, verifyToken } from "../../../middlewares/Auth";
 import { Roles } from "../../../constants/roles";
-import { SubscriptionPlanRepository } from "../../../repositories/subscription/subscription-plan/SubscriptionPlanRepository";
-import { SubscriptionPlanService } from "../../../services/subscription/subscription-plan/SubscriptionPlanService";
-import { SubscriptionController } from "../../../controllers/subscription/SubscriptionController";
+import { resolve } from "../../../di";
+import { DI_CONTROLLERS } from "../../../di/types";
+import { IAdminController } from "../../../controllers/admin/IAdminController";
 
-const companyRepository = new CompanyRepository();
-const interviewerRepository = new InterviewerRepository();
-
-const adminRepository = new AdminRepository(
-  companyRepository,
-  interviewerRepository
+const adminController = resolve<IAdminController>(
+  DI_CONTROLLERS.ADMIN_CONTROLLER
 );
-const adminService = new AdminService(adminRepository);
-const adminController = new AdminController(adminService);
-
-
 
 router.post("/signin", adminController.signin.bind(adminController));
 
@@ -66,7 +53,5 @@ router.patch(
 );
 
 //admin Subscription plan routes
-
-
 
 export default router;
