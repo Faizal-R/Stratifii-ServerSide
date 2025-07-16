@@ -5,14 +5,16 @@ import { ICompanyRepository } from "./ICompanyRepository";
 import { injectable } from "inversify";
 
 @injectable()
-export class CompanyRepository extends BaseRepository<ICompany> implements ICompanyRepository{
-    constructor(){
-        super(Company)
-    }
+export class CompanyRepository
+  extends BaseRepository<ICompany>
+  implements ICompanyRepository
+{
+  constructor() {
+    super(Company);
+  }
 
-   async findByEmail(email: string): Promise<ICompany | null> {
-        const company=await Company.findOne({email}).exec()
-        return company || null
-    }
-
+  async findByEmail(email: string): Promise<ICompany | null> {
+    const company = await Company.findOne({ email }).exec();
+    return company || null;
+  }
 }

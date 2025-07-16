@@ -6,6 +6,7 @@ import './di/inversify.config'
 import app from "./app";
 import connectDB from "./config/Database";
 import dotenv from "dotenv";
+import { logger } from "./config/logger";
 
 
 dotenv.config({ path: "src/.env" }); 
@@ -19,7 +20,7 @@ const startServer = async () => {
     await connectDB();
 
     server = app.listen(PORT, () => {
-      console.log(`🚀 Server running at http://localhost:${PORT}`);
+      logger.info(`🚀 Server running at http://localhost:${PORT}`);
     });
   } catch (error) {
     console.error("❌ Server failed to start:", error);

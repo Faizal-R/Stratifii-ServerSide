@@ -11,12 +11,18 @@ import { comparePassword, hashPassword } from "../../utils/hash";
 import { ICandidateService } from "./ICandidateService";
 import jwt from "jsonwebtoken";
 import { DiRepositories } from "../../di/types";
+import { IDelegatedCandidate } from "../../models/candidate/DelegatedCandidate";
+import { IDelegatedCandidateRepository } from "../../repositories/candidate/candidateDelegation/IDelegatedCandidateRepository";
+import { IJob } from "../../models/job/Job";
+import { ICompany } from "../../models/company/Company";
 
 @injectable()
 export class CandidateService implements ICandidateService {
   constructor(
     @inject(DiRepositories.CandidateRepository)
-    private readonly _candidateRepository: ICandidateRepository
+    private readonly _candidateRepository: ICandidateRepository,
+    @inject(DiRepositories.DelegatedCandidateRepository)
+    private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository
   ) {}
   async setupCandiateProfile(
     avatar: Express.Multer.File,
@@ -88,4 +94,42 @@ export class CandidateService implements ICandidateService {
       );
     }
   }
+
+  async getDelegatedJobs(candidateId: string): Promise<
+    {
+      delegatedCandidateId: string;
+      jobId: string;
+      jobTitle: string;
+      companyName: string;
+      mockStatus: string;
+    }[]
+  > {
+    console.log(candidateId)
+    const delegations =
+      await this._delegatedCandidateRepository.getDelegatedJobsByCandidateId(
+        candidateId
+      );
+     console.log(delegations)
+    if (!delegations || delegations.length === 0) {
+      throw new CustomError("No Delegations Found", HttpStatus.BAD_REQUEST);
+    }
+   
+    const response = delegations.map((dc) => {
+      const job = dc.job as IJob;
+      const company = dc.company as ICompany;
+
+      return {
+        delegatedCandidateId: dc._id as string,
+        jobId: job._id as string,
+        jobTitle: job.position,
+        companyName: company.companyName,
+        mockStatus: dc.status,
+        isQualifiedForFinal:dc.isQualifiedForFinal
+      };
+    });
+
+    return response;
+  }
+
+  
 }

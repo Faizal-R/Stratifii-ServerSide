@@ -24,6 +24,7 @@ export enum DiServices {
   PaymentTransactionService = "PaymentService",
   InterviewerService = "InterviewerService",
   SlotService = "SlotService",
+  InterviewService="InterviewService"
 }
 
 export enum DiControllers {

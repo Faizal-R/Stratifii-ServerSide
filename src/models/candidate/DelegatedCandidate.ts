@@ -1,14 +1,17 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
 import { ICandidate } from "./Candidate";
+import { ICompany } from "../company/Company";
+import { IJob } from "../job/Job";
 
 export interface IDelegatedCandidate extends Document {
-  candidate: Types.ObjectId|ICandidate;
-  company: Types.ObjectId;
-  job: Types.ObjectId;
+  candidate: Types.ObjectId | ICandidate;
+  company: Types.ObjectId | ICompany;
+  job: Types.ObjectId | IJob;
   status:
     | "mock_pending"
     | "mock_started"
     | "mock_completed"
+    | "mock_failed"
     | "shortlisted"
     | "final_scheduled"
     | "final_completed"
@@ -17,6 +20,12 @@ export interface IDelegatedCandidate extends Document {
   scheduledTime?: Date;
   interviewTimeZone?: string;
   feedback?: string;
+  aiMockResult?: {
+    totalQuestions: number;
+    correctAnswers: number;
+    scoreInPercentage: number;
+  };
+  isQualifiedForFinal?: boolean;
 }
 
 const DelegatedCandidateSchema: Schema = new Schema(
@@ -42,6 +51,7 @@ const DelegatedCandidateSchema: Schema = new Schema(
         "mock_pending",
         "mock_started",
         "mock_completed",
+        "mock_failed",
         "shortlisted",
         "final_scheduled",
         "final_completed",
@@ -49,6 +59,22 @@ const DelegatedCandidateSchema: Schema = new Schema(
       ],
       default: "mock_pending",
     },
+    isQualifiedForFinal: {
+      type: Boolean,
+      default: false,
+    },
+
+    aiMockResult: {
+      type: new Schema(
+        {
+          totalQuestions: { type: Number, required: true },
+          correctAnswers: { type: Number, required: true },
+          scoreInPercentage: { type: Number, required: true },
+        },
+        { _id: false }
+      ),
+    },
+
     assignedInterviewer: {
       type: Types.ObjectId,
       ref: "Interviewer",

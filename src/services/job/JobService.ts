@@ -11,27 +11,33 @@ import { Types } from "mongoose";
 import { IDelegatedCandidateRepository } from "../../repositories/candidate/candidateDelegation/IDelegatedCandidateRepository";
 import { inject, injectable } from "inversify";
 import { DiRepositories } from "../../di/types";
+import { stat } from "fs";
 
 injectable();
 export class JobService implements IJobService {
-constructor(
-  @inject(DiRepositories.JobRepository)
-  private readonly _jobRepository: IJobRepository,
+  constructor(
+    @inject(DiRepositories.JobRepository)
+    private readonly _jobRepository: IJobRepository,
 
-  @inject(DiRepositories.CandidateRepository)
-  private readonly _candidateRepository: ICandidateRepository,
+    @inject(DiRepositories.CandidateRepository)
+    private readonly _candidateRepository: ICandidateRepository,
 
-  @inject(DiRepositories.DelegatedCandidateRepository)
-  private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository
-) {}
-
+    @inject(DiRepositories.DelegatedCandidateRepository)
+    private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository
+  ) {}
 
   getJobById(jobId: string): Promise<IJob | null> {
     throw new Error("Method not implemented.");
   }
-  async getJobs(company: string): Promise<IJob[] | []> {
+  async getJobs(company: string, status?: string): Promise<IJob[] | []> {
     try {
-      const jobs = await this._jobRepository.findAll({ company });
+      let jobs;
+      if (status === "1") {
+        jobs = await this._jobRepository.findAll({ company });
+      } else {
+        jobs = await this._jobRepository.findAll({ company, status });
+      }
+
       return jobs;
     } catch (error) {
       throw new CustomError(

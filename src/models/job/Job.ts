@@ -8,7 +8,7 @@ export interface IJob extends Document {
   deadline: Date;
   status: "open" | "in-progress" | "completed";
   experienceRequired: number;
-  paymentTransactionId?: Types.ObjectId;
+  paymentTransaction?: Types.ObjectId;
 }
 
 const JobSchema: Schema = new Schema(
@@ -42,7 +42,7 @@ const JobSchema: Schema = new Schema(
       type: Number,
       required: true,
     },
-    paymentTransactionId: {
+    paymentTransaction: {
       type: Types.ObjectId,
       ref: "PaymentTransaction",
     },

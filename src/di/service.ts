@@ -12,6 +12,7 @@ import { AuthService } from "../services/auth/AuthService";
 import { PaymentTransactionService } from "../services/payment/PaymentTransactionService";
 import { InterviewerService } from "../services/interviewer/InterviewerService";  
 import { SlotService } from "../services/slot/SlotService";
+import { InterviewService } from "../services/interview/InterviewService";
 import Redis from "ioredis";
 
 // Bind services to container
@@ -25,6 +26,7 @@ container.bind(DiServices.AuthService).to(AuthService).inSingletonScope();
 container.bind(DiServices.PaymentTransactionService).to(PaymentTransactionService).inSingletonScope();
 container.bind(DiServices.InterviewerService).to(InterviewerService).inSingletonScope();  
 container.bind(DiServices.SlotService).to(SlotService).inSingletonScope();
+container.bind(DiServices.InterviewService).to(InterviewService).inSingletonScope();
 
 // External service
 container.bind<Redis>(DiExternalService.Redis).toConstantValue(redis);

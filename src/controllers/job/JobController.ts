@@ -18,8 +18,10 @@ export class JobController implements IJobController {
 
   async getAllJobs(request: Request, response: Response): Promise<void> {
     const companyId = request.user?.userId;
+    const jobStatus=request.params.jobStatus
+    console.log(jobStatus)
     try {
-      const jobs = await this._jobService.getJobs(companyId!);
+      const jobs = await this._jobService.getJobs(companyId!,jobStatus);
 
       createResponse(
         response,
@@ -125,6 +127,7 @@ export class JobController implements IJobController {
     const { jobId } = request.params;
     try {
       const candidates = await this._jobService.getCandidatesByJobId(jobId);
+      console.log(candidates)
       createResponse(
         response,
         HttpStatus.OK,

@@ -119,6 +119,7 @@ constructor(
     // Update Job Status
     await this._jobRepository.update(String(jobId), {
       status: "in-progress",
+      paymentTransaction:paymentTransaction._id as Types.ObjectId
     });
 
     //  Fetch candidates from DelegatedCandidate collection

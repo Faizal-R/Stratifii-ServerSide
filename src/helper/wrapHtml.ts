@@ -740,7 +740,7 @@ export function interviewerAccountRejectionHtml(interviewerName?:string,reasonFo
             </div>
             
             <div class="main-message">
-                <p>Dear [INTERVIEWER_NAME],</p>
+                <p>Dear Interviewer,</p>
                 <p>Thank you for registering as an interviewer on our outsourcing interview platform. We appreciate your interest in joining our network of professional interviewers.</p>
                 <p>After careful review by our admin team, we regret to inform you that your interviewer account verification has been <strong>denied</strong> at this time.</p>
             </div>
