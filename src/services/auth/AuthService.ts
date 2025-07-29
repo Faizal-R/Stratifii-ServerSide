@@ -135,8 +135,8 @@ constructor(
 
     if (role == Roles.COMPANY) {
       subscriptionDetails =
-        await this._subscriptionRecord.getSubscriptionRecordDetailsByCompanyId(
-          user._id as string
+        await this._subscriptionRecord.findOne(
+          {subscriberId:user._id as string}
         );
     }
 

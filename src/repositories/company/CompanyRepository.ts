@@ -15,6 +15,6 @@ export class CompanyRepository
 
   async findByEmail(email: string): Promise<ICompany | null> {
     const company = await Company.findOne({ email }).exec();
-    return company || null;
+    return company ;
   }
 }
