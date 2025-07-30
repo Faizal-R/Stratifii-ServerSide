@@ -164,6 +164,7 @@ export class SubscriptionController implements ISubscriptionController {
  async  getSubscriptionPlanDetails(request:Request,response:Response):Promise<void>{
     // const subscriptionId = request.body.comp;
     const companyId=  request.user?.userId;
+    console.log(companyId,request.user)
     try {
       const subscriptionPlanDetails =
         await this._subscriptionRecordService?.getSubscriptionRecordDetails(companyId!);

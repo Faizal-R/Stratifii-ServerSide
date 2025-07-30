@@ -1,25 +1,36 @@
-
 import "reflect-metadata";
 
-import './di/inversify.config'
+import "./di/inversify.config";
 
 import app from "./app";
 import connectDB from "./config/Database";
 import dotenv from "dotenv";
 import { logger } from "./config/logger";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import { initializeSocket } from "./sockets";
 
-
-dotenv.config({ path: "src/.env" }); 
+dotenv.config({ path: "src/.env" });
 
 const PORT = process.env.PORT || 5000;
 
-let server: ReturnType<typeof app.listen>; 
+let server: ReturnType<typeof app.listen>;
+const httpServer = createServer(app);
+
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.FRONTEND_URL,
+    methods: ["GET", "POST"],
+  },
+});
+
+initializeSocket(io);
 
 const startServer = async () => {
   try {
     await connectDB();
 
-    server = app.listen(PORT, () => {
+    server = httpServer.listen(PORT, () => {
       logger.info(`🚀 Server running at http://localhost:${PORT}`);
     });
   } catch (error) {
@@ -29,7 +40,6 @@ const startServer = async () => {
 };
 
 startServer();
-
 
 // Graceful Shutdown
 process.on("SIGINT", async () => {

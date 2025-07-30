@@ -13,4 +13,7 @@ export class SubscriptionRecordRepository
   constructor() {
     super(SubscriptionRecord);
   }
+    async getSubscriptionRecordDetailsByCompanyId(companyId: string): Promise<ISubscriptionRecord | null> {
+        return await SubscriptionRecord.findOne({subscriberId:companyId})
+    }
 }

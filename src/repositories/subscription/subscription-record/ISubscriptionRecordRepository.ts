@@ -2,4 +2,6 @@ import { ISubscriptionRecord } from "../../../models/subscription/SubscriptionRe
 import { IBaseRepository } from "../../base/IBaseRepository";
 
 export interface ISubscriptionRecordRepository
-  extends IBaseRepository<ISubscriptionRecord> {}
+  extends IBaseRepository<ISubscriptionRecord> {
+      getSubscriptionRecordDetailsByCompanyId(companyId: string): Promise<ISubscriptionRecord | null>
+  }

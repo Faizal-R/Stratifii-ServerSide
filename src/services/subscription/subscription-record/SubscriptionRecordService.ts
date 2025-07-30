@@ -23,9 +23,7 @@ export class SubscriptionRecordService implements ISubscriptionRecordService {
   @inject(DiRepositories.CompanyRepository)
   private readonly _companyRepository: ICompanyRepository
 ) {}
-  getSubscriptionRecordDetails(subscriptionId: string): Promise<ISubscriptionRecord | null> {
-    throw new Error("Method not implemented.");
-  }
+  
 
   async createPaymentOrder(amount: number): Promise<Orders.RazorpayOrder> {
     try {
@@ -122,11 +120,11 @@ export class SubscriptionRecordService implements ISubscriptionRecordService {
       );
     }
   }
-  // getSubscriptionRecordDetails(
-  //   companyId: string
-  // ): Promise<ISubscriptionRecord | null> {
-  //   return this._subscriptionRepository.getSubscriptionRecordDetailsByCompanyId(
-  //     companyId
-  //   );
-  // }
+  getSubscriptionRecordDetails(
+    companyId: string
+  ): Promise<ISubscriptionRecord | null> {
+    return this._subscriptionRepository.getSubscriptionRecordDetailsByCompanyId(
+      companyId
+    );
+  }
 }
