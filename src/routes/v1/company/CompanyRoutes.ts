@@ -39,7 +39,7 @@ router.put(
 //company interview Delegation routes
 
 router.get(
-  "/jobs/:jobStatus",
+  "/jobs",
 
   jobController.getAllJobs.bind(jobController)
 );

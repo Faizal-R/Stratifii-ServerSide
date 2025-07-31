@@ -18,10 +18,9 @@ export class JobController implements IJobController {
 
   async getAllJobs(request: Request, response: Response): Promise<void> {
     const companyId = request.user?.userId;
-    const jobStatus=request.params.jobStatus
-    console.log(jobStatus)
+   
     try {
-      const jobs = await this._jobService.getJobs(companyId!,jobStatus);
+      const jobs = await this._jobService.getJobs(companyId!);
 
       createResponse(
         response,

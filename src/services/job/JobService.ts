@@ -29,14 +29,9 @@ export class JobService implements IJobService {
   getJobById(jobId: string): Promise<IJob | null> {
     throw new Error("Method not implemented.");
   }
-  async getJobs(company: string, status?: string): Promise<IJob[] | []> {
+  async getJobs(company: string): Promise<IJob[] | []> {
     try {
-      let jobs;
-      if (status === "1") {
-        jobs = await this._jobRepository.findAll({ company });
-      } else {
-        jobs = await this._jobRepository.findAll({ company, status });
-      }
+      const jobs = await this._jobRepository.findAll({ company });
 
       return jobs;
     } catch (error) {
