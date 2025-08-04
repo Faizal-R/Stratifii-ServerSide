@@ -740,7 +740,7 @@ export function interviewerAccountRejectionHtml(interviewerName?:string,reasonFo
             </div>
             
             <div class="main-message">
-                <p>Dear Interviewer,</p>
+                <p>Dear ${interviewerName},</p>
                 <p>Thank you for registering as an interviewer on our outsourcing interview platform. We appreciate your interest in joining our network of professional interviewers.</p>
                 <p>After careful review by our admin team, we regret to inform you that your interviewer account verification has been <strong>denied</strong> at this time.</p>
             </div>
@@ -748,7 +748,7 @@ export function interviewerAccountRejectionHtml(interviewerName?:string,reasonFo
             <div class="reason-section">
                 <h3>Verification Decision Details</h3>
                 <div class="reason-list">
-                    <p><strong>Admin Review Result:</strong> [ADMIN_REASON]</p>
+                    <p><strong>Admin Review Result:</strong> ${reasonForRejection}</p>
                     <p>Common reasons for denial may include: incomplete profile information, insufficient experience verification, documentation issues, or platform requirements not met.</p>
                 </div>
             </div>

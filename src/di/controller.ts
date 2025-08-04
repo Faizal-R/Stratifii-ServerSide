@@ -6,7 +6,7 @@ import { AuthController } from "../controllers/auth/AuthController";
 import { AdminController } from "../controllers/admin/AdminController";
 import { CompanyController } from "../controllers/company/CompanyController";
 import { JobController } from "../controllers/job/JobController";
-import { InterviewerController } from "../controllers/interviewer/InterviewController";
+import { InterviewerController } from "../controllers/interviewer/InterviewerController";
 import { PaymentTransactionController } from "../controllers/payment/PaymentTransactionController";
 import { CandidateController } from "../controllers/candidate/CandidateController";
 import { SubscriptionController } from "../controllers/subscription/SubscriptionController";

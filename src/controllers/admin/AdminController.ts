@@ -170,6 +170,7 @@ export class AdminController implements IAdminController {
     response: Response
   ): Promise<void> {
     const { interviewerId } = request.params;
+    console.log("RequstBody of InterviewerVerification",request.body);
     const {
       isApproved,
       interviewerName,

@@ -2,8 +2,6 @@ import { Schema, model, Types, Document } from "mongoose";
 
 export interface ISlotGenerationRule extends Document {
   interviewerId: Types.ObjectId;
-  fromDate: Date;
-  toDate: Date;
   availableDays: number[]; // 0 = Sunday, ..., 6 = Saturday
   startHour: number; // 0 to 23
   endHour: number; // 1 to 24
@@ -22,17 +20,6 @@ const slotGenerationRuleSchema = new Schema(
       ref: "Interviewer",
       required: true,
     },
-
-    fromDate: {
-      type: Date,
-      required: true,
-    },
-
-    toDate: {
-      type: Date,
-      required: true,
-    },
-
     availableDays: {
       type: [Number],
       required: true,

@@ -37,14 +37,21 @@ router.post(
   verifyToken,
   checkBlockedUser,
   checkRole([Roles.INTERVIEWER]),
-  interviewerController.generateSlots.bind(interviewerController)
+  interviewerController.createSlotGenerationRule.bind(interviewerController)
+);
+router.get(
+  "/slot-generation-rule/:id",
+  verifyToken,
+  checkBlockedUser,
+  checkRole([Roles.INTERVIEWER]),
+  interviewerController.getInterviewerSlotGenerationRule.bind(interviewerController)
 );
 router.get(
   "/slots/:id",
   verifyToken,
   checkBlockedUser,
   checkRole([Roles.INTERVIEWER]),
-  interviewerController.getSlotsByInterviewerId.bind(interviewerController)
+  interviewerController.getSlotsByRule.bind(interviewerController)
 );
 
 export default router;

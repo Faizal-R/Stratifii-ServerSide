@@ -2,76 +2,67 @@ import { ISlotGenerationRule } from "../../models/slot/slotGenerationRule";
 import { IInterviewSlotRepository } from "../../repositories/slot/interviewSlot/IInterviewSlotRepository";
 import { ISlotGenerationRepository } from "../../repositories/slot/slotGenerationRule/ISlotGenerationRepository";
 import { ISlotService } from "./ISlotService";
-import { IInterviewSlot } from "../../models/slot/interviewSlot"; // Assuming you have this interface
+import { IInterviewSlot } from "../../models/slot/interviewSlot";
 import { inject, injectable } from "inversify";
 import { DiRepositories } from "../../di/types";
 
 @injectable()
 export class SlotService implements ISlotService {
-constructor(
-  @inject(DiRepositories.SlotGenerationRepository)
-  private readonly _slotGenerationRepository: ISlotGenerationRepository,
+  constructor(
+    @inject(DiRepositories.SlotGenerationRepository)
+    private readonly _slotGenerationRepository: ISlotGenerationRepository,
 
-  @inject(DiRepositories.InterviewSlotRepository)
-  private readonly _interviewSlotRepository: IInterviewSlotRepository
-) {}
+    @inject(DiRepositories.InterviewSlotRepository)
+    private readonly _interviewSlotRepository: IInterviewSlotRepository
+  ) {}
 
-
-  // Step 1: Create a rule and generate slots based on it
-  async createRuleAndGenerateSlots(
+  async createSlotGenerationRule(
     ruleData: ISlotGenerationRule
   ): Promise<IInterviewSlot[]> {
-    const rule = await this._slotGenerationRepository.create(ruleData);
-    console.log("Created rule", rule);
-    const slots = await this.generateSlotsFromRule(rule);
-    console.log("slots", slots);
+    try {
+      const rule = await this._slotGenerationRepository.create(ruleData);
+      const slots = await this.generateSlotsFromRule(rule);
+      console.log("slots", slots);
 
-    if (slots.length > 0) {
-      await this._interviewSlotRepository.insertMany(slots);
+      console.log(
+        `[SlotService] Created ${slots.length} slots for rule: ${rule._id}`
+      );
+      return slots;
+    } catch (error) {
+      console.error(
+        "[SlotService] Error creating slot generation rule:",
+        error
+      );
+      throw error;
     }
-
-    console.log(
-      `[SlotService] Created ${slots.length} slots for rule: ${rule._id}`
-    );
-    return slots;
   }
 
-  // Step 2: Generate slots from the rule
   async generateSlotsFromRule(
     rule: ISlotGenerationRule
   ): Promise<IInterviewSlot[]> {
-    const slots: IInterviewSlot[] = [];
-    const current = new Date(rule.fromDate);
-    const end = new Date(rule.toDate);
+    try {
+      const slots: IInterviewSlot[] = [];
+      const current = new Date();
+      const end = new Date(current);
+      end.setDate(end.getDate() + 30); // Generate for 30 days
 
-    while (current <= end) {
-      const day = current.getDay(); // 0 = Sunday → 6 = Saturday
-      console.log("day", day);
-      if (rule.availableDays.includes(day)) {
-        // Set working day start and end time
-        const dayStart = new Date(current);
-        dayStart.setHours(rule.startHour, 0, 0, 0);
+      while (current <= end) {
+        const day = current.getDay();
+        if (rule.availableDays.includes(day)) {
+          const dayStart = new Date(current);
+          dayStart.setHours(rule.startHour, 0, 0, 0);
 
-        const dayEnd = new Date(current);
-        dayEnd.setHours(rule.endHour, 0, 0, 0);
+          const dayEnd = new Date(current);
+          dayEnd.setHours(rule.endHour, 0, 0, 0);
 
-        let slotStart = new Date(dayStart);
+          let slotStart = new Date(dayStart);
 
-        while (slotStart < dayEnd) {
-          const slotEnd = new Date(
-            slotStart.getTime() + rule.duration * 60 * 1000
-          );
+          while (slotStart < dayEnd) {
+            const slotEnd = new Date(
+              slotStart.getTime() + rule.duration * 60 * 1000
+            );
 
-          if (slotEnd <= dayEnd) {
-            const exists = await this._interviewSlotRepository.find({
-              interviewerId: rule.interviewerId,
-              startTime: slotStart,
-              endTime: slotEnd,
-            });
-            console.log("exists", exists);
-
-            if (exists.length === 0) {
-              console.log("slot does not exist, adding to slots");
+            if (slotEnd <= dayEnd) {
               slots.push({
                 interviewerId: rule.interviewerId,
                 startTime: new Date(slotStart),
@@ -81,25 +72,57 @@ constructor(
                 isAvailable: true,
                 ruleId: rule._id,
               } as IInterviewSlot);
-              console.log("slot added", slots);
             }
-          }
 
-          slotStart = new Date(
-            slotStart.getTime() + (rule.duration + rule.buffer) * 60 * 1000
-          );
+            slotStart = new Date(
+              slotStart.getTime() + (rule.duration + rule.buffer) * 60 * 1000
+            );
+          }
         }
+
+        current.setDate(current.getDate() + 1);
       }
 
-      current.setDate(current.getDate() + 1); // Move to next day
+      return slots;
+    } catch (error) {
+      console.error("[SlotService] Error generating slots from rule:", error);
+      throw error;
     }
-
-    return slots;
   }
 
-  getSlotsByInterviewerId(
+  async getSlotsByRule(interviewerId: string): Promise<IInterviewSlot[] | []> {
+    try {
+      const rule = await this._slotGenerationRepository.findOne({
+        interviewerId,
+      });
+      console.log("rule", rule);
+      if (!rule) {
+        return [];
+      }
+
+      const slots = await this.generateSlotsFromRule(rule);
+      return slots.length > 0 ? slots : [];
+    } catch (error) {
+      console.error("[SlotService] Error getting slots by rule:", error);
+      throw error;
+    }
+  }
+
+  async getInterviewerSlotGenerationRule(
     interviewerId: string
-  ): Promise<IInterviewSlot[] | []> {
-    return this._interviewSlotRepository.find({ interviewerId });
+  ): Promise<ISlotGenerationRule | null> {
+    try {
+      const rule = await this._slotGenerationRepository.findOne({
+        interviewerId,
+      });
+      console.log("rule", rule);
+      return rule || null;
+    } catch (error) {
+      console.error(
+        "[SlotService] Error getting interviewer slot generation rule:",
+        error
+      );
+      throw error;
+    }
   }
 }
