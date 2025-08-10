@@ -8,6 +8,8 @@ import { ICompanyController } from "../../../controllers/company/ICompanyControl
 import { DiControllers } from "../../../di/types";
 import { IJobController } from "../../../controllers/job/IJobController";
 import { ISubscriptionController } from "../../../controllers/subscription/ISubscriptonController";
+import { ISlotController } from "../../../controllers/slot/ISlotController";
+
 const router = Router();
 
 const companyController = resolve<ICompanyController>(
@@ -19,6 +21,8 @@ const jobController = resolve<IJobController>(DiControllers.JobController);
 const subscriptionController = resolve<ISubscriptionController>(
   DiControllers.SubscriptionController
 );
+
+const  slotController = resolve<ISlotController>(DiControllers.SlotController);
 
 //company profile
 router.get(
@@ -63,14 +67,28 @@ router.post(
   "/jobs/:jobId/resumes",
 
   uploader.array("resumes"),
-  jobController.createCandidatesFromResumesAndAddToJob.bind(jobController)
+  jobController.createCandidatesFromResumes.bind(jobController)
 );
 
 router.get(
   "/jobs/:jobId/candidates",
 
-  jobController.getCandidatesByJobId.bind(jobController)
+  jobController.getCandidatesByJob.bind(jobController)
 );
+
+router.get(
+  "/jobs/in-progress",
+  jobController.getJobsInProgress.bind(jobController)
+);
+
+router.get(
+  "/jobs/:jobId/qualified-candidates",
+  jobController.getMockQualifiedCandidatesByJob.bind(jobController)
+);
+
+
+router.get('/jobs/:jobId/matched-interviewers', jobController.getMatchedInterviewersByJobDescription.bind(jobController))
+
 
 //creating subscription payment order
 router.post(
@@ -89,5 +107,11 @@ router.get(
   "/subscription/plan",
   subscriptionController.getSubscriptionPlanDetails.bind(subscriptionController)
 );
+
+
+//book slot for candidate
+
+
+router.post('/book-slot', slotController.bookSlotForCandidate.bind(slotController))
 
 export default router;

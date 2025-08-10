@@ -11,6 +11,7 @@ export enum DiRepositories {
   InterviewSlotRepository = "InterviewerSlotRepository",
   SlotGenerationRepository = "SlotGenerationRepository",
   DelegatedCandidateRepository = "DelegatedCandidateRepository",
+  BookedSlotRepository = "BookedSlotRepository",
 }
 
 export enum DiServices {
@@ -36,6 +37,7 @@ export enum DiControllers {
   AuthController = "AuthController",
   PaymentTransactionController = "PaymentTransactionController",
   InterviewerController = "InterviewerController",
+  SlotController = "SlotController",
 }
 
 export const DiExternalService = {

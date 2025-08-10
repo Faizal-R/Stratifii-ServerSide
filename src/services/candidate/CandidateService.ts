@@ -100,20 +100,20 @@ export class CandidateService implements ICandidateService {
       delegatedCandidateId: string;
       jobId: string;
       jobTitle: string;
-      companyName: string;
+      name: string;
       mockStatus: string;
     }[]
   > {
-    console.log(candidateId)
+    console.log(candidateId);
     const delegations =
       await this._delegatedCandidateRepository.getDelegatedJobsByCandidateId(
         candidateId
       );
-     console.log(delegations)
+    console.log(delegations);
     if (!delegations || delegations.length === 0) {
       throw new CustomError("No Delegations Found", HttpStatus.BAD_REQUEST);
     }
-   
+
     const response = delegations.map((dc) => {
       const job = dc.job as IJob;
       const company = dc.company as ICompany;
@@ -122,14 +122,12 @@ export class CandidateService implements ICandidateService {
         delegatedCandidateId: dc._id as string,
         jobId: job._id as string,
         jobTitle: job.position,
-        companyName: company.companyName,
+        name: company.name,
         mockStatus: dc.status,
-        isQualifiedForFinal:dc.isQualifiedForFinal
+        isQualifiedForFinal: dc.isQualifiedForFinal,
       };
     });
 
     return response;
   }
-
-  
 }

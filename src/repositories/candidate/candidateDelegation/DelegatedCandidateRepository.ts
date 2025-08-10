@@ -13,8 +13,8 @@ export class DelegatedCandidateRepository
   constructor() {
     super(DelegatedCandidate);
   }
-  async getCandidatesByJobId(jobId: string): Promise<IDelegatedCandidate[]> {
-    return await DelegatedCandidate.find({ job: jobId })
+  async getCandidatesByJob(jobId: string,query?: FilterQuery<IDelegatedCandidate>): Promise<IDelegatedCandidate[]> {
+    return await DelegatedCandidate.find({ job: jobId, ...query})
       .populate("candidate")
       .populate("company")
       .populate({

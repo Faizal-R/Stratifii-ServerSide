@@ -2,7 +2,7 @@ import { IInterviewer } from "../../models/interviewer/Interviewer";
 import { IInterviewerRepository } from "../../repositories/interviewer/IInterviewerRepository";
 
 import { IInterviewerService } from "./IInterviewerService";
-import { IInterviewerProfile } from "../../validations/InterviewerValidations";
+// import { IInterviewerProfile } from "../../validations/InterviewerValidations";
 import { CustomError } from "../../error/CustomError";
 import { HttpStatus } from "../../config/HttpStatusCodes";
 import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
@@ -16,6 +16,7 @@ import { comparePassword, hashPassword } from "../../utils/hash";
 import { USER_COMMON_MESSAGES } from "../../constants/messages/UserProfileMessages";
 import { inject, injectable } from "inversify";
 import { DiRepositories } from "../../di/types";
+import { uploadOnCloudinary } from "../../helper/cloudinary";
 
 @injectable()
 export class InterviewerService implements IInterviewerService {
@@ -45,13 +46,21 @@ export class InterviewerService implements IInterviewerService {
   }
   async updateInterviewerProfile(
     interviewerId: string,
-    interviewer: IInterviewerProfile
-  ): Promise<IInterviewer | null> {
+    interviewer: any,
+    avatar?: Express.Multer.File,
+    resume?: Express.Multer.File
+  ): Promise<any | null> {
     try {
+      if (avatar) {
+        const avatarUrl = await uploadOnCloudinary(avatar.path!, "auto");
+        interviewer.avatar = avatarUrl;
+      }
+
       const updatedInterviewer = await this._interviewerRepository.update(
         interviewerId,
         interviewer
       );
+      console.log(updatedInterviewer);
       return updatedInterviewer;
     } catch (error) {
       console.log("updateing Interviewer", error);

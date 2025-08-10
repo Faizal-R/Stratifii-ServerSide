@@ -16,8 +16,7 @@ export interface IDelegatedCandidate extends Document {
     | "final_scheduled"
     | "final_completed"
     | "rejected";
-  assignedInterviewer?: Types.ObjectId;
-  scheduledTime?: Date;
+ isInterviewScheduled?:boolean;
   interviewTimeZone?: string;
   feedback?: string;
   aiMockResult?: {
@@ -74,13 +73,8 @@ const DelegatedCandidateSchema: Schema = new Schema(
         { _id: false }
       ),
     },
-
-    assignedInterviewer: {
-      type: Types.ObjectId,
-      ref: "Interviewer",
-    },
-    scheduledTime: {
-      type: Date,
+    isInterviewScheduled: {
+      type: Boolean,
     },
     interviewTimeZone: {
       type: String,

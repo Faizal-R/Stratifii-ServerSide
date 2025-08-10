@@ -8,15 +8,10 @@ import {
   USER_COMMON_MESSAGES,
 } from "../../constants/messages/UserProfileMessages";
 
-import { InterviewerProfileSchema } from "../../validations/InterviewerValidations";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-} from "../../helper/generateTokens";
-import { Roles } from "../../constants/roles";
-import { COOKIE_OPTIONS } from "../../config/CookieConfig";
+
+
 import { ISlotService } from "../../services/slot/ISlotService";
-import { IInterviewSlot } from "../../models/slot/interviewSlot";
+
 import { inject, injectable } from "inversify";
 import { DiServices } from "../../di/types";
 
@@ -49,22 +44,25 @@ export class InterviewerController implements IInterviewerController {
   }
   async updateInterviewerProfile(request: Request, response: Response) {
     try {
-      console.log(request.body);
+      
       const interviewerId = request.user?.userId ?? request.body.interviewerId;
-      const interviewer = InterviewerProfileSchema.safeParse(request.body);
-      if (!interviewer.success) {
-        return createResponse(
-          response,
-          HttpStatus.BAD_REQUEST,
-          false,
-          interviewer.error.message
-        );
-      }
+      const interviewer = JSON.parse(request.body.interviewer); //request.body
+      console.log(interviewer)
+      const avatar = request.file as Express.Multer.File;
+      // if (!interviewer.success) {
+      //   return createResponse(
+      //     response,
+      //     HttpStatus.BAD_REQUEST,
+      //     false,
+      //     interviewer.error.issues[0].message
+      //   );
+      // }
 
       const updatedInterviewer =
         this._interviewerService.updateInterviewerProfile(
           interviewerId!,
-          interviewer.data
+          interviewer,
+          avatar
         );
       return createResponse(
         response,

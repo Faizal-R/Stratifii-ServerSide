@@ -65,7 +65,7 @@ export function wrapHtml(resetLink: string) {
 
 export function createPasswordHtml(
   candidateName: string,
-  companyName: string,
+  name: string,
   passwordCreationLink: string
 ) {
   return `<div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #e0e0e0; border-radius: 8px;">
@@ -109,7 +109,7 @@ export function createPasswordHtml(
   <p style="font-size: 18px; margin-bottom: 20px;">Hi ${candidateName},</p>
 
   <p>
-    You have been nominated by <strong>${companyName}</strong> to proceed with the interview process through our official interview management platform — <strong>Stratifii Interviews</strong>.
+    You have been nominated by <strong>${name}</strong> to proceed with the interview process through our official interview management platform — <strong>Stratifii Interviews</strong>.
   </p>
 
   <p>
@@ -134,7 +134,7 @@ export function createPasswordHtml(
   </button>
 
   <p>
-    Completing this step is mandatory to move forward with the interview process initiated by <strong>${companyName}</strong>.
+    Completing this step is mandatory to move forward with the interview process initiated by <strong>${name}</strong>.
   </p>
 
   <p>

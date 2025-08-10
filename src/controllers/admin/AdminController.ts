@@ -29,7 +29,7 @@ export class AdminController implements IAdminController {
         parsedData.password
       );
       response.cookie(
-        `${Roles.ADMIN}RefreshToken`,
+        `refreshToken`,
         refreshToken,
         COOKIE_OPTIONS
       );

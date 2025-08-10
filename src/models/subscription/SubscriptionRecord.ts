@@ -1,11 +1,24 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-export interface ISubscriptionRecord extends Document {
+export interface ISubscriptionFeatures {
+  candidateSlotPerMonth: number;
+  finalInterviewAccess: boolean;
+  interviewRecordingAccess: boolean;
+  feedbackDownloadAccess: boolean;
+  jobPostLimitPerMonth: number;
+  companySpecificQuestionAccess: boolean;
+}
+export interface ISubscriptionPlanDetails{
+  name:string;
+  price:number;
+  features:ISubscriptionFeatures
+}
 
-  subscriberId: mongoose.Types.ObjectId;
-  planId: mongoose.Types.ObjectId;
+export interface ISubscriptionRecord extends Document {
+  subscriberId: mongoose.Types.ObjectId | string;
+  planId: mongoose.Types.ObjectId|string;
   status: "active" | "expired" | "canceled" | "pending";
-  planDetails: Object;
+  planDetails: Object |ISubscriptionPlanDetails;
   startDate: Date;
   endDate: Date;
   transactionId: string;

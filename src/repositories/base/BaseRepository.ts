@@ -11,7 +11,7 @@ export abstract class BaseRepository<T extends Document>
   }
 
   find(query: FilterQuery<T>): Promise<T[]> {
-    return this.model.find(query).exec();
+    return this.model.find(query??{}).exec();
   }
 
   findOne(query: FilterQuery<T>): Promise<T | null> {
@@ -22,9 +22,9 @@ export abstract class BaseRepository<T extends Document>
     return this.model.findById(id).exec();
   }
 
-  findAll(query?: FilterQuery<T>): Promise<T[]> {
-    return this.model.find(query ?? {}).exec();
-  }
+  // findAll(query?: FilterQuery<T>): Promise<T[]> {
+  //   return this.model.find(query ?? {}).exec();
+  // }
 
   update(id: string, data: Partial<T>): Promise<T | null> {
     return this.model.findByIdAndUpdate(id, data, { new: true }).exec();

@@ -88,7 +88,7 @@ export class JobController implements IJobController {
     }
   }
 
-  async createCandidatesFromResumesAndAddToJob(
+  async createCandidatesFromResumes(
     request: Request,
     response: Response
   ): Promise<void> {
@@ -100,7 +100,7 @@ export class JobController implements IJobController {
       const jobId=new mongoose.Types.ObjectId(SJobId)
       console.log(resumes);
       const candidates =
-        await this._jobService.createCandidatesFromResumesAndAddToJob(
+        await this._jobService.createCandidatesFromResumes(
           jobId,
           resumes,
           companyId
@@ -119,13 +119,71 @@ export class JobController implements IJobController {
     }
   }
 
-  async getCandidatesByJobId(
+  async getCandidatesByJob(
     request: Request,
     response: Response
   ): Promise<void> {
     const { jobId } = request.params;
     try {
-      const candidates = await this._jobService.getCandidatesByJobId(jobId);
+      const candidates = await this._jobService.getCandidatesByJob(jobId);
+      console.log(candidates)
+      createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        JOB_SUCCESS_MESSAGES.CANDIDATES_FETCHED,
+        candidates
+      );
+    } catch (error) {
+      console.log(error);
+      errorResponse(response, error);
+    }
+  }
+
+  async getJobsInProgress(request:Request,response:Response):Promise<void>{
+    console.log(request.user?.userId);
+
+    try {
+      const jobs = await this._jobService.getJobsInProgress(request.user?.userId!);
+      console.log(jobs)
+      createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        JOB_SUCCESS_MESSAGES.JOB_FETCHED,
+        jobs
+      );
+    } catch (error) {
+      console.log(error);
+      errorResponse(response, error);
+    }
+  }
+
+  async getMockQualifiedCandidatesByJob(request: Request, response: Response): Promise<void> {
+    try {
+      const job=request.params.jobId
+      console.log(job)
+      console.log("entered GetMockQualified")
+      const candidates = await this._jobService.getMockQualifiedCandidatesByJob(job!)
+      console.log(candidates)
+      createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        JOB_SUCCESS_MESSAGES.CANDIDATES_FETCHED,
+        candidates
+      );
+    } catch (error) {
+      console.log(error);
+      errorResponse(response, error);
+    }
+  }
+  async getMatchedInterviewersByJobDescription(request: Request, response: Response): Promise<void> {
+    try {
+      const job=request.params.jobId
+      console.log(job)
+      console.log("entered GetMockQualified")
+      const candidates = await this._jobService.getMatchedInterviewersByJobDescription(job!)
       console.log(candidates)
       createResponse(
         response,

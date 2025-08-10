@@ -30,10 +30,10 @@ export class AdminRepository
     });
   }
   async getAllCompanies(status:string): Promise<ICompany[] | []> {
-    return await this._companyRepository.findAll({status});
+    return await this._companyRepository.find({status});
   }
   async getAllInterviewers(status:string): Promise<IInterviewer[] | []> {
-    return await this._interviewerRepository.findAll({status});
+    return await this._interviewerRepository.find({status});
   }
 
   async findByEmail(email: string): Promise<IAdmin | null> {

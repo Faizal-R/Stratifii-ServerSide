@@ -8,7 +8,7 @@ import redis from "../config/RedisConfig";
 
 import { config } from "dotenv";
 config({ path: "src/.env" }) // Load environment variables from .env file
-export const sendCreatePasswordEmail = async (candidates: ICandidate[],companyName:string) => {
+export const sendCreatePasswordEmail = async (candidates: ICandidate[],name:string) => {
   const html = `<div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
 
   <h2 style="color: #0b5ed7;">Action Required - Complete Your Account Setup for Your Interview Process</h2>
@@ -16,7 +16,7 @@ export const sendCreatePasswordEmail = async (candidates: ICandidate[],companyNa
   <p>Hi {{candidateName}},</p>
 
   <p>
-    You have been nominated by <strong>{{companyName}}</strong> to proceed with the interview process through our official interview management platform — <strong>Stratifii Interviews</strong>.
+    You have been nominated by <strong>{{name}}</strong> to proceed with the interview process through our official interview management platform — <strong>Stratifii Interviews</strong>.
   </p>
 
   <p>
@@ -45,7 +45,7 @@ export const sendCreatePasswordEmail = async (candidates: ICandidate[],companyNa
   </p>
 
   <p>
-    This step is mandatory to proceed further with the interview process initiated by <strong>{{companyName}}</strong>.
+    This step is mandatory to proceed further with the interview process initiated by <strong>{{name}}</strong>.
   </p>
 
   <p>If you were not expecting this email or have any concerns, please contact us at <a href="mailto:support@stratifii.com">support@stratifii.com</a>.</p>
@@ -72,7 +72,7 @@ export const sendCreatePasswordEmail = async (candidates: ICandidate[],companyNa
      
     const html = createPasswordHtml(
       candidate.name,
-    companyName,
+    name,
       link
     );
     await sendEmail(

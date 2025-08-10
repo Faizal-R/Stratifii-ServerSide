@@ -123,7 +123,7 @@ constructor(
     });
 
     //  Fetch candidates from DelegatedCandidate collection
-    const delegatedCandidates = await this._delegatedCandidateRepository.findAll({
+    const delegatedCandidates = await this._delegatedCandidateRepository.find({
       job:jobId
     });
     console.log("Delegated Candidates", delegatedCandidates);
@@ -132,7 +132,7 @@ constructor(
     const candidateIds = delegatedCandidates.map((dc) => dc.candidate);
     console.log("Candidate IDs to onboard", candidateIds);
 
-    const candidates = await this._candidateRepository.findAll({
+    const candidates = await this._candidateRepository.find({
       _id: { $in: candidateIds },
     });
 
@@ -142,7 +142,7 @@ constructor(
     const company = await this._companyRepository.findById(String(companyId));
     console.log("Company", company);
     //  Send onboarding emails
-    await sendCreatePasswordEmail(candidatesToOnboard, company?.companyName!);
+    await sendCreatePasswordEmail(candidatesToOnboard, company?.name!);
 
     return true;
   }

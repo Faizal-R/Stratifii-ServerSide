@@ -5,6 +5,7 @@ import { Roles } from "../../../constants/roles";
 import { resolve } from "../../../di";
 import { IInterviewerController } from "../../../controllers/interviewer/IInterviewerController";
 import { DiControllers } from "../../../di/types";
+import { uploader } from "../../../middlewares/multer";
 const router = Router();
 
 const interviewerController = resolve<IInterviewerController>(
@@ -22,6 +23,7 @@ router.put(
   "/profile",
   verifyToken,
   checkBlockedUser,
+  uploader.single("avatar"),
   checkRole([Roles.INTERVIEWER]),
   interviewerController.updateInterviewerProfile.bind(interviewerController)
 );

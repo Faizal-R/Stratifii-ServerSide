@@ -1,30 +1,39 @@
 import { ICompany } from "../../models/company/Company";
-import { ICandidate } from "../../models/candidate/Candidate";
+
 import {
   IGoogleInterviewer,
   IInterviewer,
 } from "../../models/interviewer/Interviewer";
-import { ISubscriptionRecord } from "../../models/subscription/SubscriptionRecord";
-type IUser = ICompany | ICandidate | IInterviewer;
-export interface IAuthService {
-  login(
-    email: string,
-    password: string,
-    role: string
-  ): Promise<{ accessToken: string; refreshToken: string; user: IUser ,subscriptionDetails?:ISubscriptionRecord|null}>;
 
-  registerCompany(company: ICompany): Promise<ICompany>;
+import { LoginRequestDTO } from "../../dto/request/auth/LoginRequestDTO";
+import {
+  AuthLoginResponseDTO,
+  AuthUserResponseDTO,
+} from "../../dto/response/auth/AuthResponseDTO";
+import { InterviewerRegisterRequestDTO } from "../../dto/request/auth/RegisterRequestDTO";
+
+export interface IAuthService {
+  login(AuthPayload: LoginRequestDTO): Promise<AuthLoginResponseDTO>;
+
+  registerCompany(company: ICompany): Promise<AuthUserResponseDTO>;
 
   sendVerificationCode(email: string): Promise<void>;
 
-  registerInterviewer(interviewer: IInterviewer,resume?:Express.Multer.File): Promise<IInterviewer>;
+  registerInterviewer(
+    interviewer: InterviewerRegisterRequestDTO,
+    resume?: Express.Multer.File
+  ): Promise<AuthUserResponseDTO>;
   setupInterviewerAccount(
-      interviewerId: string,
-      interviewer: IInterviewer,
-      resume: Express.Multer.File
-    ): Promise<{ accessToken: string; refreshToken: string; setupedInterviewer: IInterviewer }>
+    interviewerId: string,
+    interviewer: IInterviewer,
+    resume: Express.Multer.File
+  ): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    setupedInterviewer: IInterviewer;
+  }>;
 
-  authenticateOTP(otp: string, email: string,role:string): Promise<void>;
+  authenticateOTP(otp: string, email: string, role: string): Promise<void>;
 
   googleAuthentication(
     email: string,
@@ -33,7 +42,7 @@ export interface IAuthService {
     accessToken?: string;
     refreshToken?: string;
     user?: IGoogleInterviewer;
-    isRegister?:boolean
+    isRegister?: boolean;
   }>;
 
   requestPasswordReset(email: string, role: string): Promise<void>;
@@ -41,13 +50,11 @@ export interface IAuthService {
   resetUserPassword(
     password: string,
     confirmPassword: string,
-    token: string,
+    token: string
   ): Promise<void>;
 
   refreshAccessToken(
     userId: string,
     refreshToken: string
   ): Promise<{ accessToken: string; refreshToken: string }>;
-
-  
 }
