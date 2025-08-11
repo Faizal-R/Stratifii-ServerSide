@@ -65,7 +65,7 @@ export function wrapHtml(resetLink: string) {
 
 export function createPasswordHtml(
   candidateName: string,
-  name: string,
+  companyName: string,
   passwordCreationLink: string
 ) {
   return `<div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #e0e0e0; border-radius: 8px;">
@@ -109,7 +109,7 @@ export function createPasswordHtml(
   <p style="font-size: 18px; margin-bottom: 20px;">Hi ${candidateName},</p>
 
   <p>
-    You have been nominated by <strong>${name}</strong> to proceed with the interview process through our official interview management platform — <strong>Stratifii Interviews</strong>.
+    You have been nominated by <strong>${companyName}</strong> to proceed with the interview process through our official interview management platform — <strong>Stratifii Interviews</strong>.
   </p>
 
   <p>
@@ -134,7 +134,7 @@ export function createPasswordHtml(
   </button>
 
   <p>
-    Completing this step is mandatory to move forward with the interview process initiated by <strong>${name}</strong>.
+    Completing this step is mandatory to move forward with the interview process initiated by <strong>${companyName}</strong>.
   </p>
 
   <p>
@@ -740,7 +740,7 @@ export function interviewerAccountRejectionHtml(interviewerName?:string,reasonFo
             </div>
             
             <div class="main-message">
-                <p>Dear ${interviewerName},</p>
+                <p>Dear Interviewer,</p>
                 <p>Thank you for registering as an interviewer on our outsourcing interview platform. We appreciate your interest in joining our network of professional interviewers.</p>
                 <p>After careful review by our admin team, we regret to inform you that your interviewer account verification has been <strong>denied</strong> at this time.</p>
             </div>
@@ -748,7 +748,7 @@ export function interviewerAccountRejectionHtml(interviewerName?:string,reasonFo
             <div class="reason-section">
                 <h3>Verification Decision Details</h3>
                 <div class="reason-list">
-                    <p><strong>Admin Review Result:</strong> ${reasonForRejection}</p>
+                    <p><strong>Admin Review Result:</strong> [ADMIN_REASON]</p>
                     <p>Common reasons for denial may include: incomplete profile information, insufficient experience verification, documentation issues, or platform requirements not met.</p>
                 </div>
             </div>

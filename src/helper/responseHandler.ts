@@ -12,7 +12,7 @@ export function createResponse<T>(
   response.status(statusCode).json({
     success,
     message,
-    data,
+    data, 
   });
 }
 

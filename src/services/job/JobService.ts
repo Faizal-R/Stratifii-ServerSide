@@ -241,7 +241,7 @@ export class JobService implements IJobService {
 
       const matchedInterviewers = allInterviewers
         .map((interviewer) => {
-          const matchCount = interviewer.expertise.filter((exp) =>
+          const matchCount = (interviewer.expertise||[]).filter((exp) =>
             jobDetails.requiredSkills.includes(exp.skill)
           ).length;
 

@@ -7,7 +7,6 @@ import { IAuthController } from "./IAuthController";
 import { COOKIE_OPTIONS } from "../../config/CookieConfig";
 import { ICompany } from "../../models/company/Company";
 import { CustomError } from "../../error/CustomError";
-import { IInterviewer } from "../../models/interviewer/Interviewer";
 import jwt from "jsonwebtoken";
 import { AUTH_MESSAGES } from "../../constants/messages/AuthMessages";
 import { ERROR_MESSAGES } from "../../constants/messages//ErrorMessages";
@@ -19,6 +18,7 @@ import { inject, injectable } from "inversify";
 import { DiServices } from "../../di/types";
 import { LoginRequestDTO } from "../../dto/request/auth/LoginRequestDTO";
 import { InterviewerRegisterRequestDTO } from "../../dto/request/auth/RegisterRequestDTO";
+
 @injectable()
 export class AuthController implements IAuthController {
   constructor(
@@ -32,12 +32,8 @@ export class AuthController implements IAuthController {
       console.log(request.body);
 
       // Authenticate user
-      const {
-        accessToken,
-        refreshToken,
-        user,
-         subscription,
-      } = await this._authService.login(loginData);
+      const { accessToken, refreshToken, user, subscription } =
+        await this._authService.login(loginData);
 
       // Set refresh token as an HTTP-only cookie
       response.cookie(`refreshToken`, refreshToken, COOKIE_OPTIONS);
@@ -82,7 +78,9 @@ export class AuthController implements IAuthController {
 
   async registerInterviewer(request: Request, response: Response) {
     try {
-      const interviewer: InterviewerRegisterRequestDTO = JSON.parse(request.body.data);
+      const interviewer: InterviewerRegisterRequestDTO = JSON.parse(
+        request.body.data
+      );
 
       console.log(interviewer);
 
@@ -125,11 +123,7 @@ export class AuthController implements IAuthController {
           interviewer,
           resume
         );
-      response.cookie(
-        `${Roles.INTERVIEWER}RefreshToken`,
-        refreshToken,
-        COOKIE_OPTIONS
-      );
+      response.cookie(`refreshToken`, refreshToken, COOKIE_OPTIONS);
       createResponse(
         response,
         HttpStatus.OK,
@@ -189,6 +183,7 @@ export class AuthController implements IAuthController {
       }
       const { accessToken, refreshToken, user, isRegister } =
         await this._authService.googleAuthentication(email, name);
+      console.log(refreshToken,user);
       if (isRegister) {
         return createResponse(
           response,
@@ -198,13 +193,8 @@ export class AuthController implements IAuthController {
           { user }
         );
       }
-
-      response.cookie(
-        `${Roles.INTERVIEWER}RefreshToken`,
-        refreshToken,
-        COOKIE_OPTIONS
-      );
-
+      
+      response.cookie(`refreshToken`, refreshToken, COOKIE_OPTIONS);
       return createResponse(
         response,
         HttpStatus.OK,
@@ -291,6 +281,7 @@ export class AuthController implements IAuthController {
   async refreshAccessToken(request: Request, response: Response) {
     try {
       const incomingRefreshToken = request.cookies[`refreshToken`];
+      console.log()
       console.log(request.cookies);
       if (!incomingRefreshToken) {
         throw new CustomError(
@@ -298,7 +289,7 @@ export class AuthController implements IAuthController {
           HttpStatus.UNAUTHORIZED
         );
       }
-      const { userId, role } = (await jwt.verify(
+      const { userId } = (await jwt.verify(
         incomingRefreshToken,
         process.env.REFRESH_TOKEN_SECRET as string
       )) as TokenPayload;

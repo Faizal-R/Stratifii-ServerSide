@@ -42,6 +42,7 @@ export async function verifyToken(
     ) as TokenPayload;
 
     if (!decoded) {
+
       return createResponse(
         res,
         HttpStatus.UNAUTHORIZED,
@@ -53,6 +54,7 @@ export async function verifyToken(
     req.user = decoded;
     next();
   } catch (err) {
+
     return createResponse(
       res,
       HttpStatus.UNAUTHORIZED,
@@ -62,26 +64,26 @@ export async function verifyToken(
   }
 }
 
-const checkIsUserVerified = async (role: string, userId: string) => {
-  let user: IInterviewer | ICompany | null = null;
-  switch (role) {
-    case Roles.COMPANY:
-      user = await Company.findById(userId);
-      break;
-    case Roles.CANDIDATE:
-      user = await Candidate.findById(userId);
-      break;
-    case Roles.INTERVIEWER:
-      user = await Interviewer.findById(userId);
-      break;
-    default:
-      user = null;
-  }
+// const checkIsUserVerified = async (role: string, userId: string) => {
+//   let user: IInterviewer | ICompany | null = null;
+//   switch (role) {
+//     case Roles.COMPANY:
+//       user = await Company.findById(userId);
+//       break;
+//     case Roles.CANDIDATE:
+//       user = await Candidate.findById(userId);
+//       break;
+//     case Roles.INTERVIEWER:
+//       user = await Interviewer.findById(userId);
+//       break;
+//     default:
+//       user = null;
+//   }
 
-  if (user && user.status !== "approved") {
-    return false;
-  } else return true;
-};
+//   if (user && user.status !== "approved") {
+//     return false;
+//   } else return true;
+// };
 
 // Middleware to check if the user has the required role
 export function checkRole(requiredRoles: string[]) {

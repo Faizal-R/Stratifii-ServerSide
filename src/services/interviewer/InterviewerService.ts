@@ -85,7 +85,7 @@ export class InterviewerService implements IInterviewerService {
       );
       if (
         !interviewer ||
-        !comparePassword(currentPassword, interviewer.password)
+        !comparePassword(currentPassword, interviewer.password!)
       ) {
         throw new CustomError(
           USER_COMMON_MESSAGES.CURRENT_PASSWORD_INCORRECT,

@@ -17,6 +17,16 @@ export const initializeSocket = (io: Server) => {
       console.error(`Socket error for user ${socket.id}:`, error);
     });
 
+    socket.on("join-room", (roomId) => {
+      socket.join(roomId);
+      socket.to(roomId).emit("user-joined", socket.id);
+      console.log(`User ${socket.id} joined room ${roomId}`);
+    });
+
+    socket.on("signal", ({ roomId, data }) => {
+      socket.to(roomId).emit("signal", { id: socket.id, data });
+    });
+
     // Handle disconnection
     socket.on("disconnect", (reason) => {
       console.log(`🔌 User disconnected: ${socket.id} - Reason: ${reason}`);

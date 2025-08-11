@@ -18,13 +18,13 @@ export interface ISkillExpertise {
 export interface IInterviewer extends Document {
   _id: string | Types.ObjectId;
   name: string;
-  position: string;
+  position?: string;
   email: string;
-  phone: string;
-  password: string;
-  experience: number; 
-  linkedinProfile: string;
-  expertise: ISkillExpertise[];
+  phone?: string;
+  password?: string;
+  experience?: number; 
+  linkedinProfile?: string;
+  expertise?: ISkillExpertise[];
   avatar?: string;
   isVerified: boolean;
   rating?: number;
@@ -38,12 +38,10 @@ export interface IInterviewer extends Document {
 const skillExpertiseSchema = new Schema({
   skill: {
     type: String,
-    required: true,
     trim: true
   },
   proficiencyLevel: {
     type: String,
-    required: true,
     enum: ["beginner", "intermediate", "advanced", "expert"],
     default: "beginner"
   },
@@ -55,7 +53,6 @@ const skillExpertiseSchema = new Schema({
   skillSource: [{
     type: String,
     enum: ["professional", "academic", "personal", "certification"],
-    required: true
   }]
 }, { _id: false });
 
@@ -69,7 +66,6 @@ const interviewerSchema: Schema = new Schema(
     },
     position: {
       type: String,
-      required: true,
       trim: true
     },
     email: {
@@ -81,7 +77,7 @@ const interviewerSchema: Schema = new Schema(
     },
     phone: {
       type: String,
-      required: true,
+     
       trim: true
     },
     linkedinProfile: {
@@ -90,23 +86,22 @@ const interviewerSchema: Schema = new Schema(
     },
     password: {
       type: String,
-      required: true,
+      
       minlength: 6
     },
     experience: {
       type: Number,
-      required: true,
+     
       min: 0
     },
     expertise: {
       type: [skillExpertiseSchema],
-      required: true,
-      validate: {
-        validator: function(v: ISkillExpertise[]) {
-          return v.length > 0;
-        },
-        message: "At least one skill expertise is required"
-      }
+      // validate: {
+      //   validator: function(v: ISkillExpertise[]) {
+      //     return v.length > 0;
+      //   },
+      //   message: "At least one skill expertise is required"
+      // }
     },
     avatar: {
       type: String,

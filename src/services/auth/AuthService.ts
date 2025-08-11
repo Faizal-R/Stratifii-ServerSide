@@ -270,7 +270,7 @@ export class AuthService implements IAuthService {
       interviewerId
     );
     console.log("resumeInService", resume);
-    const hashedPassword: string = await hashPassword(interviewer.password);
+    const hashedPassword: string = await hashPassword(interviewer.password!);
     const resumeUrl = await uploadOnCloudinary(resume.path!, "raw");
     const setupedInterviewer = await this._interviewerRepository.update(
       interviewerId,
@@ -391,9 +391,17 @@ export class AuthService implements IAuthService {
       const createdInterviewer = await this._interviewerRepository.create(
         newInterviewer
       );
-      // await storeRefreshToken(createdInterviewer._id as string, refreshToken);
-
-      return { isRegister: true, user: createdInterviewer };
+      const accessToken = await generateAccessToken({
+          userId: createdInterviewer._id as string,
+          role: Roles.INTERVIEWER,
+        });
+        const refreshToken = await generateRefreshToken({
+          userId: createdInterviewer._id as string,
+          role: Roles.INTERVIEWER,
+        });
+      await storeRefreshToken(createdInterviewer._id as string, refreshToken);
+         
+      return { isRegister: true, user: createdInterviewer ,accessToken,refreshToken};
     } catch (error) {
       console.log(error);
       if (error instanceof CustomError) {

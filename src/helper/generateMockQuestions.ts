@@ -1,9 +1,14 @@
-
+import Groq from "groq-sdk";
+import dotenv from "dotenv";
 import { CustomError } from "../error/CustomError";
 import { HttpStatus } from "../config/HttpStatusCodes";
-import { groq } from "../config/AiApiConfig";
 
+dotenv.config({ path: "src/.env" });
 
+// Initialize the Groq client
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
+});
 
 // Define the type for each mock question
 export interface IQuestion {
