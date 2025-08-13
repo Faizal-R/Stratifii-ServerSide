@@ -111,6 +111,9 @@ async updateAndSubmitFeedback(interviewId: string, feedback: IInterviewFeedback)
   try {
   
    const interview = await this._interviewRepository.update(interviewId, {feedback,status:"completed"});
+   const delegatedCandidate =   await this._delegatedCandidateRepository.findOne({candidate:interview?.candidate,job:interview?.job})
+   await this._delegatedCandidateRepository.update(delegatedCandidate?._id as string,{status:"final_completed"})
+
    console.log("Updatedinterview",interview);
   } catch (error) {
     throw error;
