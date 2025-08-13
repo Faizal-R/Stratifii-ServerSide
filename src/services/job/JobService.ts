@@ -18,8 +18,9 @@ import { IInterviewSlot } from "../../models/slot/interviewSlot";
 import { IInterviewerRepository } from "../../repositories/interviewer/IInterviewerRepository";
 import { ISlotGenerationRepository } from "../../repositories/slot/slotGenerationRule/ISlotGenerationRepository";
 import { generateSlotsFromRule } from "../../utils/generateSlots";
-import { IBookedSlot } from "../../models/slot/bookedSlot";
-import { IBookedSlotRepository } from "../../repositories/slot/bookedSlot/IBookedSlotRepository";
+
+import { IInterviewRepository } from "../../repositories/interview/IInterviewRepository";
+import { IInterview } from "../../models/interview/Interview";
 
 injectable();
 export class JobService implements IJobService {
@@ -38,8 +39,8 @@ export class JobService implements IJobService {
 
     @inject(DiRepositories.SlotGenerationRepository)
     private readonly _slotGenerationRepository: ISlotGenerationRepository,
-    @inject(DiRepositories.BookedSlotRepository)
-    private readonly _bookedSlotRepository: IBookedSlotRepository
+    @inject(DiRepositories.InterviewRepository)
+    private readonly _interviewRepository: IInterviewRepository
   ) {}
 
   getJobById(jobId: string): Promise<IJob | null> {
@@ -260,14 +261,14 @@ export class JobService implements IJobService {
           const slots = generateSlotsFromRule(rule); // [{ startTime, endTime, duration }]
 
           // Fetch all booked slots with exact match on start and end times for this interviewer
-          const bookedSlots = await this._bookedSlotRepository.find({
+          const bookedSlots = await this._interviewRepository.find({
             interviewer: interviewer._id,
             status: { $ne: "cancelled" },
           });
 
           const enrichedSlots : IInterviewSlot[] = slots.map((slot) => {
             const exactBooked = bookedSlots.find(
-              (booked: IBookedSlot) =>
+              (booked: IInterview) =>
                 new Date(booked.startTime).getTime() ===
                   new Date(slot.startTime).getTime() &&
                 new Date(booked.endTime).getTime() ===

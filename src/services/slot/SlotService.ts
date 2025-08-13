@@ -6,17 +6,19 @@ import { IInterviewSlot } from "../../models/slot/interviewSlot";
 import { inject, injectable } from "inversify";
 import { DiRepositories } from "../../di/types";
 import { generateSlotsFromRule } from "../../utils/generateSlots";
-import { IBookedSlotRepository } from "../../repositories/slot/bookedSlot/IBookedSlotRepository";
-import { IBookedSlot } from "../../models/slot/bookedSlot";
+
 import { IDelegatedCandidateRepository } from "../../repositories/candidate/candidateDelegation/IDelegatedCandidateRepository";
+import { createMeetingRoom } from "../../utils/generateMeetingRoomCode";
+import { IInterviewRepository } from "../../repositories/interview/IInterviewRepository";
+import { IInterview } from "../../models/interview/Interview";
 
 @injectable()
 export class SlotService implements ISlotService {
   constructor(
     @inject(DiRepositories.SlotGenerationRepository)
     private readonly _slotGenerationRepository: ISlotGenerationRepository,
-    @inject(DiRepositories.BookedSlotRepository)
-    private readonly _bookedSlotRepository: IBookedSlotRepository,
+    @inject(DiRepositories.InterviewRepository)
+    private readonly _interviewRepository: IInterviewRepository,
 
     @inject(DiRepositories.DelegatedCandidateRepository)
     private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository
@@ -43,71 +45,54 @@ export class SlotService implements ISlotService {
     }
   }
 
-  // async generateSlotsFromRule(
-  //   rule: ISlotGenerationRule
-  // ): Promise<IInterviewSlot[]> {
-  //   try {
-  //     const slots: IInterviewSlot[] = [];
-  //     const current = new Date();
-  //     const end = new Date(current);
-  //     end.setDate(end.getDate() + 30); // Generate for 30 days
-
-  //     while (current <= end) {
-  //       const day = current.getDay();
-  //       if (rule.availableDays.includes(day)) {
-  //         const dayStart = new Date(current);
-  //         dayStart.setHours(rule.startHour, 0, 0, 0);
-
-  //         const dayEnd = new Date(current);
-  //         dayEnd.setHours(rule.endHour, 0, 0, 0);
-
-  //         let slotStart = new Date(dayStart);
-
-  //         while (slotStart < dayEnd) {
-  //           const slotEnd = new Date(
-  //             slotStart.getTime() + rule.duration * 60 * 1000
-  //           );
-
-  //           if (slotEnd <= dayEnd) {
-  //             slots.push({
-  //               interviewerId: rule.interviewerId,
-  //               startTime: new Date(slotStart),
-  //               endTime: new Date(slotEnd),
-  //               duration: rule.duration,
-  //               status: "available",
-  //               isAvailable: true,
-  //               ruleId: rule._id,
-  //             } as IInterviewSlot);
-  //           }
-
-  //           slotStart = new Date(
-  //             slotStart.getTime() + (rule.duration + rule.buffer) * 60 * 1000
-  //           );
-  //         }
-  //       }
-
-  //       current.setDate(current.getDate() + 1);
-  //     }
-
-  //     return slots;
-  //   } catch (error) {
-  //     console.error("[SlotService] Error generating slots from rule:", error);
-  //     throw error;
-  //   }
-  // }
-
-  async getSlotsByRule(interviewerId: string): Promise<IInterviewSlot[] | []> {
+  async getSlotsByRule(interviewerId: string): Promise<IInterviewSlot[]> {
     try {
       const rule = await this._slotGenerationRepository.findOne({
         interviewerId,
       });
-      console.log("rule", rule);
-      if (!rule) {
-        return [];
-      }
 
+      if (!rule) return [];
+
+      // 1. Generate all potential slots from the rule
       const slots = generateSlotsFromRule(rule);
-      return slots.length > 0 ? slots : [];
+
+      // 2. Fetch booked slots for the same interviewer
+      const bookedSlots = await this._interviewRepository.find({
+        interviewer: interviewerId,
+        status: { $ne: "cancelled" }, // ignore cancelled bookings
+      });
+
+      // 3. Mark generated slots as booked if they match booked slots
+      const updatedSlots = slots.map((slot) => {
+        const isBooked = bookedSlots.some(
+          (booked) =>
+            new Date(booked.startTime).getTime() ===
+              new Date(slot.startTime).getTime() &&
+            new Date(booked.endTime).getTime() ===
+              new Date(slot.endTime).getTime()
+        );
+
+        return {
+          ...slot,
+          isAvailable: !isBooked,
+          status: (isBooked
+            ? "booked"
+            : "available") as IInterviewSlot["status"],
+          bookedBy: isBooked
+            ? bookedSlots
+                .find(
+                  (b) =>
+                    new Date(b.startTime).getTime() ===
+                      new Date(slot.startTime).getTime() &&
+                    new Date(b.endTime).getTime() ===
+                      new Date(slot.endTime).getTime()
+                )
+                ?.bookedBy.toString()
+            : null,
+        };
+      });
+
+      return updatedSlots;
     } catch (error) {
       console.error("[SlotService] Error getting slots by rule:", error);
       throw error;
@@ -138,11 +123,12 @@ export class SlotService implements ISlotService {
     candidate: string;
     job: string;
     bookedBy: string;
-  }): Promise<IBookedSlot> {
+  }): Promise<IInterview> {
     const { interviewer, slot, candidate, job, bookedBy } =
       payloadForSlotBooking;
     try {
-      const bookedSlot = await this._bookedSlotRepository.create({
+      const meetingLink = createMeetingRoom();
+      const bookedSlot = await this._interviewRepository.create({
         interviewer,
         candidate,
         bookedBy,
@@ -150,6 +136,8 @@ export class SlotService implements ISlotService {
         startTime: slot.startTime,
         endTime: slot.endTime,
         duration: slot.duration,
+        bufferDuration: 10,
+        meetingLink,
       });
       const scheduledCandidate =
         await this._delegatedCandidateRepository.findOne({

@@ -56,4 +56,11 @@ router.get(
   interviewerController.getSlotsByRule.bind(interviewerController)
 );
 
+
+router.get("/upcoming-interviews",
+  verifyToken,
+  checkBlockedUser,
+  checkRole([Roles.INTERVIEWER]),
+  interviewerController.getUpcomingInterviews.bind(interviewerController))
+
 export default router;

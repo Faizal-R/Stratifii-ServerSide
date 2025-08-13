@@ -18,6 +18,7 @@ import { inject, injectable } from "inversify";
 import { DiRepositories } from "../../di/types";
 import { uploadOnCloudinary } from "../../helper/cloudinary";
 
+
 @injectable()
 export class InterviewerService implements IInterviewerService {
   constructor(
@@ -110,4 +111,5 @@ export class InterviewerService implements IInterviewerService {
       );
     }
   }
+
 }

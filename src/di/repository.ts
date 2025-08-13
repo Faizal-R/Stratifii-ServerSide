@@ -14,8 +14,8 @@ import { PaymentTransactionRepository } from "../repositories/payment/PaymentTra
 import { SlotGenerationRepository } from "../repositories/slot/slotGenerationRule/SlotGenerationRepository";
 import { SubscriptionPlanRepository } from "../repositories/subscription/subscription-plan/SubscriptionPlanRepository";
 import { SubscriptionRecordRepository } from "../repositories/subscription/subscription-record/SubscriptionRecordRepository";
-import { BookedSlotRepository } from "../repositories/slot/bookedSlot/BookedSlotRepository";
 
+import { InterviewRepository } from "../repositories/interview/InterviewRepository";
 // Bind repositories to container
 container.bind(DiRepositories.AdminRepository).to(AdminRepository).inSingletonScope();
 container.bind(DiRepositories.AuthRepository).to(OtpRepository).inSingletonScope();
@@ -27,5 +27,5 @@ container.bind(DiRepositories.JobRepository).to(JobRepository).inSingletonScope(
 container.bind(DiRepositories.PaymentTransactionRepository).to(PaymentTransactionRepository).inSingletonScope();
 container.bind(DiRepositories.SlotGenerationRepository).to(SlotGenerationRepository).inSingletonScope();
 container.bind(DiRepositories.SubscriptionPlanRepository).to(SubscriptionPlanRepository).inSingletonScope();
-container.bind(DiRepositories.BookedSlotRepository).to(BookedSlotRepository).inSingletonScope();
 container.bind(DiRepositories.SubscriptionRecordRepository).to(SubscriptionRecordRepository).inSingletonScope();
+container.bind(DiRepositories.InterviewRepository).to(InterviewRepository).inSingletonScope();

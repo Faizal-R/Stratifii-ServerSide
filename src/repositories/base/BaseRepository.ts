@@ -4,7 +4,7 @@ import { IBaseRepository } from "./IBaseRepository";
 export abstract class BaseRepository<T extends Document>
   implements IBaseRepository<T>
 {
-  constructor(private model: Model<T>) {}
+  constructor(protected model: Model<T>) {}
 
   create(data: Partial<T>): Promise<T> {
     return this.model.create(data);

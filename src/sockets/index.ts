@@ -17,9 +17,10 @@ export const initializeSocket = (io: Server) => {
       console.error(`Socket error for user ${socket.id}:`, error);
     });
 
-    socket.on("join-room", (roomId) => {
+    socket.on("join-room", ({roomId}) => {
       socket.join(roomId);
       socket.to(roomId).emit("user-joined", socket.id);
+
       console.log(`User ${socket.id} joined room ${roomId}`);
     });
 

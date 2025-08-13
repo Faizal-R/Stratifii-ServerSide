@@ -8,12 +8,11 @@ import {
   USER_COMMON_MESSAGES,
 } from "../../constants/messages/UserProfileMessages";
 
-
-
 import { ISlotService } from "../../services/slot/ISlotService";
 
 import { inject, injectable } from "inversify";
 import { DiServices } from "../../di/types";
+import { IInterviewService } from "../../services/interview/IInterviewService";
 
 @injectable()
 export class InterviewerController implements IInterviewerController {
@@ -21,7 +20,9 @@ export class InterviewerController implements IInterviewerController {
     @inject(DiServices.InterviewerService)
     private readonly _interviewerService: IInterviewerService,
     @inject(DiServices.SlotService)
-    private readonly _slotService: ISlotService
+    private readonly _slotService: ISlotService,
+    @inject(DiServices.InterviewService)
+    private readonly _interviewService: IInterviewService
   ) {}
 
   async getInterviewerProfile(request: Request, response: Response) {
@@ -44,10 +45,9 @@ export class InterviewerController implements IInterviewerController {
   }
   async updateInterviewerProfile(request: Request, response: Response) {
     try {
-      
       const interviewerId = request.user?.userId ?? request.body.interviewerId;
       const interviewer = JSON.parse(request.body.interviewer); //request.body
-      console.log(interviewer)
+      console.log(interviewer);
       const avatar = request.file as Express.Multer.File;
       // if (!interviewer.success) {
       //   return createResponse(
@@ -96,7 +96,10 @@ export class InterviewerController implements IInterviewerController {
       errorResponse(response, error);
     }
   }
-  async createSlotGenerationRule(request: Request, response: Response): Promise<void> {
+  async createSlotGenerationRule(
+    request: Request,
+    response: Response
+  ): Promise<void> {
     try {
       const ruleData = request.body;
       console.log(request.body);
@@ -111,7 +114,7 @@ export class InterviewerController implements IInterviewerController {
         response,
         HttpStatus.OK,
         true,
-        "Slots Generation Rule Created successfully",
+        "Slots Generation Rule Created successfully"
         // INTERVIEWER__SUCCESS_MESSAGES.SLOTS_GENERATED,
         // slots
       );
@@ -120,15 +123,10 @@ export class InterviewerController implements IInterviewerController {
       return errorResponse(response, error);
     }
   }
-  async getSlotsByRule(
-    request: Request,
-    response: Response
-  ): Promise<void> {
+  async getSlotsByRule(request: Request, response: Response): Promise<void> {
     const interviewerId = request.params.id;
     try {
-      const slots = await this._slotService.getSlotsByRule(
-        interviewerId
-      );
+      const slots = await this._slotService.getSlotsByRule(interviewerId);
       console.log("slots", slots);
 
       return createResponse(
@@ -143,25 +141,49 @@ export class InterviewerController implements IInterviewerController {
       return errorResponse(response, error);
     }
   }
-  
-async  getInterviewerSlotGenerationRule(request: Request, response: Response): Promise<void> {
-     const interviewerId = request.params.id;
+
+  async getInterviewerSlotGenerationRule(
+    request: Request,
+    response: Response
+  ): Promise<void> {
+    const interviewerId = request.params.id;
     try {
-      const rule =await  this._slotService.getInterviewerSlotGenerationRule(
-        interviewerId
-      );
-      console.log(interviewerId,"Rule in Interviewer Controller", rule);
+      const rule =
+        await this._slotService.getInterviewerSlotGenerationRule(interviewerId);
+      console.log(interviewerId, "Rule in Interviewer Controller", rule);
       return createResponse(
         response,
         HttpStatus.OK,
         true,
-        'Successfully fetched interviewer slot generation rule',
+        "Successfully fetched interviewer slot generation rule",
         // "Slots fetched successfully",
         //  INTERVIEWER__SUCCESS_MESSAGES.SLOTS_FETCHED,
-       rule
+        rule
       );
     } catch (error) {
       return errorResponse(response, error);
+    }
+  }
+
+  async getUpcomingInterviews(
+    request: Request,
+    response: Response
+  ): Promise<void> {
+    try {
+      const interviewerId = request.user?.userId;
+      const upcomingInterviews =
+        await this._interviewService.getUpcomingInterviews(interviewerId!);
+
+      return createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        "Successfully fetched upcoming interviews",
+
+        upcomingInterviews
+      );
+    } catch (error) {
+      errorResponse(response, error);
     }
   }
 }

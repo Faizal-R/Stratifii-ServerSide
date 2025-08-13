@@ -6,7 +6,7 @@ export interface IInterviewSlot  {
   duration: number;
   isAvailable: boolean;
   status: 'available' | 'booked' | 'completed' | 'cancelled' | 'expired';
-  bookedBy?: string | null;
+  bookedBy?: string | null ;
   ruleId?: string;
 
 }

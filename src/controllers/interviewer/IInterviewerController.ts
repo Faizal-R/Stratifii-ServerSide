@@ -10,5 +10,6 @@ export interface IInterviewerController{
     response: Response
   ): Promise<void>
   getInterviewerSlotGenerationRule(request: Request, response: Response): Promise<void>
+  getUpcomingInterviews(request: Request, response: Response): Promise<void>
     
 }

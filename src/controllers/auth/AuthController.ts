@@ -34,6 +34,7 @@ export class AuthController implements IAuthController {
       // Authenticate user
       const { accessToken, refreshToken, user, subscription } =
         await this._authService.login(loginData);
+        console.log(accessToken)
 
       // Set refresh token as an HTTP-only cookie
       response.cookie(`refreshToken`, refreshToken, COOKIE_OPTIONS);

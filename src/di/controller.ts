@@ -11,6 +11,7 @@ import { PaymentTransactionController } from "../controllers/payment/PaymentTran
 import { CandidateController } from "../controllers/candidate/CandidateController";
 import { SubscriptionController } from "../controllers/subscription/SubscriptionController";
 import { SlotController } from "../controllers/slot/SlotController";
+import { InterviewController } from "../controllers/interview/InterviewController";
 
 // Interfaces
 import { IAuthController } from "../controllers/auth/IAuthController";
@@ -22,6 +23,7 @@ import { IPaymentTransactionController } from "../controllers/payment/IPaymentTr
 import { ICandidateController } from "../controllers/candidate/ICandidateController";
 import { ISubscriptionController } from "../controllers/subscription/ISubscriptonController";
 import { ISlotController } from "../controllers/slot/ISlotController";
+import { IInterviewController } from "../controllers/interview/IInterviewController";
 
 // Bind controllers with interfaces
 container.bind<IAuthController>(DiControllers.AuthController).to(AuthController);
@@ -33,3 +35,4 @@ container.bind<IPaymentTransactionController>(DiControllers.PaymentTransactionCo
 container.bind<ICandidateController>(DiControllers.CandidateController).to(CandidateController);
 container.bind<ISubscriptionController>(DiControllers.SubscriptionController).to(SubscriptionController);
 container.bind<ISlotController>(DiControllers.SlotController).to(SlotController);
+container.bind<IInterviewController>(DiControllers.InterviewController).to(InterviewController);

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import adminRoutes from './admin/AdminRoutes'
 import interviewerRoutes from "./interviewer/InterviewerRoutes";
+import interviewRoutes from './interview/InterviewRoutes'
 import candidateRoutes from './candidate/CandidateRoutes'
 import companyRoutes from './company/CompanyRoutes'
 import authRoutes from './auth/AuthRoutes'
@@ -20,6 +21,7 @@ router.use('/company',verifyToken,checkBlockedUser,checkRole([Roles.COMPANY]),co
 router.use('/auth',authRoutes)
 router.use('/payment',verifyToken,checkBlockedUser,checkRole([Roles.COMPANY]),paymentRoutes)
 router.use('/subscription',verifyToken,subscriptionRoutes)
+router.use('/interview',interviewRoutes)
 
 
 
