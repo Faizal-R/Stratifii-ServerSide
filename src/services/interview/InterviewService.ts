@@ -10,7 +10,10 @@ import {
 import { IJob } from "../../models/job/Job";
 import { CustomError } from "../../error/CustomError";
 import { HttpStatus } from "../../config/HttpStatusCodes";
-import { IInterview, IInterviewFeedback } from "../../models/interview/Interview";
+import {
+  IInterview,
+  IInterviewFeedback,
+} from "../../models/interview/Interview";
 import { IInterviewRepository } from "../../repositories/interview/IInterviewRepository";
 
 @injectable()
@@ -107,29 +110,43 @@ export class InterviewService implements IInterviewService {
       throw error;
     }
   }
-async updateAndSubmitFeedback(interviewId: string, feedback: IInterviewFeedback): Promise<void> {
-  try {
-  
-   const interview = await this._interviewRepository.update(interviewId, {feedback,status:"completed"});
-   const delegatedCandidate =   await this._delegatedCandidateRepository.findOne({candidate:interview?.candidate,job:interview?.job})
-   await this._delegatedCandidateRepository.update(delegatedCandidate?._id as string,{status:"final_completed"})
+  async updateAndSubmitFeedback(
+    interviewId: string,
+    feedback: IInterviewFeedback
+  ): Promise<void> {
+    try {
+      const interview = await this._interviewRepository.update(interviewId, {
+        feedback,
+        status: "completed",
+      });
+      const delegatedCandidate =
+        await this._delegatedCandidateRepository.findOne({
+          candidate: interview?.candidate,
+          job: interview?.job,
+        });
+      await this._delegatedCandidateRepository.update(
+        delegatedCandidate?._id as string,
+        { status: "final_completed",finalInterviewFeedback:feedback }
+      );
 
-   console.log("Updatedinterview",interview);
-  } catch (error) {
-    throw error;
-  }
-}
-async getScheduledInterviews(candidateId:string ): Promise<IInterview[] | []> {
-  try {
-    const interviews =await this._interviewRepository.getInterviewDetails({candidate:candidateId});
-    if(!interviews) {
-      return []
+      console.log("Updatedinterview", interview);
+    } catch (error) {
+      throw error;
     }
-    return interviews
-  } catch (error) {
-    throw error
+  }
+  async getScheduledInterviews(
+    candidateId: string
+  ): Promise<IInterview[] | []> {
+    try {
+      const interviews = await this._interviewRepository.getInterviewDetails({
+        candidate: candidateId,
+      });
+      if (!interviews) {
+        return [];
+      }
+      return interviews;
+    } catch (error) {
+      throw error;
+    }
   }
 }
-}
-
-

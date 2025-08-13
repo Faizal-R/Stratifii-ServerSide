@@ -16,9 +16,20 @@ export interface IDelegatedCandidate extends Document {
     | "final_scheduled"
     | "final_completed"
     | "rejected";
- isInterviewScheduled?:boolean;
+  isInterviewScheduled?: boolean;
   interviewTimeZone?: string;
-  feedback?: string;
+  finalInterviewFeedback?: {
+    technicalScore?: number;
+    communicationScore?: number;
+    problemSolvingScore?: number;
+    culturalFitScore?: number;
+    overallScore?: number;
+    strengths?: string;
+    areasForImprovement?: string;
+    comments?: string;
+    recommendation?: "hire" | "no-hire" | "maybe";
+  };
+
   aiMockResult?: {
     totalQuestions: number;
     correctAnswers: number;
@@ -79,8 +90,19 @@ const DelegatedCandidateSchema: Schema = new Schema(
     interviewTimeZone: {
       type: String,
     },
-    feedback: {
-      type: String,
+    finalInterviewFeedback: {
+      technicalScore: { type: Number },
+      communicationScore: { type: Number },
+      problemSolvingScore: { type: Number },
+      culturalFitScore: { type: Number },
+      overallScore: { type: Number },
+      strengths: { type: String },
+      areasForImprovement: { type: String },
+      comments: { type: String },
+      recommendation: {
+        type: String,
+        enum: ["hire", "no-hire", "maybe"],
+      },
     },
   },
   { timestamps: true }
