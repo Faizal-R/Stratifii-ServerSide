@@ -3,7 +3,7 @@ import { IDelegatedCandidate } from "../../../models/candidate/DelegatedCandidat
 import { IBaseRepository } from "../../base/IBaseRepository";
 
 export interface IDelegatedCandidateRepository extends IBaseRepository<IDelegatedCandidate>{
-    getCandidatesByJobId(jobId: string): Promise<IDelegatedCandidate[]>;
+    getCandidatesByJob(jobId: string,query?: FilterQuery<IDelegatedCandidate>): Promise<IDelegatedCandidate[]>;
     getDelegatedJobsByCandidateId(candidateId:string):Promise<IDelegatedCandidate[]>
      getDelegationDetails(
         query: FilterQuery<IDelegatedCandidate>

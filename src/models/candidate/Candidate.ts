@@ -1,6 +1,7 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, Types } from "mongoose";
 
 export interface ICandidate extends Document {
+  _id:Types.ObjectId | string;
   email: string;
   password?: string;
   name: string;

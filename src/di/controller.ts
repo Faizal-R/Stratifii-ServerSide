@@ -6,10 +6,12 @@ import { AuthController } from "../controllers/auth/AuthController";
 import { AdminController } from "../controllers/admin/AdminController";
 import { CompanyController } from "../controllers/company/CompanyController";
 import { JobController } from "../controllers/job/JobController";
-import { InterviewerController } from "../controllers/interviewer/InterviewController";
+import { InterviewerController } from "../controllers/interviewer/InterviewerController";
 import { PaymentTransactionController } from "../controllers/payment/PaymentTransactionController";
 import { CandidateController } from "../controllers/candidate/CandidateController";
 import { SubscriptionController } from "../controllers/subscription/SubscriptionController";
+import { SlotController } from "../controllers/slot/SlotController";
+import { InterviewController } from "../controllers/interview/InterviewController";
 
 // Interfaces
 import { IAuthController } from "../controllers/auth/IAuthController";
@@ -20,6 +22,8 @@ import { IInterviewerController } from "../controllers/interviewer/IInterviewerC
 import { IPaymentTransactionController } from "../controllers/payment/IPaymentTransactionController";
 import { ICandidateController } from "../controllers/candidate/ICandidateController";
 import { ISubscriptionController } from "../controllers/subscription/ISubscriptonController";
+import { ISlotController } from "../controllers/slot/ISlotController";
+import { IInterviewController } from "../controllers/interview/IInterviewController";
 
 // Bind controllers with interfaces
 container.bind<IAuthController>(DiControllers.AuthController).to(AuthController);
@@ -30,3 +34,5 @@ container.bind<IInterviewerController>(DiControllers.InterviewerController).to(I
 container.bind<IPaymentTransactionController>(DiControllers.PaymentTransactionController).to(PaymentTransactionController);
 container.bind<ICandidateController>(DiControllers.CandidateController).to(CandidateController);
 container.bind<ISubscriptionController>(DiControllers.SubscriptionController).to(SubscriptionController);
+container.bind<ISlotController>(DiControllers.SlotController).to(SlotController);
+container.bind<IInterviewController>(DiControllers.InterviewController).to(InterviewController);

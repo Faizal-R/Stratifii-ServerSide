@@ -7,7 +7,7 @@ export interface ICandidateService{
       delegatedCandidateId: string;
       jobId: string;
       jobTitle: string;
-      companyName: string;
+      name: string;
       mockStatus: string;
     }[]>
 }

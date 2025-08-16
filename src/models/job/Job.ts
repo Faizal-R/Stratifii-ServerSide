@@ -5,7 +5,6 @@ export interface IJob extends Document {
   position: string;
   description?: string;
   requiredSkills: string[];
-  deadline: Date;
   status: "open" | "in-progress" | "completed";
   experienceRequired: number;
   paymentTransaction?: Types.ObjectId;
@@ -28,10 +27,6 @@ const JobSchema: Schema = new Schema(
     requiredSkills: {
       type: [String],
       default: [],
-    },
-    deadline: {
-      type: Date,
-      required: true,
     },
     status: {
       type: String,

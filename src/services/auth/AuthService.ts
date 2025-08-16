@@ -6,6 +6,7 @@ import { ICompany } from "../../models/company/Company";
 import {
   IGoogleInterviewer,
   IInterviewer,
+  TStatus,
 } from "../../models/interviewer/Interviewer";
 
 import {
@@ -46,39 +47,51 @@ import { ISubscriptionPlanService } from "../subscription/subscription-plan/ISub
 import { ISubscriptionRecord } from "../../models/subscription/SubscriptionRecord";
 import { inject, injectable } from "inversify";
 import { DiRepositories } from "../../di/types";
-
-type UserType = ICompany | IInterviewer | ICandidate;
+import {
+  LoginRequestDTO,
+  LoginRequestSchema,
+} from "../../dto/request/auth/LoginRequestDTO";
+import { TUserType } from "../../types/user";
+import {
+  mapToAuthResponseDTO,
+  mapToAuthUserResponseDTO,
+} from "../../mapper/auth/AuthMapper";
+import {
+  AuthLoginResponseDTO,
+  AuthUserResponseDTO,
+} from "../../dto/response/auth/AuthResponseDTO";
+import { InterviewerRegisterRequestDTO, InterviewerRegisterSchema } from "../../dto/request/auth/RegisterRequestDTO";
 
 @injectable()
 export class AuthService implements IAuthService {
-constructor(
-  @inject(DiRepositories.InterviewerRepository)
-  private readonly _interviewerRepository: IInterviewerRepository,
+  constructor(
+    @inject(DiRepositories.InterviewerRepository)
+    private readonly _interviewerRepository: IInterviewerRepository,
 
-  @inject(DiRepositories.CandidateRepository)
-  private readonly _candidateRepository: ICandidateRepository,
+    @inject(DiRepositories.CandidateRepository)
+    private readonly _candidateRepository: ICandidateRepository,
 
-  @inject(DiRepositories.CompanyRepository)
-  private readonly _companyRepository: ICompanyRepository,
+    @inject(DiRepositories.CompanyRepository)
+    private readonly _companyRepository: ICompanyRepository,
 
-  @inject(DiRepositories.AuthRepository)
-  private readonly _otpRepository: IOtpRepository,
+    @inject(DiRepositories.AuthRepository)
+    private readonly _otpRepository: IOtpRepository,
 
-  @inject(DiRepositories.SubscriptionRecordRepository)
-  private readonly _subscriptionRecord: ISubscriptionRecordRepository
-) {}
+    @inject(DiRepositories.SubscriptionRecordRepository)
+    private readonly _subscriptionRecord: ISubscriptionRecordRepository
+  ) {}
 
-  async login(
-    role: Roles,
-    email: string,
-    password: string
-  ): Promise<{
-    accessToken: string;
-    refreshToken: string;
-    user: UserType;
-    subscriptionDetails?: ISubscriptionRecord | null;
-  }> {
-    let user: UserType | null | undefined;
+  async login(authPayload: LoginRequestDTO): Promise<AuthLoginResponseDTO> {
+    const validatedAuthPayload = LoginRequestSchema.safeParse(authPayload);
+
+    if (!validatedAuthPayload.success) {
+      const firstIssue = validatedAuthPayload.error.issues[0];
+      throw new CustomError(firstIssue.message, HttpStatus.BAD_REQUEST);
+    }
+
+    const { email, password, role } = validatedAuthPayload.data;
+
+    let user: TUserType | null | undefined;
 
     switch (role) {
       case Roles.COMPANY:
@@ -134,13 +147,17 @@ constructor(
     let subscriptionDetails: ISubscriptionRecord | null = null;
 
     if (role == Roles.COMPANY) {
-      subscriptionDetails =
-        await this._subscriptionRecord.findOne(
-          {subscriberId:user._id as string}
-        );
+      subscriptionDetails = await this._subscriptionRecord.findOne({
+        subscriberId: user._id as string,
+      });
     }
 
-    return { accessToken, refreshToken, user, subscriptionDetails };
+    return mapToAuthResponseDTO({
+      accessToken,
+      refreshToken,
+      user,
+      subscriptionDetails,
+    });
   }
 
   async sendVerificationCode(email: string) {
@@ -157,7 +174,7 @@ constructor(
     await sendEmail(email, html);
   }
 
-  async registerCompany(company: ICompany): Promise<ICompany> {
+  async registerCompany(company: ICompany): Promise<AuthUserResponseDTO> {
     try {
       const validatedData = companyRegistrationSchema.parse(company);
 
@@ -173,10 +190,14 @@ constructor(
 
       validatedData.password = await hashPassword(validatedData.password);
 
-      const newCompany: Omit<ICompany, keyof Document> = { ...validatedData };
-      const newCom = await this._companyRepository.create(newCompany);
-      await this.sendVerificationCode(newCom.email);
-      return newCom;
+      const validatedCompany: Omit<ICompany, keyof Document> = {
+        ...validatedData,
+      };
+      const createdCompany = await this._companyRepository.create(
+        validatedCompany
+      );
+      await this.sendVerificationCode(createdCompany.email);
+      return mapToAuthUserResponseDTO(createdCompany);
     } catch (error) {
       console.log(error);
       if (error instanceof CustomError) {
@@ -198,10 +219,17 @@ constructor(
   }
 
   async registerInterviewer(
-    interviewer: IInterviewer,
+    interviewer: InterviewerRegisterRequestDTO,
     resume: Express.Multer.File
-  ): Promise<IInterviewer> {
-    const validatedData = interviewerSchema.parse(interviewer);
+  ): Promise<AuthUserResponseDTO> {
+    const parsedResult = InterviewerRegisterSchema.safeParse(interviewer);
+
+    if (!parsedResult.success) {
+      const firstError = parsedResult.error.errors[0];
+      throw new CustomError(firstError.message, 400);
+    }
+
+    const validatedData = parsedResult.data;
 
     const existingUser = await this._interviewerRepository.findByEmail(
       validatedData.email
@@ -212,30 +240,21 @@ constructor(
 
     const hashedPassword = await hashPassword(validatedData.password);
     const resumeUrl = await uploadOnCloudinary(resume?.path!, "raw");
-
-    const validatedInterviewer: Omit<IInterviewer, keyof Document> = {
-      name: validatedData.name,
-      email: validatedData.email,
-      position: validatedData.position,
+     
+    const validatedInterviewer={
+      ...validatedData,
       password: hashedPassword,
-      phone: validatedData.phone,
-      experience: validatedData.experience,
-      linkedinProfile: validatedData.linkedinProfile,
-      languages: validatedData.languages,
-      availableDays: validatedData.availableDays,
-      professionalSummary: validatedData.professionalSummary,
-      expertise: validatedData.expertise,
-      isVerified: false,
-      status: "pending",
-      isBlocked: false,
       resume: resumeUrl,
-    };
-    const newInterviewer = await this._interviewerRepository.create(
+      status: "pending" as TStatus,
+      isBlocked: false,
+    }
+
+    const createdInterviewer = await this._interviewerRepository.create(
       validatedInterviewer
     );
-    await this.sendVerificationCode(newInterviewer.email);
+    await this.sendVerificationCode(createdInterviewer.email);
 
-    return newInterviewer;
+    return mapToAuthUserResponseDTO(createdInterviewer);
   }
 
   async setupInterviewerAccount(
@@ -251,7 +270,7 @@ constructor(
       interviewerId
     );
     console.log("resumeInService", resume);
-    const hashedPassword: string = await hashPassword(interviewer.password);
+    const hashedPassword: string = await hashPassword(interviewer.password!);
     const resumeUrl = await uploadOnCloudinary(resume.path!, "raw");
     const setupedInterviewer = await this._interviewerRepository.update(
       interviewerId,
@@ -372,9 +391,17 @@ constructor(
       const createdInterviewer = await this._interviewerRepository.create(
         newInterviewer
       );
-      // await storeRefreshToken(createdInterviewer._id as string, refreshToken);
-
-      return { isRegister: true, user: createdInterviewer };
+      const accessToken = await generateAccessToken({
+          userId: createdInterviewer._id as string,
+          role: Roles.INTERVIEWER,
+        });
+        const refreshToken = await generateRefreshToken({
+          userId: createdInterviewer._id as string,
+          role: Roles.INTERVIEWER,
+        });
+      await storeRefreshToken(createdInterviewer._id as string, refreshToken);
+         
+      return { isRegister: true, user: createdInterviewer ,accessToken,refreshToken};
     } catch (error) {
       console.log(error);
       if (error instanceof CustomError) {
@@ -389,7 +416,7 @@ constructor(
   }
 
   async requestPasswordReset(email: string, role: string) {
-    let user: UserType | null;
+    let user: TUserType | null;
     try {
       switch (role) {
         case Roles.COMPANY:
@@ -449,7 +476,7 @@ constructor(
     }
 
     const hashedPassword = await hashPassword(password);
-    let user: UserType | null;
+    let user: TUserType | null;
     let role = decoded.role;
     try {
       switch (role) {

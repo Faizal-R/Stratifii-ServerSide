@@ -7,19 +7,18 @@ import { IAuthController } from "./IAuthController";
 import { COOKIE_OPTIONS } from "../../config/CookieConfig";
 import { ICompany } from "../../models/company/Company";
 import { CustomError } from "../../error/CustomError";
-import { IInterviewer } from "../../models/interviewer/Interviewer";
 import jwt from "jsonwebtoken";
 import { AUTH_MESSAGES } from "../../constants/messages/AuthMessages";
 import { ERROR_MESSAGES } from "../../constants/messages//ErrorMessages";
 import { TokenPayload } from "../../middlewares/Auth";
-import {
-  deleteRefreshToken,
-  storeRefreshToken,
-} from "../../helper/handleRefreshToken";
+import { deleteRefreshToken } from "../../helper/handleRefreshToken";
 import { VALIDATION_MESSAGES } from "../../constants/messages/ValidationMessages";
 import { INTERVIEWER__SUCCESS_MESSAGES } from "../../constants/messages/UserProfileMessages";
 import { inject, injectable } from "inversify";
 import { DiServices } from "../../di/types";
+import { LoginRequestDTO } from "../../dto/request/auth/LoginRequestDTO";
+import { InterviewerRegisterRequestDTO } from "../../dto/request/auth/RegisterRequestDTO";
+
 @injectable()
 export class AuthController implements IAuthController {
   constructor(
@@ -29,40 +28,17 @@ export class AuthController implements IAuthController {
 
   async login(request: Request, response: Response): Promise<void> {
     try {
-      const { role, email, password } = request.body;
+      const loginData: LoginRequestDTO = request.body;
       console.log(request.body);
 
-      // Validate request body
-      if (!role || !email || !password) {
-        return createResponse(
-          response,
-          HttpStatus.BAD_REQUEST,
-          false,
-          VALIDATION_MESSAGES.ALL_FIELDS_REQUIRED
-        );
-      }
-
-      // Validate role
-      if (!Object.values(Roles).includes(role)) {
-        return createResponse(
-          response,
-          HttpStatus.BAD_REQUEST,
-          false,
-          ERROR_MESSAGES.INVALID_INPUT
-        );
-      }
-
       // Authenticate user
-      const {
-        accessToken,
-        refreshToken,
-        user,
-        subscriptionDetails: subscription,
-      } = await this._authService.login(role, email, password);
+      const { accessToken, refreshToken, user, subscription } =
+        await this._authService.login(loginData);
+        console.log(accessToken)
 
       // Set refresh token as an HTTP-only cookie
-      response.cookie(`${role}RefreshToken`, refreshToken, COOKIE_OPTIONS);
-      console.log;
+      response.cookie(`refreshToken`, refreshToken, COOKIE_OPTIONS);
+
       // Send success response
       return createResponse(
         response,
@@ -103,7 +79,11 @@ export class AuthController implements IAuthController {
 
   async registerInterviewer(request: Request, response: Response) {
     try {
-      const interviewer: IInterviewer = JSON.parse(request.body.data);
+      const interviewer: InterviewerRegisterRequestDTO = JSON.parse(
+        request.body.data
+      );
+
+      console.log(interviewer);
 
       const newInterviewer = await this._authService.registerInterviewer(
         interviewer,
@@ -144,11 +124,7 @@ export class AuthController implements IAuthController {
           interviewer,
           resume
         );
-      response.cookie(
-        `${Roles.INTERVIEWER}RefreshToken`,
-        refreshToken,
-        COOKIE_OPTIONS
-      );
+      response.cookie(`refreshToken`, refreshToken, COOKIE_OPTIONS);
       createResponse(
         response,
         HttpStatus.OK,
@@ -208,6 +184,7 @@ export class AuthController implements IAuthController {
       }
       const { accessToken, refreshToken, user, isRegister } =
         await this._authService.googleAuthentication(email, name);
+      console.log(refreshToken,user);
       if (isRegister) {
         return createResponse(
           response,
@@ -217,13 +194,8 @@ export class AuthController implements IAuthController {
           { user }
         );
       }
-
-      response.cookie(
-        `${Roles.INTERVIEWER}RefreshToken`,
-        refreshToken,
-        COOKIE_OPTIONS
-      );
-
+      
+      response.cookie(`refreshToken`, refreshToken, COOKIE_OPTIONS);
       return createResponse(
         response,
         HttpStatus.OK,
@@ -309,10 +281,8 @@ export class AuthController implements IAuthController {
 
   async refreshAccessToken(request: Request, response: Response) {
     try {
-      const incomingRole = request.body.role;
-
-      const incomingRefreshToken =
-        request.cookies[`${incomingRole}RefreshToken`];
+      const incomingRefreshToken = request.cookies[`refreshToken`];
+      console.log()
       console.log(request.cookies);
       if (!incomingRefreshToken) {
         throw new CustomError(
@@ -320,7 +290,7 @@ export class AuthController implements IAuthController {
           HttpStatus.UNAUTHORIZED
         );
       }
-      const { userId, role } = (await jwt.verify(
+      const { userId } = (await jwt.verify(
         incomingRefreshToken,
         process.env.REFRESH_TOKEN_SECRET as string
       )) as TokenPayload;
@@ -330,7 +300,7 @@ export class AuthController implements IAuthController {
           userId as string,
           incomingRefreshToken
         );
-      response.cookie(`${role}RefreshToken`, refreshToken, COOKIE_OPTIONS);
+      response.cookie(`refreshToken`, refreshToken, COOKIE_OPTIONS);
       return createResponse(
         response,
         HttpStatus.OK,
@@ -345,7 +315,6 @@ export class AuthController implements IAuthController {
   }
   async verifyUserAccount(request: Request, response: Response): Promise<void> {
     const { email } = request.body;
-    console.log("enter in the otp controller");
     try {
       await this._authService.sendVerificationCode(email);
       createResponse(
@@ -362,7 +331,7 @@ export class AuthController implements IAuthController {
   signout(request: Request, response: Response): void {
     try {
       const user = request.user;
-      response.clearCookie(`${user?.role}RefreshToken`);
+      response.clearCookie(`refreshToken`);
       deleteRefreshToken(user?.userId as string);
 
       return createResponse(

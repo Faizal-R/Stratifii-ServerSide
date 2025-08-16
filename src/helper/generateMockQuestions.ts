@@ -93,7 +93,10 @@ Make sure all questions are based on the given skills and experience.
         HttpStatus.BAD_REQUEST
       );
     }
-  } catch (err: any) {
-    console.error("❌ API Error or Invalid JSON:", err.message);
+  } catch (err) {
+    if (err instanceof CustomError) {
+      console.error("❌ API Error or Invalid JSON:", err.message);
+      throw err;
+    }
   }
 }

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // Define company registration schema
 export const companyRegistrationSchema = z.object({
-  companyName: z.string().min(3, "Company name must be at least 3 characters."),
+  name: z.string().min(3, "Company name must be at least 3 characters."),
   email: z.string().email("Invalid email format."),
   companyWebsite: z.string().url("Invalid website URL."),
   registrationCertificateNumber: z
@@ -35,7 +35,7 @@ export const statusEnum = z.enum(["approved", "pending", "rejected"], {
 
 export const CompanyProfileSchema = z.object({
 
-  companyName: z.string().min(1, "Company name is required").trim(),
+  name: z.string().min(1, "Company name is required").trim(),
   email: z
     .string()
     .regex(

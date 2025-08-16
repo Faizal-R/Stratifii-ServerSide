@@ -33,7 +33,7 @@ export class SubscriptionPlanService implements ISubscriptionPlanService {
 
   async getAllSubscriptions(): Promise<ISubscriptionPlan[]> {
     try {
-      return await this._subscriptionPlanRepository.findAll();
+      return await this._subscriptionPlanRepository.find();
     } catch (error) {
       console.error("Error fetching subscriptions:", error);
       throw new CustomError(

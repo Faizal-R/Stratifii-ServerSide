@@ -3,7 +3,8 @@ import { TStatus } from "../interviewer/Interviewer";
 // import { TStatus } from "./IInterviewerModel"; // Ensure this module exists or remove if not needed
 
 export interface ICompany extends Document {
-  companyName: string;
+  _id: Types.ObjectId|string;
+  name: string;
   email: string;
   companyLogo?: string;
   headquartersLocation?: string;
@@ -28,7 +29,7 @@ export interface ICompany extends Document {
 
 const CompanySchema: Schema = new Schema(
   {
-    companyName: {
+    name: {
       type: String,
       required: true,
       trim: true,

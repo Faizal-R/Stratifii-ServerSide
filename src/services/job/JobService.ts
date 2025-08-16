@@ -11,7 +11,16 @@ import { Types } from "mongoose";
 import { IDelegatedCandidateRepository } from "../../repositories/candidate/candidateDelegation/IDelegatedCandidateRepository";
 import { inject, injectable } from "inversify";
 import { DiRepositories } from "../../di/types";
-import { stat } from "fs";
+import { IDelegatedCandidate } from "../../models/candidate/DelegatedCandidate";
+
+import { IInterviewer } from "../../models/interviewer/Interviewer";
+import { IInterviewSlot } from "../../models/slot/interviewSlot";
+import { IInterviewerRepository } from "../../repositories/interviewer/IInterviewerRepository";
+import { ISlotGenerationRepository } from "../../repositories/slot/slotGenerationRule/ISlotGenerationRepository";
+import { generateSlotsFromRule } from "../../utils/generateSlots";
+
+import { IInterviewRepository } from "../../repositories/interview/IInterviewRepository";
+import { IInterview } from "../../models/interview/Interview";
 
 injectable();
 export class JobService implements IJobService {
@@ -23,7 +32,15 @@ export class JobService implements IJobService {
     private readonly _candidateRepository: ICandidateRepository,
 
     @inject(DiRepositories.DelegatedCandidateRepository)
-    private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository
+    private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository,
+
+    @inject(DiRepositories.InterviewerRepository)
+    private readonly _interviewerRepository: IInterviewerRepository,
+
+    @inject(DiRepositories.SlotGenerationRepository)
+    private readonly _slotGenerationRepository: ISlotGenerationRepository,
+    @inject(DiRepositories.InterviewRepository)
+    private readonly _interviewRepository: IInterviewRepository
   ) {}
 
   getJobById(jobId: string): Promise<IJob | null> {
@@ -31,7 +48,7 @@ export class JobService implements IJobService {
   }
   async getJobs(company: string): Promise<IJob[] | []> {
     try {
-      const jobs = await this._jobRepository.findAll({ company });
+      const jobs = await this._jobRepository.find({ company });
 
       return jobs;
     } catch (error) {
@@ -80,11 +97,11 @@ export class JobService implements IJobService {
     }
   }
 
-  async createCandidatesFromResumesAndAddToJob(
+  async createCandidatesFromResumes(
     jobId: Types.ObjectId,
     resumes: Express.Multer.File[],
     companyId: Types.ObjectId
-  ): Promise<Types.ObjectId[]> {
+  ): Promise<IDelegatedCandidate[] | IDelegatedCandidate> {
     const addedDelegations: Types.ObjectId[] = [];
 
     try {
@@ -126,9 +143,23 @@ export class JobService implements IJobService {
         }
       }
 
-      return addedDelegations;
+      const allCandidates = await Promise.all(
+        addedDelegations.map((delegationId) =>
+          this._delegatedCandidateRepository.getDelegationDetails({
+            _id: delegationId,
+          })
+        )
+      );
+      console.log(allCandidates);
+
+      // Filter out any null values to ensure correct type
+      const filteredCandidates = allCandidates.filter(
+        (candidate): candidate is IDelegatedCandidate => candidate !== null
+      );
+
+      return filteredCandidates;
     } catch (error) {
-      console.error("Error in createCandidatesFromResumesAndAddToJob:", error);
+      console.error("Error in createCandidatesFromResumes:", error);
       throw new CustomError(
         ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
         HttpStatus.INTERNAL_SERVER_ERROR
@@ -136,15 +167,133 @@ export class JobService implements IJobService {
     }
   }
 
-  getCandidatesByJobId(jobId: string): Promise<any[] | []> {
+  getCandidatesByJob(jobId: string): Promise<any[] | []> {
     try {
       const candidates =
-        this._delegatedCandidateRepository.getCandidatesByJobId(jobId);
+        this._delegatedCandidateRepository.getCandidatesByJob(jobId);
       if (!candidates) {
         throw new CustomError(ERROR_MESSAGES.NOT_FOUND, HttpStatus.NOT_FOUND);
       }
       return candidates;
     } catch (error) {
+      throw new CustomError(
+        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async getJobsInProgress(
+    company: string
+  ): Promise<{ job: IJob; qualifiedCandidatesCount: number }[]> {
+    try {
+      const jobs = await this._jobRepository.find({
+        company,
+        status: "in-progress",
+      });
+
+      const jobsWithQualifiedCandidates = await Promise.all(
+        jobs.map(async (job) => {
+          const candidates = await this._delegatedCandidateRepository.find({
+            job: job._id,
+            status: "mock_completed",
+          });
+
+          return {
+            job,
+            qualifiedCandidatesCount: candidates.length,
+          };
+        })
+      );
+
+      return jobsWithQualifiedCandidates;
+    } catch (error) {
+      throw new CustomError(
+        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+  async getMockQualifiedCandidatesByJob(
+    job: string
+  ): Promise<IDelegatedCandidate[] | []> {
+    try {
+      const candidates =
+        await this._delegatedCandidateRepository.getCandidatesByJob(job, {
+          status: "mock_completed",
+        });
+      console.log(candidates);
+      return candidates;
+    } catch (error) {
+      throw new CustomError(
+        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+  async getMatchedInterviewersByJobDescription(
+    jobId: string
+  ): Promise<{ interviewer: IInterviewer; slots: IInterviewSlot[] }[] | []> {
+    try {
+      const jobDetails = await this._jobRepository.findById(jobId);
+      if (!jobDetails) return [];
+
+      const allInterviewers = await this._interviewerRepository.find();
+
+      const matchedInterviewers = allInterviewers
+        .map((interviewer) => {
+          const matchCount = (interviewer.expertise||[]).filter((exp) =>
+            jobDetails.requiredSkills.includes(exp.skill)
+          ).length;
+
+          return { interviewer, matchCount };
+        })
+        .filter(({ matchCount }) => matchCount > 0)
+        .sort((a, b) => b.matchCount - a.matchCount);
+      console.log("Matched Interviewers", matchedInterviewers);
+
+      const interviewersWithSlots = await Promise.all(
+        matchedInterviewers.map(async ({ interviewer }) => {
+          const rule = await this._slotGenerationRepository.findOne({
+            interviewerId: interviewer._id,
+          });
+
+          const slots = generateSlotsFromRule(rule); // [{ startTime, endTime, duration }]
+
+          // Fetch all booked slots with exact match on start and end times for this interviewer
+          const bookedSlots = await this._interviewRepository.find({
+            interviewer: interviewer._id,
+            status: { $ne: "cancelled" },
+          });
+
+          const enrichedSlots : IInterviewSlot[] = slots.map((slot) => {
+            const exactBooked = bookedSlots.find(
+              (booked: IInterview) =>
+                new Date(booked.startTime).getTime() ===
+                  new Date(slot.startTime).getTime() &&
+                new Date(booked.endTime).getTime() ===
+                  new Date(slot.endTime).getTime()
+            );
+
+            return {
+              interviewerId: interviewer._id,
+              startTime: slot.startTime,
+              endTime: slot.endTime,
+              duration: slot.duration,
+              isAvailable: !exactBooked,
+              status: exactBooked ? "booked" : "available",
+              ruleId: rule?._id as string,
+            };
+          });
+
+          return { interviewer, slots: enrichedSlots };
+        })
+      );
+
+      console.log("final InterviewerWithSlots", interviewersWithSlots);
+      return interviewersWithSlots;
+    } catch (error) {
+      console.log("Error in getMatchedInterviewersByJobDescription", error);
       throw new CustomError(
         ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
         HttpStatus.INTERNAL_SERVER_ERROR
