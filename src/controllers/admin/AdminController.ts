@@ -6,7 +6,10 @@ import { HttpStatus } from "../../config/HttpStatusCodes";
 
 import { ADMIN_SUCCESS_MESSAGES } from "../../constants/messages/AdminMessages";
 import { Roles } from "../../constants/roles";
-import { COOKIE_OPTIONS } from "../../config/CookieConfig";
+import {
+  REFRESH_TOKEN_COOKIE_OPTIONS,
+  ACCESS_TOKEN_COOKIE_OPTIONS,
+} from "../../config/CookieConfig";
 import { inject, injectable } from "inversify";
 import { DiServices } from "../../di/types";
 import { adminLoginSchema } from "../../validations/AdminValidation";
@@ -28,10 +31,16 @@ export class AdminController implements IAdminController {
         parsedData.email,
         parsedData.password
       );
+
+      response.cookie(
+        `accessToken`,
+         accessToken,
+        ACCESS_TOKEN_COOKIE_OPTIONS);
+
       response.cookie(
         `refreshToken`,
         refreshToken,
-        COOKIE_OPTIONS
+        REFRESH_TOKEN_COOKIE_OPTIONS
       );
 
       return createResponse(
@@ -40,7 +49,6 @@ export class AdminController implements IAdminController {
         true,
         // AUTH_MESSAGES.LOGGED_IN,
         "Admin logged  in successfully",
-        accessToken
       );
     } catch (error) {
       if (error instanceof ZodError) {
@@ -98,9 +106,8 @@ export class AdminController implements IAdminController {
   ): Promise<void> {
     try {
       const companyId = request.body.companyId;
-      let updatedCompany = await this._adminService.updateCompanyStatus(
-        companyId
-      );
+      let updatedCompany =
+        await this._adminService.updateCompanyStatus(companyId);
       return createResponse(
         response,
         HttpStatus.OK,
@@ -118,9 +125,8 @@ export class AdminController implements IAdminController {
   ): Promise<void> {
     try {
       const interviewerId = request.body.interviewerId;
-      let updatedCompany = await this._adminService.updateInterviewerStatus(
-        interviewerId
-      );
+      let updatedCompany =
+        await this._adminService.updateInterviewerStatus(interviewerId);
       return createResponse(
         response,
         HttpStatus.OK,
@@ -140,6 +146,9 @@ export class AdminController implements IAdminController {
   ): Promise<void> {
     const companyId = request.params.companyId;
     const isApproved = request.body.isApproved;
+    const reasonForRejection = request.body.reasonForRejection;
+    console.log("RequstBody of CompanyVerification", request.body);
+    
     if (!companyId) {
       return createResponse(
         response,
@@ -152,7 +161,8 @@ export class AdminController implements IAdminController {
     try {
       const updatedCompany = await this._adminService.handleCompanyVerification(
         companyId,
-        isApproved
+        isApproved,
+        reasonForRejection
       );
       return createResponse(
         response,
@@ -170,7 +180,7 @@ export class AdminController implements IAdminController {
     response: Response
   ): Promise<void> {
     const { interviewerId } = request.params;
-    console.log("RequstBody of InterviewerVerification",request.body);
+    console.log("RequstBody of InterviewerVerification", request.body);
     const {
       isApproved,
       interviewerName,

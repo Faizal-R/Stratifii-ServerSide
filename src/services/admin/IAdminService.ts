@@ -10,7 +10,7 @@ export interface IAdminService{
     getAllInterivewers(status:string):Promise<IInterviewer[]|[]>
     updateInterviewerStatus(interviewerId:string):Promise<IInterviewer|null>
 
-    handleCompanyVerification(companyId:string,isApproved:boolean): Promise<ICompany|null>
+    handleCompanyVerification(companyId:string,isApproved:boolean,reasonForRejection?:string): Promise<ICompany|null>
     handleInterviewerVerification(interviewerId:string,isApproved:boolean,interviewerName:string,interviewerEmail:string,reasonForRejection?:string): Promise<IInterviewer|null>
     
 }  

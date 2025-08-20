@@ -4,7 +4,7 @@ import redis from "../../config/RedisConfig";
 import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 import { CustomError } from "../../error/CustomError";
 import { uploadOnCloudinary } from "../../helper/cloudinary";
-import { TokenPayload } from "../../middlewares/Auth";
+import { AccessTokenPayload } from "../../middlewares/Auth";
 import { ICandidate } from "../../models/candidate/Candidate";
 import { ICandidateRepository } from "../../repositories/candidate/ICandidateRepository";
 import { comparePassword, hashPassword } from "../../utils/hash";
@@ -35,7 +35,7 @@ export class CandidateService implements ICandidateService {
       const decoded = jwt.verify(
         token,
         process.env.ACCESS_TOKEN_SECRET as string
-      ) as TokenPayload;
+      ) as AccessTokenPayload;
       console.log("decoded", decoded);
       const userId = decoded.userId;
       console.log("userId", userId);

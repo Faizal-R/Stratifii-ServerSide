@@ -1,9 +1,18 @@
+import { CookieOptions } from "express";
 
-import { CookieOptions } from 'express';
-export const COOKIE_OPTIONS: CookieOptions = {
-    httpOnly: true, // Prevent client-side access
-   sameSite: 'none',
-secure: true,
+// Access Token Cookie (short-lived, used in all requests)
+export const ACCESS_TOKEN_COOKIE_OPTIONS: CookieOptions = {
+  httpOnly: true,
+  sameSite: "none",
+  secure: true,
+  maxAge: 1 * 60 * 1000,
+  path: "/"
+};
 
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days expiration
-};  
+export const REFRESH_TOKEN_COOKIE_OPTIONS: CookieOptions = {
+  httpOnly: true,
+  sameSite: "none",
+  secure: true,
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+  path: "/" 
+};

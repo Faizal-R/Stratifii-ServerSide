@@ -37,7 +37,8 @@ export interface IAuthService {
 
   googleAuthentication(
     email: string,
-    name: string
+    name: string,
+    avatar:string
   ): Promise<{
     accessToken?: string;
     refreshToken?: string;
@@ -53,8 +54,8 @@ export interface IAuthService {
     token: string
   ): Promise<void>;
 
-  refreshAccessToken(
-    userId: string,
-    refreshToken: string
-  ): Promise<{ accessToken: string; refreshToken: string }>;
+  // refreshAccessToken(
+  //   userId: string,
+  //   refreshToken: string
+  // ): Promise<{ accessToken: string; refreshToken: string }>;
 }

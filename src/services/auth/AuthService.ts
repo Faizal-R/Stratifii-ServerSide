@@ -12,6 +12,7 @@ import {
 import {
   generateAccessToken,
   generateRefreshToken,
+  generateSessionIdForToken,
 } from "../../helper/generateTokens";
 
 import { ICandidate } from "../../models/candidate/Candidate";
@@ -29,12 +30,8 @@ import { interviewerSchema } from "../../validations/InterviewerValidations";
 import { IAuthService } from "./IAuthService";
 import jwt from "jsonwebtoken";
 
-import { TokenPayload } from "../../middlewares/Auth";
-import {
-  deleteRefreshToken,
-  storeRefreshToken,
-  verifyRefreshToken,
-} from "../../helper/handleRefreshToken";
+import { AccessTokenPayload } from "../../middlewares/Auth";
+import { storeRefreshToken } from "../../helper/handleRefreshToken";
 
 import { otpVerificationHtml, wrapHtml } from "../../helper/wrapHtml";
 import { AUTH_MESSAGES } from "../../constants/messages/AuthMessages";
@@ -60,7 +57,10 @@ import {
   AuthLoginResponseDTO,
   AuthUserResponseDTO,
 } from "../../dto/response/auth/AuthResponseDTO";
-import { InterviewerRegisterRequestDTO, InterviewerRegisterSchema } from "../../dto/request/auth/RegisterRequestDTO";
+import {
+  InterviewerRegisterRequestDTO,
+  InterviewerRegisterSchema,
+} from "../../dto/request/auth/RegisterRequestDTO";
 
 @injectable()
 export class AuthService implements IAuthService {
@@ -137,12 +137,14 @@ export class AuthService implements IAuthService {
       userId: user._id as string,
       role,
     });
+    const sessionId = generateSessionIdForToken();
     const refreshToken = await generateRefreshToken({
       userId: user._id as string,
       role,
+      sessionId,
     });
 
-    await storeRefreshToken(user._id as string, refreshToken);
+    await storeRefreshToken(sessionId, refreshToken);
 
     let subscriptionDetails: ISubscriptionRecord | null = null;
 
@@ -240,14 +242,14 @@ export class AuthService implements IAuthService {
 
     const hashedPassword = await hashPassword(validatedData.password);
     const resumeUrl = await uploadOnCloudinary(resume?.path!, "raw");
-     
-    const validatedInterviewer={
+
+    const validatedInterviewer = {
       ...validatedData,
       password: hashedPassword,
       resume: resumeUrl,
       status: "pending" as TStatus,
       isBlocked: false,
-    }
+    };
 
     const createdInterviewer = await this._interviewerRepository.create(
       validatedInterviewer
@@ -292,11 +294,13 @@ export class AuthService implements IAuthService {
       userId: interviewerId,
       role: Roles.INTERVIEWER,
     });
+    const sessionId = generateSessionIdForToken();
     const refreshToken = await generateRefreshToken({
       userId: interviewerId,
       role: Roles.INTERVIEWER,
+      sessionId,
     });
-    await storeRefreshToken(interviewerId, refreshToken);
+    await storeRefreshToken(sessionId, refreshToken);
     return { accessToken, refreshToken, setupedInterviewer };
   }
 
@@ -350,7 +354,8 @@ export class AuthService implements IAuthService {
 
   async googleAuthentication(
     email: string,
-    name: string
+    name: string,
+    avatar: string
   ): Promise<{
     accessToken?: string;
     refreshToken?: string;
@@ -371,11 +376,13 @@ export class AuthService implements IAuthService {
           userId: interviewer._id as string,
           role: Roles.INTERVIEWER,
         });
+        const sessionId = generateSessionIdForToken();
         const refreshToken = await generateRefreshToken({
           userId: interviewer._id as string,
           role: Roles.INTERVIEWER,
+          sessionId,
         });
-        await storeRefreshToken(interviewer._id as string, refreshToken);
+        await storeRefreshToken(sessionId, refreshToken);
 
         return {
           accessToken,
@@ -387,21 +394,29 @@ export class AuthService implements IAuthService {
       const newInterviewer: Omit<IGoogleInterviewer, keyof Document> = {
         name,
         email,
+        avatar: avatar,
       };
       const createdInterviewer = await this._interviewerRepository.create(
         newInterviewer
       );
       const accessToken = await generateAccessToken({
-          userId: createdInterviewer._id as string,
-          role: Roles.INTERVIEWER,
-        });
-        const refreshToken = await generateRefreshToken({
-          userId: createdInterviewer._id as string,
-          role: Roles.INTERVIEWER,
-        });
-      await storeRefreshToken(createdInterviewer._id as string, refreshToken);
-         
-      return { isRegister: true, user: createdInterviewer ,accessToken,refreshToken};
+        userId: createdInterviewer._id as string,
+        role: Roles.INTERVIEWER,
+      });
+      const sessionId = generateSessionIdForToken();
+      const refreshToken = await generateRefreshToken({
+        userId: createdInterviewer._id as string,
+        role: Roles.INTERVIEWER,
+        sessionId,
+      });
+      await storeRefreshToken(sessionId, refreshToken);
+
+      return {
+        isRegister: true,
+        user: createdInterviewer,
+        accessToken,
+        refreshToken,
+      };
     } catch (error) {
       console.log(error);
       if (error instanceof CustomError) {
@@ -465,7 +480,7 @@ export class AuthService implements IAuthService {
     let decoded = jwt.verify(
       token,
       process.env.ACCESS_TOKEN_SECRET as string
-    ) as TokenPayload;
+    ) as AccessTokenPayload;
 
     const userId = decoded.userId;
 
@@ -508,28 +523,28 @@ export class AuthService implements IAuthService {
     }
   }
 
-  async refreshAccessToken(
-    userId: string,
-    refreshToken: string
-  ): Promise<{ accessToken: string; refreshToken: string }> {
-    const isValidRefreshToken = await verifyRefreshToken(userId, refreshToken);
+  // async refreshAccessToken(
+  //   userId: string,
+  //   refreshToken: string
+  // ): Promise<{ accessToken: string; refreshToken: string }> {
+  //   const isValidRefreshToken = await verifyRefreshToken(userId, refreshToken);
 
-    if (!isValidRefreshToken) {
-      throw new CustomError("Invalid refresh token", HttpStatus.UNAUTHORIZED);
-    }
+  //   if (!isValidRefreshToken) {
+  //     throw new CustomError("Invalid refresh token", HttpStatus.UNAUTHORIZED);
+  //   }
 
-    const decodedToken = jwt.verify(
-      refreshToken,
-      process.env.REFRESH_TOKEN_SECRET as string
-    ) as TokenPayload;
+  //   const decodedToken = jwt.verify(
+  //     refreshToken,
+  //     process.env.REFRESH_TOKEN_SECRET as string
+  //   ) as TokenPayload;
 
-    const role = decodedToken.role;
+  //   const role = decodedToken.role;
 
-    const accessToken = await generateAccessToken({ userId, role });
-    const newRefreshToken = await generateRefreshToken({ userId, role });
+  //   const accessToken = await generateAccessToken({ userId, role });
+  //   const newRefreshToken = await generateRefreshToken({ userId, role });
 
-    await deleteRefreshToken(userId);
-    await storeRefreshToken(userId, newRefreshToken);
-    return { accessToken, refreshToken: newRefreshToken };
-  }
+  //   await deleteRefreshToken(userId);
+  //   await storeRefreshToken(userId, newRefreshToken);
+  //   return { accessToken, refreshToken: newRefreshToken };
+  // }
 }

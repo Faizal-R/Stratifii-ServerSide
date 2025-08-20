@@ -482,10 +482,6 @@ export function otpVerificationHtml(otp:string){
 
 
 
-
-
-
-
 export function interviewerAccountRejectionHtml(interviewerName?:string,reasonForRejection?:string){
  return `<!DOCTYPE html>
 <html lang="en">
@@ -793,3 +789,906 @@ export function interviewerAccountRejectionHtml(interviewerName?:string,reasonFo
 </body>
 </html>`
 }
+
+
+export function companyAccountRejectionHtml(companyName?:string,reasonForRejection?:string){
+ return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Application Update - ${companyName}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(to bottom right, #000000 0%, #000000 50%, #2d1b69 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.3), 0 0 0 1px rgba(139, 92, 246, 0.1);
+            overflow: hidden;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #000000 0%, #2d1b69 50%, #7c3aed 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(139, 92, 246, 0.1) 50%, transparent 70%);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+            position: relative;
+            z-index: 1;
+            font-weight: 300;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .greeting {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .status-alert {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 127, 0.1) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-left: 4px solid #ef4444;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1);
+            backdrop-filter: blur(5px);
+        }
+        
+        .status-alert h3 {
+            color: #dc2626;
+            font-size: 20px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        
+        .status-alert p {
+            color: #991b1b;
+            font-size: 15px;
+        }
+        
+        .message {
+            color: #555;
+            font-size: 16px;
+            margin-bottom: 20px;
+            line-height: 1.7;
+        }
+        
+        .reason-box {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(168, 85, 247, 0.05) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.1);
+            backdrop-filter: blur(5px);
+        }
+        
+        .reason-box h4 {
+            color: #4c1d95;
+            margin-bottom: 12px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .reason-box p {
+            color: #6b21a8;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        
+        .next-steps {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-left: 4px solid #22c55e;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.1);
+            backdrop-filter: blur(5px);
+        }
+        
+        .next-steps h4 {
+            color: #15803d;
+            margin-bottom: 12px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .next-steps p {
+            color: #166534;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        
+        .footer {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(0, 0, 0, 0.05) 100%);
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid rgba(139, 92, 246, 0.1);
+            backdrop-filter: blur(5px);
+        }
+        
+        .footer p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .contact-info {
+            color: #555;
+            font-size: 14px;
+        }
+        
+        .signature {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .signature h5 {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        @media (max-width: 600px) {
+            .email-container {
+                margin: 10px;
+            }
+            
+            .header, .content, .footer {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>Stratifii Interviews</h1>
+            <p>Outsourcing Interview Solutions</p>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">
+                Hello ${companyName},
+            </div>
+            
+            <div class="message">
+                Thank you for registering with InterviewPro and showing interest in our outsourcing interview platform.
+            </div>
+            
+            <div class="status-alert">
+                <h3>Registration Status: Not Approved</h3>
+                <p>Unfortunately, we cannot approve your company registration at this time.</p>
+            </div>
+            
+            <div class="reason-box">
+                <h4>Reason for Rejection:</h4>
+                <p>${reasonForRejection}</p>
+            </div>
+            
+            <div class="message">
+                We understand this may be disappointing. Our platform maintains strict quality standards to ensure the best experience for all our partner companies and candidates.
+            </div>
+            
+            <div class="next-steps">
+                <h4>What's Next?</h4>
+                <p>You can address the mentioned issues and reapply for registration. We encourage you to review our company requirements and submit a new application when ready.</p>
+            </div>
+            
+            <div class="message">
+                If you have any questions about this decision or need clarification on our requirements, please feel free to contact our support team.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Need help? Contact our support team</p>
+            
+            <div class="contact-info">
+                <p>📧 support@interviewpro.com</p>
+                <p>📞 +1 (555) 123-4567</p>
+            </div>
+            
+            <div class="signature">
+                <h5>Best regards,</h5>
+                <p>InterviewPro Admin Team<br>
+                Quality Interview Solutions</p>
+            </div>
+        </div>
+    </div>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'971f2d4e245106bb',t:'MTc1NTY2NDQ1My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
+`;  
+};
+
+
+
+export function companyAccountVerificationEmailHtml(companyName?:string){
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Verified - Stratifii Interviews</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            background: #f2f2f7;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.15);
+            overflow: hidden;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #000000 0%, #2d1b69 50%, #7c3aed 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+            font-weight: 300;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .greeting {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .success-alert {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-left: 4px solid #22c55e;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        
+        .success-alert h3 {
+            color: #15803d;
+            font-size: 22px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        
+        .success-alert p {
+            color: #166534;
+            font-size: 16px;
+        }
+        
+        .checkmark {
+            margin-bottom: 20px;
+        }
+        
+        .message {
+            color: #555;
+            font-size: 16px;
+            margin-bottom: 20px;
+            line-height: 1.7;
+        }
+        
+        .features-box {
+            background: #faf5ff;
+            border: 1px solid #e9d5ff;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+        }
+        
+        .features-box h4 {
+            color: #4c1d95;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .features-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .features-list li {
+            color: #6b21a8;
+            font-size: 15px;
+            margin-bottom: 12px;
+            line-height: 1.5;
+            display: flex;
+            align-items: center;
+        }
+        
+        .features-list img {
+            margin-right: 10px;
+        }
+        
+        .cta-section {
+            background: #f5f3ff;
+            border: 1px solid #ddd6fe;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        
+        .cta-section h4 {
+            color: #4c1d95;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        }
+        
+        .cta-button:hover {
+            opacity: 0.9;
+        }
+        
+        .support-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 25px 0;
+        }
+        
+        .support-box h4 {
+            color: #1d4ed8;
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .support-box p {
+            color: #1e40af;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .footer {
+            background: #fafafa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .footer p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .contact-info {
+            color: #555;
+            font-size: 14px;
+        }
+        
+        .signature {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .signature h5 {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        @media (max-width: 600px) {
+            .email-container {
+                margin: 10px;
+            }
+            
+            .header, .content, .footer {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>Stratifii Platform</h1>
+            <p>Outsourcing Interview Solutions</p>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">
+                Congratulations ${companyName}!
+            </div>
+            
+            <div class="success-alert">
+                <div class="checkmark">
+                    <img src="https://img.icons8.com/ios-filled/50/22c55e/checkmark.png" alt="Success" width="50" height="50" />
+                </div>
+                <h3>Account Successfully Verified</h3>
+                <p>Your company registration has been approved and your account is now active.</p>
+            </div>
+            
+            <div class="message">
+                Welcome to Stratifii! We're excited to have you as our partner. Your company profile has been thoroughly reviewed and approved by our admin team.
+            </div>
+            
+            <div class="features-box">
+                <h4>What You Can Do Now:</h4>
+                <ul class="features-list">
+                    <li><img src="https://img.icons8.com/ios-filled/20/7c3aed/arrow.png" width="16" height="16" alt="arrow"> Submit candidate profiles for professional interviews</li>
+                    <li><img src="https://img.icons8.com/ios-filled/20/7c3aed/arrow.png" width="16" height="16" alt="arrow"> Access our comprehensive interview assessment reports</li>
+                    <li><img src="https://img.icons8.com/ios-filled/20/7c3aed/arrow.png" width="16" height="16" alt="arrow"> Track interview progress and candidate performance</li>
+                    <li><img src="https://img.icons8.com/ios-filled/20/7c3aed/arrow.png" width="16" height="16" alt="arrow"> Receive quality-filtered candidates back to your team</li>
+                    <li><img src="https://img.icons8.com/ios-filled/20/7c3aed/arrow.png" width="16" height="16" alt="arrow"> Manage your company dashboard and settings</li>
+                </ul>
+            </div>
+            
+            <div class="message">
+                Our platform is designed to streamline your hiring process by providing professional interview services that save you time while ensuring you get the best candidates.
+            </div>
+            
+            <div class="support-box">
+                <h4>Need Assistance?</h4>
+                <p>Our support team is here to help you get the most out of Stratifii. Don't hesitate to reach out if you have any questions about using the platform or submitting your first candidates.</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Thank you for choosing InterviewPro for your interview outsourcing needs!</p>
+            
+            <div class="contact-info">
+                <p>📧 support@interviewpro.com</p>
+                <p>📞 +1 (555) 123-4567</p>
+            </div>
+            
+            <div class="signature">
+                <h5>Best regards,</h5>
+                <p>Stratifiii Admin Team<br>
+                Quality Interview Solutions</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+`
+}
+
+
+export function interviewerAccountVerificationEmailHtml(interviewerName?:string){
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interviewer Account Verified - Stratifii Interviews</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(to bottom right, #000000 0%, #000000 50%, #2d1b69 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.3), 0 0 0 1px rgba(139, 92, 246, 0.1);
+            overflow: hidden;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #000000 0%, #2d1b69 50%, #7c3aed 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(139, 92, 246, 0.1) 50%, transparent 70%);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+            position: relative;
+            z-index: 1;
+            font-weight: 300;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .greeting {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .success-alert {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-left: 4px solid #22c55e;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.1);
+            backdrop-filter: blur(5px);
+            text-align: center;
+        }
+        
+        .success-alert h3 {
+            color: #15803d;
+            font-size: 22px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        
+        .success-alert p {
+            color: #166534;
+            font-size: 16px;
+        }
+        
+        .checkmark {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        }
+        
+        .checkmark::after {
+            content: '✓';
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        .message {
+            color: #555;
+            font-size: 16px;
+            margin-bottom: 20px;
+            line-height: 1.7;
+        }
+        
+        .role-box {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(168, 85, 247, 0.05) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.1);
+            backdrop-filter: blur(5px);
+        }
+        
+        .role-box h4 {
+            color: #4c1d95;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .role-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .role-list li {
+            color: #6b21a8;
+            font-size: 15px;
+            margin-bottom: 10px;
+            padding-left: 25px;
+            position: relative;
+            line-height: 1.5;
+        }
+        
+        .role-list li::before {
+            content: '→';
+            color: #7c3aed;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+            font-size: 16px;
+        }
+        
+        .cta-section {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.1);
+            backdrop-filter: blur(5px);
+        }
+        
+        .cta-section h4 {
+            color: #4c1d95;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+        }
+        
+        .guidelines-box {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(217, 119, 6, 0.05) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 25px 0;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.1);
+            backdrop-filter: blur(5px);
+        }
+        
+        .guidelines-box h4 {
+            color: #d97706;
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .guidelines-box p {
+            color: #92400e;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .footer {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(0, 0, 0, 0.05) 100%);
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid rgba(139, 92, 246, 0.1);
+            backdrop-filter: blur(5px);
+        }
+        
+        .footer p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .contact-info {
+            color: #555;
+            font-size: 14px;
+        }
+        
+        .signature {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .signature h5 {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        @media (max-width: 600px) {
+            .email-container {
+                margin: 10px;
+            }
+            
+            .header, .content, .footer {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>Stratifii Platform</h1>
+            <p>Professional Interview Services</p>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">
+                Welcome to the team, ${interviewerName}!
+            </div>
+            
+            <div class="success-alert">
+                <div class="checkmark">
+                    <img src="https://img.icons8.com/ios-filled/50/22c55e/checkmark.png" alt="Success" width="50" height="50" />
+                </div>
+                <h3>Interviewer Account Verified</h3>
+                <p>Your profile has been approved and you're now part of our expert interview team.</p>
+            </div>
+            
+            <div class="message">
+                Congratulations! Your interviewer application has been thoroughly reviewed and approved by our admin team. We're excited to have you join our network of professional interviewers.
+            </div>
+            
+            <div class="role-box">
+                <h4>Your Role as an Stratifii Interviewer:</h4>
+                <ul class="role-list">
+                    <li>Conduct professional interviews for candidates submitted by partner companies</li>
+                    <li>Evaluate candidates based on technical skills and cultural fit</li>
+                    <li>Provide detailed assessment reports and recommendations</li>
+                    <li>Maintain high standards of professionalism and confidentiality</li>
+                    <li>Help companies find quality candidates efficiently</li>
+                </ul>
+            </div>
+            
+            <div class="cta-section">
+                <h4>Ready to Start Interviewing?</h4>
+                <a href="#" class="cta-button">Access Interviewer Dashboard</a>
+            </div>
+            
+            <div class="message">
+                As a verified interviewer, you'll receive interview assignments based on your expertise and availability. Each interview you conduct helps companies make better hiring decisions while building your professional reputation.
+            </div>
+            
+            <div class="guidelines-box">
+                <h4>Important Guidelines:</h4>
+                <p>Please review our interviewer guidelines and code of conduct in your dashboard. Maintaining quality standards and professional behavior is essential for the success of our platform and all stakeholders involved.</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Thank you for joining our team of professional interviewers!</p>
+            
+            <div class="contact-info">
+                <p>📧 interviewers@interviewpro.com</p>
+                <p>📞 +1 (555) 123-4567</p>
+            </div>
+            
+            <div class="signature">
+                <h5>Best regards,</h5>
+                <p>Stratifii Admin Team<br>
+                Quality Interview Solutions</p>
+            </div>
+        </div>
+    </div>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'971f3d4c51def242',t:'MTc1NTY2NTEwOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
+`
+};

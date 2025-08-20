@@ -4,13 +4,15 @@ import { createResponse, errorResponse } from "../../helper/responseHandler";
 import { IAuthService } from "../../services/auth/IAuthService";
 import { HttpStatus } from "../../config/HttpStatusCodes";
 import { IAuthController } from "./IAuthController";
-import { COOKIE_OPTIONS } from "../../config/CookieConfig";
+import {
+  ACCESS_TOKEN_COOKIE_OPTIONS,
+  REFRESH_TOKEN_COOKIE_OPTIONS,
+} from "../../config/CookieConfig";
 import { ICompany } from "../../models/company/Company";
-import { CustomError } from "../../error/CustomError";
-import jwt from "jsonwebtoken";
+
 import { AUTH_MESSAGES } from "../../constants/messages/AuthMessages";
 import { ERROR_MESSAGES } from "../../constants/messages//ErrorMessages";
-import { TokenPayload } from "../../middlewares/Auth";
+// import { TokenPayload } from "../../middlewares/Auth";
 import { deleteRefreshToken } from "../../helper/handleRefreshToken";
 import { VALIDATION_MESSAGES } from "../../constants/messages/ValidationMessages";
 import { INTERVIEWER__SUCCESS_MESSAGES } from "../../constants/messages/UserProfileMessages";
@@ -34,10 +36,15 @@ export class AuthController implements IAuthController {
       // Authenticate user
       const { accessToken, refreshToken, user, subscription } =
         await this._authService.login(loginData);
-        console.log(accessToken)
+      console.log(accessToken);
 
-      // Set refresh token as an HTTP-only cookie
-      response.cookie(`refreshToken`, refreshToken, COOKIE_OPTIONS);
+      response.cookie(`accessToken`, accessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
+
+      response.cookie(
+        `refreshToken`,
+        refreshToken,
+        REFRESH_TOKEN_COOKIE_OPTIONS
+      );
 
       // Send success response
       return createResponse(
@@ -46,7 +53,6 @@ export class AuthController implements IAuthController {
         true,
         AUTH_MESSAGES.LOGGED_IN,
         {
-          accessToken,
           user,
           subscription,
         }
@@ -124,13 +130,24 @@ export class AuthController implements IAuthController {
           interviewer,
           resume
         );
-      response.cookie(`refreshToken`, refreshToken, COOKIE_OPTIONS);
+
+      //setting Access Token
+      response.cookie(`accessToken`, accessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
+
+      //setting Refresh Token
+
+      response.cookie(
+        `refreshToken`,
+        refreshToken,
+        REFRESH_TOKEN_COOKIE_OPTIONS
+      );
+
       createResponse(
         response,
         HttpStatus.OK,
         true,
         INTERVIEWER__SUCCESS_MESSAGES.INTERVIEWER_PROFILE_UPDATED,
-        { interviewer: setupedInterviewer, accessToken }
+        { interviewer: setupedInterviewer }
       );
     } catch (error) {
       errorResponse(response, error);
@@ -171,37 +188,36 @@ export class AuthController implements IAuthController {
   async googleAuthentication(request: Request, response: Response) {
     console.log(request.body);
     try {
-      const { email, name } = request.body;
+      const { email, name, avatar } = request.body;
 
-      if (!email || !name) {
-        return createResponse(
-          response,
-          HttpStatus.BAD_REQUEST,
-          false,
-          VALIDATION_MESSAGES.ALL_FIELDS_REQUIRED,
-          HttpStatus.BAD_REQUEST
-        );
-      }
       const { accessToken, refreshToken, user, isRegister } =
-        await this._authService.googleAuthentication(email, name);
-      console.log(refreshToken,user);
+        await this._authService.googleAuthentication(email, name, avatar);
+      console.log(user);
+      console.log("isRegister", isRegister);
+      console.log("accessToken", accessToken);
+      console.log("refreshToken", refreshToken);
+
       if (isRegister) {
         return createResponse(
           response,
           HttpStatus.OK,
           true,
           AUTH_MESSAGES.GOOGLE_AUTH_SUCCESS,
-          { user }
+          user
         );
       }
-      
-      response.cookie(`refreshToken`, refreshToken, COOKIE_OPTIONS);
+      response.cookie(`accessToken`, accessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
+      response.cookie(
+        `refreshToken`,
+        refreshToken,
+        REFRESH_TOKEN_COOKIE_OPTIONS
+      );
       return createResponse(
         response,
         HttpStatus.OK,
         true,
         AUTH_MESSAGES.GOOGLE_AUTH_SUCCESS,
-        { accessToken, user }
+        user
       );
     } catch (error) {
       console.log(error);
@@ -279,40 +295,48 @@ export class AuthController implements IAuthController {
     }
   }
 
-  async refreshAccessToken(request: Request, response: Response) {
-    try {
-      const incomingRefreshToken = request.cookies[`refreshToken`];
-      console.log()
-      console.log(request.cookies);
-      if (!incomingRefreshToken) {
-        throw new CustomError(
-          ERROR_MESSAGES.INVALID_INPUT,
-          HttpStatus.UNAUTHORIZED
-        );
-      }
-      const { userId } = (await jwt.verify(
-        incomingRefreshToken,
-        process.env.REFRESH_TOKEN_SECRET as string
-      )) as TokenPayload;
+  // async refreshAccessToken(request: Request, response: Response) {
+  //   try {
+  //     console.log("refreshAccessToken");
+  //     const incomingRefreshToken = request.cookies[`refreshToken`];
+  //     console.log("incomingRefreshToken", incomingRefreshToken);
+  //     console.log("cookies", request.cookies);
+  //     if (!incomingRefreshToken) {
+  //       return createResponse(
+  //         response,
+  //         HttpStatus.UNAUTHORIZED,
+  //         false,
+  //         ERROR_MESSAGES.INVALID_INPUT
+  //       );
+  //     }
+  //     const { userId } = (await jwt.verify(
+  //       incomingRefreshToken,
+  //       process.env.REFRESH_TOKEN_SECRET as string
+  //     )) as TokenPayload;
 
-      const { accessToken, refreshToken } =
-        await this._authService.refreshAccessToken(
-          userId as string,
-          incomingRefreshToken
-        );
-      response.cookie(`refreshToken`, refreshToken, COOKIE_OPTIONS);
-      return createResponse(
-        response,
-        HttpStatus.OK,
-        true,
-        AUTH_MESSAGES.ACCESS_TOKEN_REFRESHED,
-        { accessToken }
-      );
-    } catch (error) {
-      console.log(error);
-      return errorResponse(response, error);
-    }
-  }
+  //     const { accessToken, refreshToken } =
+  //       await this._authService.refreshAccessToken(
+  //         userId as string,
+  //         incomingRefreshToken
+  //       );
+
+  //     response.cookie(`accessToken`, accessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
+  //     response.cookie(
+  //       `refreshToken`,
+  //       refreshToken,
+  //       REFRESH_TOKEN_COOKIE_OPTIONS
+  //     );
+  //     return createResponse(
+  //       response,
+  //       HttpStatus.OK,
+  //       true,
+  //       AUTH_MESSAGES.ACCESS_TOKEN_REFRESHED
+  //     );
+  //   } catch (error) {
+  //     console.log(error);
+  //     return errorResponse(response, error);
+  //   }
+  // }
   async verifyUserAccount(request: Request, response: Response): Promise<void> {
     const { email } = request.body;
     try {
@@ -328,11 +352,28 @@ export class AuthController implements IAuthController {
     }
   }
 
-  signout(request: Request, response: Response): void {
+  async signout(request: Request, response: Response): Promise<void> {
     try {
       const user = request.user;
-      response.clearCookie(`refreshToken`);
-      deleteRefreshToken(user?.userId as string);
+      console.log("beforeClearCookie", request.cookies);
+
+      response.clearCookie("accessToken", {
+        httpOnly: true,
+        sameSite: "none",
+        secure: true,
+        path: "/",
+      });
+
+      response.clearCookie("refreshToken", {
+        httpOnly: true,
+        sameSite: "none",
+        secure: true,
+        path: "/",
+      });
+
+      console.log("Cookies", request.cookies);
+      // Delete refresh token from Redis
+      await deleteRefreshToken(user?.userId as string);
 
       return createResponse(
         response,

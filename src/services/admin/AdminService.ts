@@ -7,6 +7,7 @@ import { HttpStatus } from "../../config/HttpStatusCodes";
 import {
   generateAccessToken,
   generateRefreshToken,
+  generateSessionIdForToken,
 } from "../../helper/generateTokens";
 import { Roles } from "../../constants/roles";
 import { ICompany } from "../../models/company/Company";
@@ -14,13 +15,21 @@ import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 import { IInterviewer } from "../../models/interviewer/Interviewer";
 import { storeRefreshToken } from "../../helper/handleRefreshToken";
 import { sendEmail } from "../../helper/EmailService";
-import { interviewerAccountRejectionHtml } from "../../helper/wrapHtml";
+import {
+  companyAccountRejectionHtml,
+  companyAccountVerificationEmailHtml,
+  interviewerAccountRejectionHtml,
+  interviewerAccountVerificationEmailHtml,
+} from "../../helper/wrapHtml";
 import { inject, injectable } from "inversify";
 import { DiRepositories, DiServices } from "../../di/types";
 
 @injectable()
 export class AdminService implements IAdminService {
-  constructor(@inject(DiRepositories.AdminRepository) private readonly _adminRepository: IAdminRepository) {}
+  constructor(
+    @inject(DiRepositories.AdminRepository)
+    private readonly _adminRepository: IAdminRepository
+  ) {}
   async getAllCompanies(status: string): Promise<ICompany[] | []> {
     try {
       const companies = await this._adminRepository.getAllCompanies(status);
@@ -58,17 +67,24 @@ export class AdminService implements IAdminService {
       console.log(admin?.password, password);
       console.log(isPassMatch);
       if (!admin || !isPassMatch) {
-        throw new CustomError("Incorrect Email or password", HttpStatus.BAD_REQUEST);
+        throw new CustomError(
+          "Incorrect Email or password",
+          HttpStatus.BAD_REQUEST
+        );
       }
       const accessToken = await generateAccessToken({
         userId: admin._id as string,
         role: Roles.ADMIN,
       });
+      const sessionId = generateSessionIdForToken();
+      console.log(sessionId);
+
       const refreshToken = await generateRefreshToken({
         userId: admin._id as string,
         role: Roles.ADMIN,
+        sessionId,
       });
-      await storeRefreshToken(admin._id as string, refreshToken);
+      await storeRefreshToken(sessionId, refreshToken);
       return { accessToken, refreshToken };
     } catch (error) {
       console.log(error);
@@ -115,7 +131,8 @@ export class AdminService implements IAdminService {
 
   async handleCompanyVerification(
     companyId: string,
-    isApproved: boolean
+    isApproved: boolean,
+    reasonForRejection?: string
   ): Promise<ICompany | null> {
     try {
       const updatedCompany =
@@ -123,6 +140,27 @@ export class AdminService implements IAdminService {
           companyId,
           isApproved
         );
+      if (!isApproved) {
+        const htmlContent = companyAccountRejectionHtml(
+          updatedCompany?.name as string,
+          reasonForRejection
+        );
+        await sendEmail(
+          updatedCompany?.email as string,
+          htmlContent,
+          "Account Verification Status"
+        );
+      } else {
+        const htmlContent = companyAccountVerificationEmailHtml(
+          updatedCompany?.name as string
+        );
+        await sendEmail(
+          updatedCompany?.email as string,
+          htmlContent,
+          "Account Verification Status"
+        );
+      }
+
       return updatedCompany;
     } catch (error) {
       if (error instanceof CustomError) throw error;
@@ -150,6 +188,14 @@ export class AdminService implements IAdminService {
           interviewerName,
           reasonForRejection
         );
+        await sendEmail(
+          interviewerEmail,
+          htmlContent,
+          "Account Verification Status"
+        );
+      } else {
+        const htmlContent =
+          interviewerAccountVerificationEmailHtml(interviewerName);
         await sendEmail(
           interviewerEmail,
           htmlContent,

@@ -54,10 +54,7 @@ router.post(
   authController.resetUserPassword.bind(authController)
 );
 
-router.post(
-  "/refresh-token",
-  authController.refreshAccessToken.bind(authController)
-);
+
 
 router.post("/signout", authController.signout.bind(authController));
 

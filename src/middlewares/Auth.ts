@@ -1,95 +1,164 @@
 // File: auth.ts
 
 import { NextFunction, Request, Response } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { TokenExpiredError } from "jsonwebtoken";
 import { createResponse } from "../helper/responseHandler";
 import { HttpStatus } from "../config/HttpStatusCodes";
-import Company, { ICompany } from "../models/company/Company";
-import Interviewer, { IInterviewer } from "../models/interviewer/Interviewer";
-import { Roles } from "../constants/roles";
-import { Candidate } from "../models";
 import { VALIDATION_MESSAGES } from "../constants/messages/ValidationMessages";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../helper/generateTokens";
+import crypto from "crypto";
+import {
+  deleteRefreshToken,
+  storeRefreshToken,
+  verifyRefreshToken,
+} from "../helper/handleRefreshToken";
+import {
+  ACCESS_TOKEN_COOKIE_OPTIONS,
+  REFRESH_TOKEN_COOKIE_OPTIONS,
+} from "../config/CookieConfig";
 
-// Define an interface for the decoded token payload
-export interface TokenPayload {
+// ---------- Token Payload Interfaces ----------
+export interface AccessTokenPayload {
   userId: string;
   role: "admin" | "candidate" | "interviewer" | "company";
   exp?: number;
 }
 
-// Middleware to verify the token
+export interface RefreshTokenPayload {
+  sessionId: string;
+  userId: string;
+  role: "admin" | "candidate" | "interviewer" | "company";
+  exp?: number;
+}
+
+// ---------- Middleware: Verify Access Token ----------
 export async function verifyToken(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
-  const token = req.headers["authorization"]?.split(" ")[1];
-  //  console.log(token)
-  if (!token) {
-    return createResponse(
-      res,
-      HttpStatus.UNAUTHORIZED,
-      false,
-      "Access denied. No token provided."
-    );
-  }
-
   try {
-    // Verify the token using the secret key
-    const decoded = jwt.verify(
-      token,
-      process.env.ACCESS_TOKEN_SECRET as string
-    ) as TokenPayload;
+    const accessToken = req.cookies["accessToken"];
+    const refreshToken = req.cookies["refreshToken"];
 
-    if (!decoded) {
-
-      return createResponse(
-        res,
-        HttpStatus.UNAUTHORIZED,
-        false,
-        VALIDATION_MESSAGES.SESSION_EXPIRED
-      );
+    // If no access token, try to refresh
+    if (!accessToken) {
+      return await handleRefresh(req, res, next, refreshToken);
     }
-   
-    req.user = decoded;
-    next();
-  } catch (err) {
 
+    // Try to verify access token
+    const decoded = jwt.verify(
+      accessToken,
+      process.env.ACCESS_TOKEN_SECRET as string
+    ) as AccessTokenPayload;
+
+    req.user = decoded;
+    return next();
+    
+  } catch (err) {
+    if (err instanceof TokenExpiredError) {
+      // Access token expired → try refresh
+      const refreshToken = req.cookies["refreshToken"];
+      return await handleRefresh(req, res, next, refreshToken);
+    }
+
+    console.error("JWT verification error:", err);
     return createResponse(
       res,
       HttpStatus.UNAUTHORIZED,
       false,
-      "Invalid or expired token."
+      "Invalid access token. Please log in again."
     );
   }
 }
 
-// const checkIsUserVerified = async (role: string, userId: string) => {
-//   let user: IInterviewer | ICompany | null = null;
-//   switch (role) {
-//     case Roles.COMPANY:
-//       user = await Company.findById(userId);
-//       break;
-//     case Roles.CANDIDATE:
-//       user = await Candidate.findById(userId);
-//       break;
-//     case Roles.INTERVIEWER:
-//       user = await Interviewer.findById(userId);
-//       break;
-//     default:
-//       user = null;
-//   }
+// ---------- Simple Refresh Handler ----------
+async function handleRefresh(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+  refreshToken?: string
+) {
+  if (!refreshToken) {
+    return createResponse(
+      res,
+      HttpStatus.UNAUTHORIZED,
+      false,
+      "No refresh token found. Please log in again."
+    );
+  }
 
-//   if (user && user.status !== "approved") {
-//     return false;
-//   } else return true;
-// };
+  try {
+    // Verify refresh token JWT structure and expiry
+    const decodedRefresh = jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET as string
+    ) as RefreshTokenPayload;
 
-// Middleware to check if the user has the required role
+    // Verify refresh token exists in Redis
+    const isValidRefreshToken = await verifyRefreshToken(
+      decodedRefresh.sessionId,
+      refreshToken
+    );
+
+    if (!isValidRefreshToken) {
+      console.log("Invalid or expired refresh token for session:", decodedRefresh.sessionId);
+      return createResponse(
+        res,
+        HttpStatus.UNAUTHORIZED,
+        false,
+        "Invalid refresh token. Please log in again."
+      );
+    }
+
+    // ✅ SIMPLE APPROACH: Generate ONLY new access token
+    // Keep the same refresh token and session ID
+    const newAccessToken = await generateAccessToken({
+      userId: decodedRefresh.userId,
+      role: decodedRefresh.role,
+    });
+
+    // Set only the new access token cookie
+    res.cookie("accessToken", newAccessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
+
+    console.log(`Access token refreshed for user: ${decodedRefresh.userId}`);
+    req.user = { 
+      userId: decodedRefresh.userId, 
+      role: decodedRefresh.role 
+    };
+    
+    return next();
+    
+  } catch (err) {
+    console.error("Refresh token error:", err);
+    
+    return createResponse(
+      res,
+      HttpStatus.UNAUTHORIZED,
+      false,
+      "Refresh token expired. Please log in again."
+    );
+  }
+}
+
+// ---------- Middleware: Role-Based Authorization ----------
 export function checkRole(requiredRoles: string[]) {
   return (req: Request, res: Response, next: NextFunction): void => {
     const userRole = req.user?.role;
-    if (requiredRoles.includes(userRole!)) {
+    
+    if (!userRole) {
+      return createResponse(
+        res,
+        HttpStatus.UNAUTHORIZED,
+        false,
+        "User not authenticated."
+      );
+    }
+
+    if (requiredRoles.includes(userRole)) {
       next();
     } else {
       createResponse(
