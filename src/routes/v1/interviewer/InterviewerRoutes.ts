@@ -6,11 +6,13 @@ import { resolve } from "../../../di";
 import { IInterviewerController } from "../../../controllers/interviewer/IInterviewerController";
 import { DiControllers } from "../../../di/types";
 import { uploader } from "../../../middlewares/multer";
+import { ISlotController } from "../../../controllers/slot/ISlotController";
 const router = Router();
 
 const interviewerController = resolve<IInterviewerController>(
  DiControllers.InterviewerController
 );
+const slotController = resolve<ISlotController>(DiControllers.SlotController);
 
 router.get(
   "/profile",
@@ -23,7 +25,10 @@ router.put(
   "/profile",
   verifyToken,
   checkBlockedUser,
-  uploader.single("avatar"),
+uploader.fields([
+  { name: 'avatar', maxCount: 1 },
+  { name: 'resume', maxCount: 1 }
+]),
   checkRole([Roles.INTERVIEWER]),
   interviewerController.updateInterviewerProfile.bind(interviewerController)
 );
@@ -39,21 +44,28 @@ router.post(
   verifyToken,
   checkBlockedUser,
   checkRole([Roles.INTERVIEWER]),
-  interviewerController.createSlotGenerationRule.bind(interviewerController)
+  slotController.createSlotGenerationRule.bind(interviewerController)
 );
 router.get(
-  "/slot-generation-rule/:id",
+  "/slot-generation-rule/:interviewerId",
   verifyToken,
   checkBlockedUser,
   checkRole([Roles.INTERVIEWER]),
-  interviewerController.getInterviewerSlotGenerationRule.bind(interviewerController)
+  slotController.getInterviewerSlotGenerationRule.bind(interviewerController)
 );
 router.get(
   "/slots/:id",
   verifyToken,
   checkBlockedUser,
   checkRole([Roles.INTERVIEWER]),
-  interviewerController.getSlotsByRule.bind(interviewerController)
+  slotController.getSlotsByRule.bind(interviewerController)
+);
+router.put(
+  "/slot-generation-rule/:interviewerId",
+  verifyToken,
+  checkBlockedUser,
+  checkRole([Roles.INTERVIEWER]),
+  slotController.updateInterviewerSlotGenerationRule.bind(interviewerController)
 );
 
 

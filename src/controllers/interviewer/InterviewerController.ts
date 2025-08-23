@@ -45,10 +45,18 @@ export class InterviewerController implements IInterviewerController {
   }
   async updateInterviewerProfile(request: Request, response: Response) {
     try {
+      console.log(request.files, "files in update profile");
+
       const interviewerId = request.user?.userId ?? request.body.interviewerId;
       const interviewer = JSON.parse(request.body.interviewer); //request.body
-      console.log(interviewer);
-      const avatar = request.file as Express.Multer.File;
+      let avatar: Express.Multer.File | undefined;
+      let resume: Express.Multer.File | undefined;
+      if (request.files && !Array.isArray(request.files)) {
+        avatar = (request.files['avatar']?.[0] as Express.Multer.File) ?? undefined;
+        resume = (request.files['resume']?.[0] as Express.Multer.File) ?? undefined;
+      }
+      console.log("avatar", avatar);
+      console.log("resume", resume);
       // if (!interviewer.success) {
       //   return createResponse(
       //     response,
@@ -62,7 +70,8 @@ export class InterviewerController implements IInterviewerController {
         this._interviewerService.updateInterviewerProfile(
           interviewerId!,
           interviewer,
-          avatar
+          avatar,
+          resume
         );
       return createResponse(
         response,
@@ -96,74 +105,7 @@ export class InterviewerController implements IInterviewerController {
       errorResponse(response, error);
     }
   }
-  async createSlotGenerationRule(
-    request: Request,
-    response: Response
-  ): Promise<void> {
-    try {
-      const ruleData = request.body;
-      console.log(request.body);
-      const interviewerId = request.user?.userId;
-      const slots = await this._slotService.createSlotGenerationRule({
-        ...ruleData,
-        interviewerId,
-        duration: ruleData.slotDuration,
-        buffer: ruleData.bufferRate,
-      });
-      return createResponse(
-        response,
-        HttpStatus.OK,
-        true,
-        "Slots Generation Rule Created successfully"
-        // INTERVIEWER__SUCCESS_MESSAGES.SLOTS_GENERATED,
-        // slots
-      );
-    } catch (error) {
-      console.error("Error generating slots:", error);
-      return errorResponse(response, error);
-    }
-  }
-  async getSlotsByRule(request: Request, response: Response): Promise<void> {
-    const interviewerId = request.params.id;
-    try {
-      const slots = await this._slotService.getSlotsByRule(interviewerId);
-      console.log("slots", slots);
-
-      return createResponse(
-        response,
-        HttpStatus.OK,
-        true,
-        "Slots fetched successfully",
-        //  INTERVIEWER__SUCCESS_MESSAGES.SLOTS_FETCHED,
-        slots
-      );
-    } catch (error) {
-      return errorResponse(response, error);
-    }
-  }
-
-  async getInterviewerSlotGenerationRule(
-    request: Request,
-    response: Response
-  ): Promise<void> {
-    const interviewerId = request.params.id;
-    try {
-      const rule =
-        await this._slotService.getInterviewerSlotGenerationRule(interviewerId);
-      console.log(interviewerId, "Rule in Interviewer Controller", rule);
-      return createResponse(
-        response,
-        HttpStatus.OK,
-        true,
-        "Successfully fetched interviewer slot generation rule",
-        // "Slots fetched successfully",
-        //  INTERVIEWER__SUCCESS_MESSAGES.SLOTS_FETCHED,
-        rule
-      );
-    } catch (error) {
-      return errorResponse(response, error);
-    }
-  }
+  
 
   async getUpcomingInterviews(
     request: Request,

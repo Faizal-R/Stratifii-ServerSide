@@ -9,7 +9,7 @@ import { ISlotGenerationRule } from "../models/slot/slotGenerationRule";
       const slots: IInterviewSlot[] = [];
       const current = new Date();
       const end = new Date(current);
-      end.setDate(end.getDate() + 30); // Generate for 30 days
+      end.setDate(end.getDate() + 10); // Generate for 30 days
 
       while (current <= end) {
         const day = current.getDay();

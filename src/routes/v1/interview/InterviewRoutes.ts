@@ -26,4 +26,9 @@ router.get("/:id/scheduled-interviews",
   interviewController.getScheduledInterviews.bind(interviewController)
 );
 
+router.get('/candidate/:candidateId',verifyToken,
+  checkBlockedUser,
+  checkRole([Roles.INTERVIEWER]),
+  interviewController.getAllInterviewsByCandidateId.bind(interviewController))
+
 export default router;

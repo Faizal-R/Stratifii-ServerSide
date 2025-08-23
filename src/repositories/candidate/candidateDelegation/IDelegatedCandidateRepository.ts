@@ -8,5 +8,7 @@ export interface IDelegatedCandidateRepository extends IBaseRepository<IDelegate
      getDelegationDetails(
         query: FilterQuery<IDelegatedCandidate>
       ): Promise<IDelegatedCandidate | null>
-
+getDelegatedCandidatesByCompanyId(
+    companyId: string
+  ): Promise<IDelegatedCandidate[]>
 }

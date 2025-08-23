@@ -5,7 +5,7 @@ export const ACCESS_TOKEN_COOKIE_OPTIONS: CookieOptions = {
   httpOnly: true,
   sameSite: "none",
   secure: true,
-  maxAge: 1 * 60 * 1000,
+  maxAge: 15 * 60 * 1000,
   path: "/"
 };
 

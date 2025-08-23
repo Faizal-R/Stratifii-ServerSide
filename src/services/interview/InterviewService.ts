@@ -126,7 +126,7 @@ export class InterviewService implements IInterviewService {
         });
       await this._delegatedCandidateRepository.update(
         delegatedCandidate?._id as string,
-        { status: "final_completed",finalInterviewFeedback:feedback }
+        { status: "final_completed", finalInterviewFeedback: feedback }
       );
 
       console.log("Updatedinterview", interview);
@@ -141,6 +141,24 @@ export class InterviewService implements IInterviewService {
       const interviews = await this._interviewRepository.getInterviewDetails({
         candidate: candidateId,
       });
+      if (!interviews) {
+        return [];
+      }
+      return interviews;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getAllInterviewsByCandidateId(
+    candidateId: string
+  ): Promise<IInterview[] | []> {
+    try {
+      const interviews = await this._interviewRepository.getInterviewDetails({
+        candidate: candidateId,
+        status:{$eq:"completed"}
+      });
+      console.log("interviewsByCandidateId", interviews);
       if (!interviews) {
         return [];
       }

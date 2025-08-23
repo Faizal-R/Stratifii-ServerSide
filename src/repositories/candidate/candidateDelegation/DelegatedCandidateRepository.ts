@@ -32,6 +32,14 @@ export class DelegatedCandidateRepository
       .populate("job")
       .populate("company");
   }
+
+  async getDelegatedCandidatesByCompanyId(
+    companyId: string
+  ): Promise<IDelegatedCandidate[]> {
+    return await DelegatedCandidate.find({ company: companyId })
+      .populate("candidate")
+      .populate("job");
+  }
   async getDelegationDetails(
     query: FilterQuery<IDelegatedCandidate>
   ): Promise<IDelegatedCandidate | null> {

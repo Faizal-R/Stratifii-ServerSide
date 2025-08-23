@@ -9,6 +9,7 @@ import { DiControllers } from "../../../di/types";
 import { IJobController } from "../../../controllers/job/IJobController";
 import { ISubscriptionController } from "../../../controllers/subscription/ISubscriptonController";
 import { ISlotController } from "../../../controllers/slot/ISlotController";
+import { CompanyController } from "../../../controllers/company/CompanyController";
 
 const router = Router();
 
@@ -113,5 +114,9 @@ router.get(
 
 
 router.post('/book-slot', slotController.bookSlotForCandidate.bind(slotController))
+
+//dashboard routes
+router.get('/dashboard', companyController.getCompanyDashboard.bind(companyController))
+
 
 export default router;

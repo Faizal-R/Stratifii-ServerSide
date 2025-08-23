@@ -117,6 +117,28 @@ export class SlotService implements ISlotService {
     }
   }
 
+  async updateInterviewerSlotGenerationRule(
+    interviewerId: string,
+    ruleData: ISlotGenerationRule
+  ): Promise<ISlotGenerationRule | null> {
+    try {
+      const existingRule = await this._slotGenerationRepository.findOne({
+        interviewerId,
+      });
+      const updatedRule = await this._slotGenerationRepository.update(
+        existingRule?._id as string,
+        ruleData
+      );
+      return updatedRule;
+    } catch (error) {
+      console.error(
+        "[SlotService] Error updating interviewer slot generation rule:",
+        error
+      );
+      throw error;
+    }
+  }
+
   async bookSlotForCandidate(payloadForSlotBooking: {
     interviewer: string;
     slot: IInterviewSlot;
@@ -141,7 +163,8 @@ export class SlotService implements ISlotService {
       });
       const scheduledCandidate =
         await this._delegatedCandidateRepository.findOne({
-          candidate: candidate,
+          job,
+          candidate,
         });
 
       await this._delegatedCandidateRepository.update(

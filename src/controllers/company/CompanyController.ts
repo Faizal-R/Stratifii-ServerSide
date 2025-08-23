@@ -9,7 +9,7 @@ import {
 } from "../../constants/messages/UserProfileMessages";
 import { CompanyProfileSchema } from "../../validations/CompanyValidations";
 import { inject, injectable } from "inversify";
-import { DiControllers, DiServices } from "../../di/types";
+import {  DiServices } from "../../di/types";
 
 @injectable()
 export class CompanyController implements ICompanyController {
@@ -88,5 +88,23 @@ export class CompanyController implements ICompanyController {
     } catch (error) {
       errorResponse(response, error);
     }
+  }
+
+  async getCompanyDashboard(request: Request, response: Response): Promise<void> {
+    try {
+      const companyId = request.user?.userId;
+      console.log("companyId", companyId);
+      const dashboardData = await this._companyService.getCompanyDashboard(companyId!);
+      console.log("dashboardData", dashboardData);
+      return createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        "Company dashboard data fetched successfully",
+        dashboardData
+      );
+    } catch (error) {
+      errorResponse(response, error);
+    } 
   }
 }

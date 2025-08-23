@@ -6,12 +6,7 @@ import { IInterviewerService } from "./IInterviewerService";
 import { CustomError } from "../../error/CustomError";
 import { HttpStatus } from "../../config/HttpStatusCodes";
 import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-} from "../../helper/generateTokens";
-import { Roles } from "../../constants/roles";
-import { storeRefreshToken } from "../../helper/handleRefreshToken";
+
 import { comparePassword, hashPassword } from "../../utils/hash";
 import { USER_COMMON_MESSAGES } from "../../constants/messages/UserProfileMessages";
 import { inject, injectable } from "inversify";
@@ -55,6 +50,10 @@ export class InterviewerService implements IInterviewerService {
       if (avatar) {
         const avatarUrl = await uploadOnCloudinary(avatar.path!, "auto");
         interviewer.avatar = avatarUrl;
+      }
+      if (resume) {
+        const resumeUrl = await uploadOnCloudinary(resume.path!, "raw");
+        interviewer.resume = resumeUrl;
       }
 
       const updatedInterviewer = await this._interviewerRepository.update(

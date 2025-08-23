@@ -11,6 +11,10 @@ export interface ISlotService {
   getInterviewerSlotGenerationRule(
     interviewerId: string
   ): Promise<ISlotGenerationRule | null>;
+     updateInterviewerSlotGenerationRule(
+    interviewerId: string,
+    ruleData: ISlotGenerationRule
+  ): Promise<ISlotGenerationRule | null>
 
   bookSlotForCandidate(payloadForSlotBooking: {
     interviewer: string;

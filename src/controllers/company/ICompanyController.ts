@@ -5,4 +5,5 @@ export interface ICompanyController{
   getCompanyById(request: Request, response: Response): Promise<void>;
   updateCompanyProfile(request: Request, response: Response): Promise<void>;
   changePassword(request: Request, response: Response): Promise<void>;
+  getCompanyDashboard(request: Request, response: Response): Promise<void>;
 }

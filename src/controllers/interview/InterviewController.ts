@@ -42,4 +42,18 @@ export class InterviewController implements IInterviewController {
       errorResponse(response, error);
     }
   }
+
+ async getAllInterviewsByCandidateId(request: Request, response: Response): Promise<void> {
+    const candidateId = request.params.candidateId;
+    try {
+      console.log("entered getAllInterviewsByCandidateId");
+      const interviews = await this._interviewService.getAllInterviewsByCandidateId(candidateId);
+      return createResponse(response, HttpStatus.OK, true,"Interviews fetched successfully",interviews)
+    } catch (error) {
+      console.log(error);
+      errorResponse(response, error);
+    }
+  }
+
+  
 }
