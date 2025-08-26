@@ -5,37 +5,43 @@ import { Request, Response } from "express";
 import { HttpStatus } from "../../config/HttpStatusCodes";
 
 import { ADMIN_SUCCESS_MESSAGES } from "../../constants/messages/AdminMessages";
-import { Roles } from "../../constants/roles";
+import { Roles } from "../../constants/enums/roles";
 import {
   REFRESH_TOKEN_COOKIE_OPTIONS,
   ACCESS_TOKEN_COOKIE_OPTIONS,
 } from "../../config/CookieConfig";
 import { inject, injectable } from "inversify";
-import { DiServices } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 import { adminLoginSchema } from "../../validations/AdminValidation";
 import { ZodError } from "zod";
 
 @injectable()
 export class AdminController implements IAdminController {
   constructor(
-    @inject(DiServices.AdminService)
+    @inject(DI_TOKENS.SERVICES.ADMIN_SERVICE)
     private readonly _adminService: IAdminService
   ) {}
   async signin(request: Request, response: Response): Promise<void> {
     try {
       const { email, password } = request.body;
       // Validate input using Zod
-      const parsedData = adminLoginSchema.parse({ email, password });
+      const validatedData = adminLoginSchema.safeParse({ email, password });
+
+      if (!validatedData.success) {
+        return createResponse(
+          response,
+          HttpStatus.BAD_REQUEST,
+          false,
+          validatedData.error.issues[0].message
+        );
+      }
 
       const { accessToken, refreshToken } = await this._adminService.login(
-        parsedData.email,
-        parsedData.password
+        validatedData.data.email,
+        validatedData.data.password
       );
 
-      response.cookie(
-        `accessToken`,
-         accessToken,
-        ACCESS_TOKEN_COOKIE_OPTIONS);
+      response.cookie(`accessToken`, accessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
 
       response.cookie(
         `refreshToken`,
@@ -48,17 +54,9 @@ export class AdminController implements IAdminController {
         HttpStatus.OK,
         true,
         // AUTH_MESSAGES.LOGGED_IN,
-        "Admin logged  in successfully",
+        "Admin logged  in successfully"
       );
     } catch (error) {
-      if (error instanceof ZodError) {
-        return createResponse(
-          response,
-          HttpStatus.BAD_REQUEST,
-          false,
-          error.errors[0].message
-        );
-      }
       return errorResponse(response, error);
     }
   }
@@ -106,8 +104,9 @@ export class AdminController implements IAdminController {
   ): Promise<void> {
     try {
       const companyId = request.body.companyId;
-      let updatedCompany =
-        await this._adminService.updateCompanyStatus(companyId);
+      let updatedCompany = await this._adminService.updateCompanyStatus(
+        companyId
+      );
       return createResponse(
         response,
         HttpStatus.OK,
@@ -125,8 +124,9 @@ export class AdminController implements IAdminController {
   ): Promise<void> {
     try {
       const interviewerId = request.body.interviewerId;
-      let updatedCompany =
-        await this._adminService.updateInterviewerStatus(interviewerId);
+      let updatedCompany = await this._adminService.updateInterviewerStatus(
+        interviewerId
+      );
       return createResponse(
         response,
         HttpStatus.OK,
@@ -148,7 +148,7 @@ export class AdminController implements IAdminController {
     const isApproved = request.body.isApproved;
     const reasonForRejection = request.body.reasonForRejection;
     console.log("RequstBody of CompanyVerification", request.body);
-    
+
     if (!companyId) {
       return createResponse(
         response,

@@ -1,24 +1,23 @@
 import { Orders } from "razorpay/dist/types/orders";
-import { PaymentConfig } from "../../constants/AppConfig";
+import { PaymentConfig } from "../../constants/enums/AppConfig";
 import { IPaymentTransactionRepository } from "../../repositories/payment/IPaymentTransactionRepository";
 import { ICalculatePaymentResponse } from "../../types/payment";
 import { IPaymentTransactionService } from "./IPaymentTransactionService";
 import { razorpay as RazorPay } from "../../config/razorpay";
 import { CustomError } from "../../error/CustomError";
 import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
-import { INTERVIEWER__SUCCESS_MESSAGES } from "../../constants/messages/UserProfileMessages";
 import { PAYMENT_MESSAGES } from "../../constants/messages/PaymentAndSubscriptionMessages";
 import { HttpStatus } from "../../config/HttpStatusCodes";
 import crypto from "crypto";
 import { Types } from "mongoose";
 import { IJobRepository } from "../../repositories/job/IJobRepository";
-import { JobRepository } from "../../repositories/job/JobRepository";
+
 import { sendCreatePasswordEmail } from "../../helper/sendCreatePasswordEmail";
 import { IDelegatedCandidateRepository } from "../../repositories/candidate/candidateDelegation/IDelegatedCandidateRepository";
 import { ICandidateRepository } from "../../repositories/candidate/ICandidateRepository";
 import { ICompanyRepository } from "../../repositories/company/ICompanyRepository";
 import { inject, injectable } from "inversify";
-import { DiRepositories } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 
 export interface IPaymentVerificationDetails {
   razorpay_order_id: string;
@@ -31,21 +30,22 @@ export interface IPaymentVerificationDetails {
 @injectable()
 export class PaymentTransactionService implements IPaymentTransactionService {
 constructor(
-  @inject(DiRepositories.PaymentTransactionRepository)
+  @inject(DI_TOKENS.REPOSITORIES.PAYMENT_TRANSACTION_REPOSITORY)
   private readonly _paymentTransactionRepository: IPaymentTransactionRepository,
 
-  @inject(DiRepositories.JobRepository)
+  @inject(DI_TOKENS.REPOSITORIES.JOB_REPOSITORY)
   private readonly _jobRepository: IJobRepository,
 
-  @inject(DiRepositories.DelegatedCandidateRepository)
+  @inject(DI_TOKENS.REPOSITORIES.DELEGATED_CANDIDATE_REPOSITORY)
   private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository,
 
-  @inject(DiRepositories.CandidateRepository)
+  @inject(DI_TOKENS.REPOSITORIES.CANDIDATE_REPOSITORY)
   private readonly _candidateRepository: ICandidateRepository,
 
-  @inject(DiRepositories.CompanyRepository)
+  @inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)
   private readonly _companyRepository: ICompanyRepository
 ) {}
+
 
   calculatePayment(candidatesCount: number): ICalculatePaymentResponse {
     const pricePerInterview = PaymentConfig.RATE_PER_CANDIDATE;

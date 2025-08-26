@@ -4,7 +4,7 @@ import { ISlotGenerationRepository } from "../../repositories/slot/slotGeneratio
 import { ISlotService } from "./ISlotService";
 import { IInterviewSlot } from "../../models/slot/interviewSlot";
 import { inject, injectable } from "inversify";
-import { DiRepositories } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 import { generateSlotsFromRule } from "../../utils/generateSlots";
 
 import { IDelegatedCandidateRepository } from "../../repositories/candidate/candidateDelegation/IDelegatedCandidateRepository";
@@ -15,12 +15,12 @@ import { IInterview } from "../../models/interview/Interview";
 @injectable()
 export class SlotService implements ISlotService {
   constructor(
-    @inject(DiRepositories.SlotGenerationRepository)
+    @inject(DI_TOKENS.REPOSITORIES.SLOT_GENERATION_REPOSITORY)
     private readonly _slotGenerationRepository: ISlotGenerationRepository,
-    @inject(DiRepositories.InterviewRepository)
+    @inject(DI_TOKENS.REPOSITORIES.INTERVIEW_REPOSITORY)
     private readonly _interviewRepository: IInterviewRepository,
 
-    @inject(DiRepositories.DelegatedCandidateRepository)
+    @inject(DI_TOKENS.REPOSITORIES.DELEGATED_CANDIDATE_REPOSITORY)
     private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository
   ) {}
 

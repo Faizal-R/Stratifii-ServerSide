@@ -9,7 +9,7 @@ import { ERROR_MESSAGES } from "../../constants/messages//ErrorMessages";
 // import {PAYMENT_MESSAGES} from "../../constants/messages/PaymentAndSubscriptionMessages"
 import { CANDIDATE_SUCCESS_MESSAGE } from "../../constants/messages/UserProfileMessages";
 import { inject, injectable } from "inversify";
-import { DiServices } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 import { CANDIDATE_JOB_MESSAGE } from "../../constants/messages/CandidateMessages";
 
 import { IInterviewService } from "../../services/interview/IInterviewService";
@@ -17,9 +17,10 @@ import { IInterviewService } from "../../services/interview/IInterviewService";
 @injectable()
 export class CandidateController implements ICandidateController {
   constructor(
-    @inject(DiServices.CandidateService)
+    @inject(DI_TOKENS.SERVICES.CANDIDATE_SERVICE)
     private readonly _candidateService: ICandidateService,
-    @inject(DiServices.InterviewService)
+
+    @inject(DI_TOKENS.SERVICES.INTERVIEW_SERVICE)
     private readonly _interviewService: IInterviewService
   ) {}
   async setupCandidateProfile(

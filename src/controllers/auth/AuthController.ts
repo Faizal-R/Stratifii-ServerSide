@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Roles } from "../../constants/roles";
+import { Roles } from "../../constants/enums/roles";
 import { createResponse, errorResponse } from "../../helper/responseHandler";
 import { IAuthService } from "../../services/auth/IAuthService";
 import { HttpStatus } from "../../config/HttpStatusCodes";
@@ -13,18 +13,22 @@ import { ICompany } from "../../models/company/Company";
 import { AUTH_MESSAGES } from "../../constants/messages/AuthMessages";
 import { ERROR_MESSAGES } from "../../constants/messages//ErrorMessages";
 // import { TokenPayload } from "../../middlewares/Auth";
-import { deleteRefreshToken } from "../../helper/handleRefreshToken";
+
 import { VALIDATION_MESSAGES } from "../../constants/messages/ValidationMessages";
 import { INTERVIEWER__SUCCESS_MESSAGES } from "../../constants/messages/UserProfileMessages";
 import { inject, injectable } from "inversify";
-import { DiServices } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 import { LoginRequestDTO } from "../../dto/request/auth/LoginRequestDTO";
-import { InterviewerRegisterRequestDTO } from "../../dto/request/auth/RegisterRequestDTO";
+import {
+  companyRegisterRequestDTO,
+  InterviewerRegisterRequestDTO,
+} from "../../dto/request/auth/RegisterRequestDTO";
+import { Tokens } from "../../constants/enums/token";
 
 @injectable()
 export class AuthController implements IAuthController {
   constructor(
-    @inject(DiServices.AuthService)
+    @inject(DI_TOKENS.SERVICES.AUTH_SERVICE)
     private readonly _authService: IAuthService
   ) {}
 
@@ -37,11 +41,14 @@ export class AuthController implements IAuthController {
       const { accessToken, refreshToken, user, subscription } =
         await this._authService.login(loginData);
       console.log(accessToken);
-
-      response.cookie(`accessToken`, accessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
+      response.cookie(
+        Tokens.ACCESS_TOKEN,
+        accessToken,
+        ACCESS_TOKEN_COOKIE_OPTIONS
+      );
 
       response.cookie(
-        `refreshToken`,
+        Tokens.REFRESH_TOKEN,
         refreshToken,
         REFRESH_TOKEN_COOKIE_OPTIONS
       );
@@ -66,7 +73,7 @@ export class AuthController implements IAuthController {
   async registerCompany(request: Request, response: Response): Promise<void> {
     try {
       // Extract request body
-      const companyData: ICompany = request.body;
+      const companyData: companyRegisterRequestDTO = request.body;
 
       const newCompany = await this._authService.registerCompany(companyData);
 
@@ -295,48 +302,6 @@ export class AuthController implements IAuthController {
     }
   }
 
-  // async refreshAccessToken(request: Request, response: Response) {
-  //   try {
-  //     console.log("refreshAccessToken");
-  //     const incomingRefreshToken = request.cookies[`refreshToken`];
-  //     console.log("incomingRefreshToken", incomingRefreshToken);
-  //     console.log("cookies", request.cookies);
-  //     if (!incomingRefreshToken) {
-  //       return createResponse(
-  //         response,
-  //         HttpStatus.UNAUTHORIZED,
-  //         false,
-  //         ERROR_MESSAGES.INVALID_INPUT
-  //       );
-  //     }
-  //     const { userId } = (await jwt.verify(
-  //       incomingRefreshToken,
-  //       process.env.REFRESH_TOKEN_SECRET as string
-  //     )) as TokenPayload;
-
-  //     const { accessToken, refreshToken } =
-  //       await this._authService.refreshAccessToken(
-  //         userId as string,
-  //         incomingRefreshToken
-  //       );
-
-  //     response.cookie(`accessToken`, accessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
-  //     response.cookie(
-  //       `refreshToken`,
-  //       refreshToken,
-  //       REFRESH_TOKEN_COOKIE_OPTIONS
-  //     );
-  //     return createResponse(
-  //       response,
-  //       HttpStatus.OK,
-  //       true,
-  //       AUTH_MESSAGES.ACCESS_TOKEN_REFRESHED
-  //     );
-  //   } catch (error) {
-  //     console.log(error);
-  //     return errorResponse(response, error);
-  //   }
-  // }
   async verifyUserAccount(request: Request, response: Response): Promise<void> {
     const { email } = request.body;
     try {
@@ -354,26 +319,13 @@ export class AuthController implements IAuthController {
 
   async signout(request: Request, response: Response): Promise<void> {
     try {
-      const user = request.user;
-      console.log("beforeClearCookie", request.cookies);
-
-      response.clearCookie("accessToken", {
-        httpOnly: true,
-        sameSite: "none",
-        secure: true,
-        path: "/",
-      });
-
-      response.clearCookie("refreshToken", {
-        httpOnly: true,
-        sameSite: "none",
-        secure: true,
-        path: "/",
-      });
-
       console.log("Cookies", request.cookies);
-      // Delete refresh token from Redis
-      await deleteRefreshToken(user?.userId as string);
+      const refreshToken = request.cookies[Tokens.REFRESH_TOKEN];
+
+      await this._authService.signout(refreshToken);
+      response.clearCookie(Tokens.ACCESS_TOKEN);
+
+      response.clearCookie(Tokens.REFRESH_TOKEN);
 
       return createResponse(
         response,

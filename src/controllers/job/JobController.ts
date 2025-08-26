@@ -3,15 +3,17 @@ import { IJob } from "../../models/job/Job";
 import { IJobService } from "../../services/job/IJobService";
 import { createResponse, errorResponse } from "../../helper/responseHandler";
 import { HttpStatus } from "../../config/HttpStatusCodes";
-import { JOB_SUCCESS_MESSAGES } from "../../constants/messages";
+import { JOB_SUCCESS_MESSAGES } from "../../constants/enums/messages";
 import { IJobController } from "./IJobController";
 import mongoose from "mongoose";
 import { inject, injectable } from "inversify";
-import { DiServices } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 
 @injectable()
 export class JobController implements IJobController {
-  constructor(@inject(DiServices.JobService) private readonly _jobService: IJobService) {}
+  constructor(@inject(DI_TOKENS.SERVICES.JOB_SERVICE)
+private readonly _jobService: IJobService
+) {}
   getJobById(request: Request, response: Response): Promise<void> {
     throw new Error("Method not implemented.");
   }

@@ -11,7 +11,7 @@ export enum AUTH_MESSAGES {
   PASSWORD_RESET_LINK_SENT = "A password reset link has been sent to your email. Please check your inbox.",
   INVALID_TOKEN = "Invalid or expired token. Please request a new password reset link.",
   ACCESS_TOKEN_REFRESHED = "Access token refreshed successfully",
-  LOGGED_OUT = 'All done! You’re logged out',
+  LOGGED_OUT = "All done! You’re logged out",
   CANDIDATE_SETUP_SUCCESS = "Candidate setup successfully",
   PASSWORD_CHANGED = "Password changed successfully.",
   INVALID_OTP_FORMAT = "Invalid OTP format. Please enter a valid code.",
@@ -21,7 +21,11 @@ export enum AUTH_MESSAGES {
   COMPANY_ALREADY_EXISTS = "This email is already associated with an existing company.",
   INTERVIEWER_ALREADY_EXISTS = "This email is already associated with an existing company.",
   USER_NOT_VERIFIED = " Looks like your account isn’t verified yet. Please verify your account to continue.",
-  VERIFICATION_CODE_SENT="A verification code has been sent to your email. Please use it to verify your account.",
-  
-
+  VERIFICATION_CODE_SENT = "A verification code has been sent to your email. Please use it to verify your account.",
+  INVALID_SESSION = "Your session is no longer valid. Please log in again.",
+  LOGIN_REQUIRED = "Please log in to continue.",
+  SESSION_TERMINATED = "Your session has been terminated for security reasons. Please log in again.",
+  SESSION_EXPIRED = "Your session has expired. Please log in again.",
+  LOGIN_TO_ACCESS = "Please log in to access this feature.",
+  ACCESS_DENIED = "You don't have permission to access this feature.",
 }

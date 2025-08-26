@@ -1,6 +1,6 @@
 // src/schemas/LoginRequestSchema.ts
 import { z } from "zod";
-import { Roles } from "../../../constants/roles";
+import { Roles } from "../../../constants/enums/roles";
 
 
 export const LoginRequestSchema = z.object({

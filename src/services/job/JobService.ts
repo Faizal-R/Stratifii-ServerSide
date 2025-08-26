@@ -10,7 +10,7 @@ import { ICandidateRepository } from "../../repositories/candidate/ICandidateRep
 import { Types } from "mongoose";
 import { IDelegatedCandidateRepository } from "../../repositories/candidate/candidateDelegation/IDelegatedCandidateRepository";
 import { inject, injectable } from "inversify";
-import { DiRepositories } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 import { IDelegatedCandidate } from "../../models/candidate/DelegatedCandidate";
 
 import { IInterviewer } from "../../models/interviewer/Interviewer";
@@ -25,23 +25,25 @@ import { IInterview } from "../../models/interview/Interview";
 injectable();
 export class JobService implements IJobService {
   constructor(
-    @inject(DiRepositories.JobRepository)
-    private readonly _jobRepository: IJobRepository,
+  @inject(DI_TOKENS.REPOSITORIES.JOB_REPOSITORY)
+  private readonly _jobRepository: IJobRepository,
 
-    @inject(DiRepositories.CandidateRepository)
-    private readonly _candidateRepository: ICandidateRepository,
+  @inject(DI_TOKENS.REPOSITORIES.CANDIDATE_REPOSITORY)
+  private readonly _candidateRepository: ICandidateRepository,
 
-    @inject(DiRepositories.DelegatedCandidateRepository)
-    private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository,
+  @inject(DI_TOKENS.REPOSITORIES.DELEGATED_CANDIDATE_REPOSITORY)
+  private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository,
 
-    @inject(DiRepositories.InterviewerRepository)
-    private readonly _interviewerRepository: IInterviewerRepository,
+  @inject(DI_TOKENS.REPOSITORIES.INTERVIEWER_REPOSITORY)
+  private readonly _interviewerRepository: IInterviewerRepository,
 
-    @inject(DiRepositories.SlotGenerationRepository)
-    private readonly _slotGenerationRepository: ISlotGenerationRepository,
-    @inject(DiRepositories.InterviewRepository)
-    private readonly _interviewRepository: IInterviewRepository
-  ) {}
+  @inject(DI_TOKENS.REPOSITORIES.SLOT_GENERATION_REPOSITORY)
+  private readonly _slotGenerationRepository: ISlotGenerationRepository,
+
+  @inject(DI_TOKENS.REPOSITORIES.INTERVIEW_REPOSITORY)
+  private readonly _interviewRepository: IInterviewRepository
+) {}
+
 
   getJobById(jobId: string): Promise<IJob | null> {
     throw new Error("Method not implemented.");

@@ -1,13 +1,13 @@
 import { Router } from "express";
 const router = Router();
 import { checkRole, verifyToken } from "../../../middlewares/Auth";
-import { Roles } from "../../../constants/roles";
+import { Roles } from "../../../constants/enums/roles";
 import { resolve } from "../../../di";
-import { DiControllers } from "../../../di/types";
+import { DI_TOKENS } from "../../../di/types";
 import { IAdminController } from "../../../controllers/admin/IAdminController";
 
 const adminController = resolve<IAdminController>(
-  DiControllers.AdminController
+  DI_TOKENS.CONTROLLERS.ADMIN_CONTROLLER
 );
 
 router.post("/signin", adminController.signin.bind(adminController));

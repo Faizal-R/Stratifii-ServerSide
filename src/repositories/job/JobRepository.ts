@@ -7,7 +7,7 @@ import { CustomError } from "../../error/CustomError";
 import {
   JOB_ERROR_MESSAGES,
   JOB_SUCCESS_MESSAGES,
-} from "../../constants/messages";
+} from "../../constants/enums/messages";
 import DelegatedCandidate from "../../models/candidate/DelegatedCandidate";
 import { injectable } from "inversify";
 import { IJobStats } from "../../types/ICompanyDashboardTypes";
@@ -24,7 +24,7 @@ export class JobRepository
   }
 
   async getJobStatsForDashboard(companyId: string): Promise<IJobStats> {
-    const result= await Job.aggregate([
+    const result= await this.model.aggregate([
       {
         $match: { company: companyId },
       },
@@ -44,7 +44,9 @@ export class JobRepository
         },
       },
     ]);
-    return result[0] || { _id: null, total: 0, inProgress: 0, completed: 0, open: 0
+
+    console.log("Job stats result:", result);
+    return result[0] || { total: 0, inProgress: 0, completed: 0, open: 0}
 }
-}
+
 }

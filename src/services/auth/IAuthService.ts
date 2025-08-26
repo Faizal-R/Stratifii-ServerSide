@@ -10,12 +10,12 @@ import {
   AuthLoginResponseDTO,
   AuthUserResponseDTO,
 } from "../../dto/response/auth/AuthResponseDTO";
-import { InterviewerRegisterRequestDTO } from "../../dto/request/auth/RegisterRequestDTO";
+import { companyRegisterRequestDTO, InterviewerRegisterRequestDTO } from "../../dto/request/auth/RegisterRequestDTO";
 
 export interface IAuthService {
   login(AuthPayload: LoginRequestDTO): Promise<AuthLoginResponseDTO>;
 
-  registerCompany(company: ICompany): Promise<AuthUserResponseDTO>;
+  registerCompany(company:companyRegisterRequestDTO): Promise<AuthUserResponseDTO>;
 
   sendVerificationCode(email: string): Promise<void>;
 
@@ -58,4 +58,6 @@ export interface IAuthService {
   //   userId: string,
   //   refreshToken: string
   // ): Promise<{ accessToken: string; refreshToken: string }>;
+
+  signout(refreshToken:string):Promise<boolean>;
 }

@@ -11,18 +11,21 @@ import {
 import { ISlotService } from "../../services/slot/ISlotService";
 
 import { inject, injectable } from "inversify";
-import { DiServices } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 import { IInterviewService } from "../../services/interview/IInterviewService";
 
 @injectable()
 export class InterviewerController implements IInterviewerController {
   constructor(
-    @inject(DiServices.InterviewerService)
-    private readonly _interviewerService: IInterviewerService,
-    @inject(DiServices.SlotService)
-    private readonly _slotService: ISlotService,
-    @inject(DiServices.InterviewService)
-    private readonly _interviewService: IInterviewService
+  @inject(DI_TOKENS.SERVICES.INTERVIEWER_SERVICE)
+private readonly _interviewerService: IInterviewerService,
+
+@inject(DI_TOKENS.SERVICES.SLOT_SERVICE)
+private readonly _slotService: ISlotService,
+
+@inject(DI_TOKENS.SERVICES.INTERVIEW_SERVICE)
+private readonly _interviewService: IInterviewService
+
   ) {}
 
   async getInterviewerProfile(request: Request, response: Response) {

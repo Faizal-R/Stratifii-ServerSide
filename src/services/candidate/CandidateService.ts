@@ -4,14 +4,13 @@ import redis from "../../config/RedisConfig";
 import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 import { CustomError } from "../../error/CustomError";
 import { uploadOnCloudinary } from "../../helper/cloudinary";
-import { AccessTokenPayload } from "../../middlewares/Auth";
+import { AccessTokenPayload } from "../../types/token";
 import { ICandidate } from "../../models/candidate/Candidate";
 import { ICandidateRepository } from "../../repositories/candidate/ICandidateRepository";
-import { comparePassword, hashPassword } from "../../utils/hash";
+import {  hashPassword } from "../../utils/hash";
 import { ICandidateService } from "./ICandidateService";
 import jwt from "jsonwebtoken";
-import { DiRepositories } from "../../di/types";
-import { IDelegatedCandidate } from "../../models/candidate/DelegatedCandidate";
+import { DI_TOKENS } from "../../di/types";
 import { IDelegatedCandidateRepository } from "../../repositories/candidate/candidateDelegation/IDelegatedCandidateRepository";
 import { IJob } from "../../models/job/Job";
 import { ICompany } from "../../models/company/Company";
@@ -19,10 +18,12 @@ import { ICompany } from "../../models/company/Company";
 @injectable()
 export class CandidateService implements ICandidateService {
   constructor(
-    @inject(DiRepositories.CandidateRepository)
-    private readonly _candidateRepository: ICandidateRepository,
-    @inject(DiRepositories.DelegatedCandidateRepository)
-    private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository
+  @inject(DI_TOKENS.REPOSITORIES.CANDIDATE_REPOSITORY)
+private readonly _candidateRepository: ICandidateRepository,
+
+@inject(DI_TOKENS.REPOSITORIES.DELEGATED_CANDIDATE_REPOSITORY)
+private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository
+
   ) {}
   async setupCandiateProfile(
     avatar: Express.Multer.File,
@@ -30,8 +31,7 @@ export class CandidateService implements ICandidateService {
     token: string
   ): Promise<ICandidate | null> {
     try {
-      console.log("Line Number 21 in CandidateService.ts");
-      console.log(token === process.env.ACCESS_TOKEN_SECRET);
+     
       const decoded = jwt.verify(
         token,
         process.env.ACCESS_TOKEN_SECRET as string

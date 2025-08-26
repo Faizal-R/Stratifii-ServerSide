@@ -8,7 +8,7 @@ import { BaseRepository } from "../base/BaseRepository";
 import { ICompanyRepository } from "../company/ICompanyRepository";
 import { IInterviewerRepository } from "../interviewer/IInterviewerRepository";
 import { IAdminRepository } from "./IAdminRepository";
-import { DiRepositories } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 
 @injectable()
 export class AdminRepository
@@ -16,8 +16,8 @@ export class AdminRepository
   implements IAdminRepository
 {
   constructor(
-  @inject(DiRepositories.CompanyRepository)  private _companyRepository: ICompanyRepository,
-  @inject(DiRepositories.InterviewerRepository)  private _interviewerRepository: IInterviewerRepository
+  @inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)  private _companyRepository: ICompanyRepository,
+  @inject(DI_TOKENS.REPOSITORIES.INTERVIEWER_REPOSITORY)  private _interviewerRepository: IInterviewerRepository
   ) {
     super(Admin);
   }
@@ -37,7 +37,7 @@ export class AdminRepository
   }
 
   async findByEmail(email: string): Promise<IAdmin | null> {
-    return await Admin.findOne({ email }).exec();
+    return await this.model.findOne({ email }).exec();
   }
 
   async updateCompanyStatus(companyId: string) {

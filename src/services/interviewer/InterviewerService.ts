@@ -10,15 +10,16 @@ import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 import { comparePassword, hashPassword } from "../../utils/hash";
 import { USER_COMMON_MESSAGES } from "../../constants/messages/UserProfileMessages";
 import { inject, injectable } from "inversify";
-import { DiRepositories } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 import { uploadOnCloudinary } from "../../helper/cloudinary";
 
 
 @injectable()
 export class InterviewerService implements IInterviewerService {
   constructor(
-    @inject(DiRepositories.InterviewerRepository)
-    private readonly _interviewerRepository: IInterviewerRepository
+   @inject(DI_TOKENS.REPOSITORIES.INTERVIEWER_REPOSITORY)
+private readonly _interviewerRepository: IInterviewerRepository
+
   ) {}
   async getInterviewerById(
     interviewerId: string

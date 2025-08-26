@@ -6,7 +6,7 @@ import jwt, { SignOptions } from "jsonwebtoken";
 
 import crypto from "crypto";
 
-export function generateSessionIdForToken(): string {
+export function generateTokenId(): string {
   return crypto.randomBytes(32).toString("hex");
 }
 
@@ -27,13 +27,12 @@ export function generateAccessToken(payload: {
 export function generateRefreshToken(payload: {
   userId: string;
   role: string;
-  sessionId: string;
+  jti: string;
 }): string {
   const secret = process.env.REFRESH_TOKEN_SECRET as string;
 
   const options: jwt.SignOptions = {
-    expiresIn: process.env
-      .REFRESH_TOKEN_EXPIRY_FOR_COOKIE as jwt.SignOptions["expiresIn"], // "7d"
+    expiresIn: process.env.REFRESH_TOKEN_EXPIRY as jwt.SignOptions["expiresIn"], // "7d"
   };
 
   return jwt.sign(payload, secret, options);

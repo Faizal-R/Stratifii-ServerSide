@@ -4,37 +4,15 @@ import { NextFunction, Request, Response } from "express";
 import jwt, { TokenExpiredError } from "jsonwebtoken";
 import { createResponse } from "../helper/responseHandler";
 import { HttpStatus } from "../config/HttpStatusCodes";
-import { VALIDATION_MESSAGES } from "../constants/messages/ValidationMessages";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-} from "../helper/generateTokens";
-import crypto from "crypto";
-import {
-  deleteRefreshToken,
-  storeRefreshToken,
-  verifyRefreshToken,
-} from "../helper/handleRefreshToken";
-import {
-  ACCESS_TOKEN_COOKIE_OPTIONS,
-  REFRESH_TOKEN_COOKIE_OPTIONS,
-} from "../config/CookieConfig";
 
-// ---------- Token Payload Interfaces ----------
-export interface AccessTokenPayload {
-  userId: string;
-  role: "admin" | "candidate" | "interviewer" | "company";
-  exp?: number;
-}
+import { generateAccessToken } from "../helper/generateTokens";
 
-export interface RefreshTokenPayload {
-  sessionId: string;
-  userId: string;
-  role: "admin" | "candidate" | "interviewer" | "company";
-  exp?: number;
-}
+import { ACCESS_TOKEN_COOKIE_OPTIONS } from "../config/CookieConfig";
+import { getBlacklistedToken } from "../utils/handleTokenBlacklisting";
+import { Tokens } from "../constants/enums/token";
+import { AUTH_MESSAGES } from "../constants/messages/AuthMessages";
+import { AccessTokenPayload, RefreshTokenPayload } from "../types/token";
 
-// ---------- Middleware: Verify Access Token ----------
 export async function verifyToken(
   req: Request,
   res: Response,
@@ -57,7 +35,6 @@ export async function verifyToken(
 
     req.user = decoded;
     return next();
-    
   } catch (err) {
     if (err instanceof TokenExpiredError) {
       // Access token expired → try refresh
@@ -70,7 +47,7 @@ export async function verifyToken(
       res,
       HttpStatus.UNAUTHORIZED,
       false,
-      "Invalid access token. Please log in again."
+      AUTH_MESSAGES.INVALID_SESSION
     );
   }
 }
@@ -87,7 +64,7 @@ async function handleRefresh(
       res,
       HttpStatus.UNAUTHORIZED,
       false,
-      "No refresh token found. Please log in again."
+      AUTH_MESSAGES.LOGIN_REQUIRED
     );
   }
 
@@ -98,48 +75,44 @@ async function handleRefresh(
       process.env.REFRESH_TOKEN_SECRET as string
     ) as RefreshTokenPayload;
 
-    // Verify refresh token exists in Redis
-    const isValidRefreshToken = await verifyRefreshToken(
-      decodedRefresh.sessionId,
-      refreshToken
-    );
-
-    if (!isValidRefreshToken) {
-      console.log("Invalid or expired refresh token for session:", decodedRefresh.sessionId);
+    //check this token is blacklisted or not
+    const blackListedToken = await getBlacklistedToken(decodedRefresh.jti);
+    if (blackListedToken) {
       return createResponse(
         res,
         HttpStatus.UNAUTHORIZED,
         false,
-        "Invalid refresh token. Please log in again."
+        AUTH_MESSAGES.SESSION_TERMINATED
       );
     }
 
-    // ✅ SIMPLE APPROACH: Generate ONLY new access token
-    // Keep the same refresh token and session ID
     const newAccessToken = await generateAccessToken({
       userId: decodedRefresh.userId,
       role: decodedRefresh.role,
     });
 
     // Set only the new access token cookie
-    res.cookie("accessToken", newAccessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
+    res.cookie(
+      Tokens.ACCESS_TOKEN,
+      newAccessToken,
+      ACCESS_TOKEN_COOKIE_OPTIONS
+    );
 
     console.log(`Access token refreshed for user: ${decodedRefresh.userId}`);
-    req.user = { 
-      userId: decodedRefresh.userId, 
-      role: decodedRefresh.role 
+    req.user = {
+      userId: decodedRefresh.userId,
+      role: decodedRefresh.role,
     };
-    
+
     return next();
-    
   } catch (err) {
     console.error("Refresh token error:", err);
-    
+
     return createResponse(
       res,
       HttpStatus.UNAUTHORIZED,
       false,
-      "Refresh token expired. Please log in again."
+      AUTH_MESSAGES.SESSION_EXPIRED
     );
   }
 }
@@ -148,13 +121,13 @@ async function handleRefresh(
 export function checkRole(requiredRoles: string[]) {
   return (req: Request, res: Response, next: NextFunction): void => {
     const userRole = req.user?.role;
-    
+
     if (!userRole) {
       return createResponse(
         res,
         HttpStatus.UNAUTHORIZED,
         false,
-        "User not authenticated."
+        AUTH_MESSAGES.LOGIN_TO_ACCESS
       );
     }
 
@@ -165,7 +138,7 @@ export function checkRole(requiredRoles: string[]) {
         res,
         HttpStatus.FORBIDDEN,
         false,
-        `Forbidden: Your role (${userRole}) does not have permission to access this resource.`
+        AUTH_MESSAGES.ACCESS_DENIED
       );
     }
   };

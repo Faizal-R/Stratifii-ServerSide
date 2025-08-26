@@ -12,15 +12,15 @@ import mongoose, { Types } from "mongoose";
 import { ICompanyRepository } from "../../../repositories/company/ICompanyRepository";
 import { ISubscriptionRecord } from "../../../models/subscription/SubscriptionRecord";
 import { inject, injectable } from "inversify";
-import { DiRepositories } from "../../../di/types";
+import { DI_TOKENS } from "../../../di/types";
 
 injectable();
 export class SubscriptionRecordService implements ISubscriptionRecordService {
   constructor(
-  @inject(DiRepositories.SubscriptionRecordRepository)
+  @inject(DI_TOKENS.REPOSITORIES.SUBSCRIPTION_RECORD_REPOSITORY)
   private readonly _subscriptionRepository: ISubscriptionRecordRepository,
 
-  @inject(DiRepositories.CompanyRepository)
+  @inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)
   private readonly _companyRepository: ICompanyRepository
 ) {}
   

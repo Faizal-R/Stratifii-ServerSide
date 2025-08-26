@@ -7,13 +7,13 @@ import { HttpStatus } from "../../config/HttpStatusCodes";
 import {
   generateAccessToken,
   generateRefreshToken,
-  generateSessionIdForToken,
+  generateTokenId,
 } from "../../helper/generateTokens";
-import { Roles } from "../../constants/roles";
+import { Roles } from "../../constants/enums/roles";
 import { ICompany } from "../../models/company/Company";
 import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 import { IInterviewer } from "../../models/interviewer/Interviewer";
-import { storeRefreshToken } from "../../helper/handleRefreshToken";
+
 import { sendEmail } from "../../helper/EmailService";
 import {
   companyAccountRejectionHtml,
@@ -22,13 +22,14 @@ import {
   interviewerAccountVerificationEmailHtml,
 } from "../../helper/wrapHtml";
 import { inject, injectable } from "inversify";
-import { DiRepositories, DiServices } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 
 @injectable()
 export class AdminService implements IAdminService {
   constructor(
-    @inject(DiRepositories.AdminRepository)
-    private readonly _adminRepository: IAdminRepository
+   @inject(DI_TOKENS.REPOSITORIES.ADMIN_REPOSITORY)
+private readonly _adminRepository: IAdminRepository
+
   ) {}
   async getAllCompanies(status: string): Promise<ICompany[] | []> {
     try {
@@ -76,15 +77,13 @@ export class AdminService implements IAdminService {
         userId: admin._id as string,
         role: Roles.ADMIN,
       });
-      const sessionId = generateSessionIdForToken();
-      console.log(sessionId);
+    
 
-      const refreshToken = await generateRefreshToken({
+      const refreshToken = generateRefreshToken({
         userId: admin._id as string,
         role: Roles.ADMIN,
-        sessionId,
+        jti: generateTokenId(),
       });
-      await storeRefreshToken(sessionId, refreshToken);
       return { accessToken, refreshToken };
     } catch (error) {
       console.log(error);

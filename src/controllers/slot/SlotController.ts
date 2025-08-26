@@ -1,5 +1,5 @@
 import { inject } from "inversify";
-import { DiServices } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 import { IInterviewSlot } from "../../models/slot/interviewSlot";
 import { ISlotService } from "../../services/slot/ISlotService";
 import { ISlotController } from "./ISlotController";
@@ -10,7 +10,9 @@ import { IInterview } from "../../models/interview/Interview";
 
 export class SlotController implements ISlotController {
   constructor(
-    @inject(DiServices.SlotService) private readonly _slotService: ISlotService
+   @inject(DI_TOKENS.SERVICES.SLOT_SERVICE)
+private readonly _slotService: ISlotService
+
   ) {}
 
   async bookSlotForCandidate(

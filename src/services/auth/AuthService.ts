@@ -1,4 +1,4 @@
-import { Roles } from "../../constants/roles";
+import { Roles } from "../../constants/enums/roles";
 import { IInterviewerRepository } from "../../repositories/interviewer/IInterviewerRepository";
 import { ICandidateRepository } from "../../repositories/candidate/ICandidateRepository";
 import { ICompanyRepository } from "../../repositories/company/ICompanyRepository";
@@ -12,7 +12,7 @@ import {
 import {
   generateAccessToken,
   generateRefreshToken,
-  generateSessionIdForToken,
+  generateTokenId,
 } from "../../helper/generateTokens";
 
 import { ICandidate } from "../../models/candidate/Candidate";
@@ -23,15 +23,12 @@ import { sendEmail } from "../../helper/EmailService";
 import { Document } from "mongoose";
 import redis from "../../config/RedisConfig";
 import { CustomError } from "../../error/CustomError";
-import { companyRegistrationSchema } from "../../validations/CompanyValidations";
+import { companyRegistrationSchema } from "../../dto/request/auth/RegisterRequestDTO";
 import { string, ZodError } from "zod";
 import { HttpStatus } from "../../config/HttpStatusCodes";
-import { interviewerSchema } from "../../validations/InterviewerValidations";
 import { IAuthService } from "./IAuthService";
 import jwt from "jsonwebtoken";
-
-import { AccessTokenPayload } from "../../middlewares/Auth";
-import { storeRefreshToken } from "../../helper/handleRefreshToken";
+import { AccessTokenPayload, RefreshTokenPayload } from "../../types/token";
 
 import { otpVerificationHtml, wrapHtml } from "../../helper/wrapHtml";
 import { AUTH_MESSAGES } from "../../constants/messages/AuthMessages";
@@ -40,10 +37,9 @@ import { VALIDATION_MESSAGES } from "../../constants/messages/ValidationMessages
 import { getUserByRoleAndEmail } from "../../helper/getUserByRoleAndEmail";
 import { uploadOnCloudinary } from "../../helper/cloudinary";
 import { ISubscriptionRecordRepository } from "../../repositories/subscription/subscription-record/ISubscriptionRecordRepository";
-import { ISubscriptionPlanService } from "../subscription/subscription-plan/ISubscriptionPlanService";
 import { ISubscriptionRecord } from "../../models/subscription/SubscriptionRecord";
-import { inject, injectable } from "inversify";
-import { DiRepositories } from "../../di/types";
+import {  inject, injectable } from "inversify";
+import { DI_TOKENS } from "../../di/types";
 import {
   LoginRequestDTO,
   LoginRequestSchema,
@@ -58,27 +54,30 @@ import {
   AuthUserResponseDTO,
 } from "../../dto/response/auth/AuthResponseDTO";
 import {
+  companyRegisterRequestDTO,
   InterviewerRegisterRequestDTO,
   InterviewerRegisterSchema,
 } from "../../dto/request/auth/RegisterRequestDTO";
+import { blacklistToken } from "../../utils/handleTokenBlacklisting";
 
 @injectable()
 export class AuthService implements IAuthService {
   constructor(
-    @inject(DiRepositories.InterviewerRepository)
-    private readonly _interviewerRepository: IInterviewerRepository,
+   @inject(DI_TOKENS.REPOSITORIES.INTERVIEWER_REPOSITORY)
+private readonly _interviewerRepository: IInterviewerRepository,
 
-    @inject(DiRepositories.CandidateRepository)
-    private readonly _candidateRepository: ICandidateRepository,
+@inject(DI_TOKENS.REPOSITORIES.CANDIDATE_REPOSITORY)
+private readonly _candidateRepository: ICandidateRepository,
 
-    @inject(DiRepositories.CompanyRepository)
-    private readonly _companyRepository: ICompanyRepository,
+@inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)
+private readonly _companyRepository: ICompanyRepository,
 
-    @inject(DiRepositories.AuthRepository)
-    private readonly _otpRepository: IOtpRepository,
+@inject(DI_TOKENS.REPOSITORIES.OTP_REPOSITORY)
+private readonly _otpRepository: IOtpRepository,
 
-    @inject(DiRepositories.SubscriptionRecordRepository)
-    private readonly _subscriptionRecord: ISubscriptionRecordRepository
+@inject(DI_TOKENS.REPOSITORIES.SUBSCRIPTION_RECORD_REPOSITORY)
+private readonly _subscriptionRecord: ISubscriptionRecordRepository
+
   ) {}
 
   async login(authPayload: LoginRequestDTO): Promise<AuthLoginResponseDTO> {
@@ -137,14 +136,12 @@ export class AuthService implements IAuthService {
       userId: user._id as string,
       role,
     });
-    const sessionId = generateSessionIdForToken();
+
     const refreshToken = await generateRefreshToken({
       userId: user._id as string,
       role,
-      sessionId,
+      jti: generateTokenId(),
     });
-
-    await storeRefreshToken(sessionId, refreshToken);
 
     let subscriptionDetails: ISubscriptionRecord | null = null;
 
@@ -176,9 +173,19 @@ export class AuthService implements IAuthService {
     await sendEmail(email, html);
   }
 
-  async registerCompany(company: ICompany): Promise<AuthUserResponseDTO> {
+  async registerCompany(
+    company: companyRegisterRequestDTO
+  ): Promise<AuthUserResponseDTO> {
     try {
-      const validatedData = companyRegistrationSchema.parse(company);
+      const {
+        data: validatedData,
+        success,
+        error,
+      } = companyRegistrationSchema.safeParse(company);
+      if (!success) {
+        const firstError = error.errors[0];
+        throw new CustomError(firstError.message, HttpStatus.BAD_REQUEST);
+      }
 
       const existingCompany = await this._companyRepository.findByEmail(
         validatedData.email
@@ -192,25 +199,14 @@ export class AuthService implements IAuthService {
 
       validatedData.password = await hashPassword(validatedData.password);
 
-      const validatedCompany: Omit<ICompany, keyof Document> = {
-        ...validatedData,
-      };
       const createdCompany = await this._companyRepository.create(
-        validatedCompany
+        validatedData
       );
       await this.sendVerificationCode(createdCompany.email);
       return mapToAuthUserResponseDTO(createdCompany);
     } catch (error) {
-      console.log(error);
       if (error instanceof CustomError) {
         throw error;
-      }
-
-      if (error instanceof ZodError) {
-        throw new CustomError(
-          error.errors.map((e) => e.message).join(", "),
-          HttpStatus.BAD_REQUEST
-        );
       }
 
       throw new CustomError(
@@ -294,13 +290,13 @@ export class AuthService implements IAuthService {
       userId: interviewerId,
       role: Roles.INTERVIEWER,
     });
-    const sessionId = generateSessionIdForToken();
+
     const refreshToken = await generateRefreshToken({
       userId: interviewerId,
       role: Roles.INTERVIEWER,
-      sessionId,
+      jti: generateTokenId(),
     });
-    await storeRefreshToken(sessionId, refreshToken);
+
     return { accessToken, refreshToken, setupedInterviewer };
   }
 
@@ -376,13 +372,12 @@ export class AuthService implements IAuthService {
           userId: interviewer._id as string,
           role: Roles.INTERVIEWER,
         });
-        const sessionId = generateSessionIdForToken();
+
         const refreshToken = await generateRefreshToken({
           userId: interviewer._id as string,
           role: Roles.INTERVIEWER,
-          sessionId,
+          jti: generateTokenId(),
         });
-        await storeRefreshToken(sessionId, refreshToken);
 
         return {
           accessToken,
@@ -403,13 +398,12 @@ export class AuthService implements IAuthService {
         userId: createdInterviewer._id as string,
         role: Roles.INTERVIEWER,
       });
-      const sessionId = generateSessionIdForToken();
+
       const refreshToken = await generateRefreshToken({
         userId: createdInterviewer._id as string,
         role: Roles.INTERVIEWER,
-        sessionId,
+        jti: generateTokenId(),
       });
-      await storeRefreshToken(sessionId, refreshToken);
 
       return {
         isRegister: true,
@@ -523,28 +517,39 @@ export class AuthService implements IAuthService {
     }
   }
 
-  // async refreshAccessToken(
-  //   userId: string,
-  //   refreshToken: string
-  // ): Promise<{ accessToken: string; refreshToken: string }> {
-  //   const isValidRefreshToken = await verifyRefreshToken(userId, refreshToken);
+  async signout(refreshToken: string): Promise<boolean> {
+    try {
+      const decoded = jwt.verify(
+        refreshToken,
+        process.env.REFRESH_TOKEN_SECRET as string
+      ) as RefreshTokenPayload;
 
-  //   if (!isValidRefreshToken) {
-  //     throw new CustomError("Invalid refresh token", HttpStatus.UNAUTHORIZED);
-  //   }
+      if (decoded && typeof decoded.exp === "number") {
+        const ttl = decoded.exp - Math.floor(Date.now() / 1000);
+        if (ttl > 0) {
+          await blacklistToken(decoded.jti, ttl);
+        }
+      }
 
-  //   const decodedToken = jwt.verify(
-  //     refreshToken,
-  //     process.env.REFRESH_TOKEN_SECRET as string
-  //   ) as TokenPayload;
+      return true;
+    } catch (error) {
+      if (error instanceof jwt.TokenExpiredError) {
+        return true;
+      }
+      if (error instanceof jwt.JsonWebTokenError) {
+        throw new CustomError(
+          "Your session is not valid. Please log in again.",
+          HttpStatus.BAD_REQUEST
+        );
+      }
 
-  //   const role = decodedToken.role;
-
-  //   const accessToken = await generateAccessToken({ userId, role });
-  //   const newRefreshToken = await generateRefreshToken({ userId, role });
-
-  //   await deleteRefreshToken(userId);
-  //   await storeRefreshToken(userId, newRefreshToken);
-  //   return { accessToken, refreshToken: newRefreshToken };
-  // }
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      throw new CustomError(
+        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
 }

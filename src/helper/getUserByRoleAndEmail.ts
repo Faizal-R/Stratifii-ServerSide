@@ -1,4 +1,4 @@
-import { Roles } from "../constants/roles";
+import { Roles } from "../constants/enums/roles";
 import { Candidate, Company, Interviewer } from "../models";
 import { ICandidate } from "../models/candidate/Candidate";
 import { ICompany } from "../models/company/Company";

@@ -1,13 +1,13 @@
 import { Router } from "express";
-import { Roles } from "../../../constants/roles";
+import { Roles } from "../../../constants/enums/roles";
 import { checkRole, verifyToken } from "../../../middlewares/Auth";
 import { resolve } from "../../../di";
 import { ISubscriptionController } from "../../../controllers/subscription/ISubscriptonController";
-import { DiControllers } from "../../../di/types";
+import { DI_TOKENS } from "../../../di/types";
 const router = Router();
 
 const subscriptionPlanController = resolve<ISubscriptionController>(
-DiControllers.SubscriptionController
+  DI_TOKENS.CONTROLLERS.SUBSCRIPTION_CONTROLLER
 );
 
 router.post(

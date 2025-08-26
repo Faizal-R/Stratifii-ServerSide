@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify";
 import { IInterviewController } from "./IInterviewController";
-import { DiServices } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 import { IInterviewService } from "../../services/interview/IInterviewService";
 import { Request,Response } from "express";
 import { createResponse, errorResponse } from "../../helper/responseHandler";
@@ -8,8 +8,9 @@ import { HttpStatus } from "../../config/HttpStatusCodes";
 @injectable()
 export class InterviewController implements IInterviewController {
   constructor(
-    @inject(DiServices.InterviewService)
-    private readonly _interviewService: IInterviewService
+  @inject(DI_TOKENS.SERVICES.INTERVIEW_SERVICE)
+private readonly _interviewService: IInterviewService
+
   ) {}
  async updateAndSubmitFeedback(
     request: Request,

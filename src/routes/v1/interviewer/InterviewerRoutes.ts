@@ -1,18 +1,18 @@
 import { Router } from "express";
 import { checkRole, verifyToken } from "../../../middlewares/Auth";
 import { checkBlockedUser } from "../../../middlewares/checkBlockedUser";
-import { Roles } from "../../../constants/roles";
+import { Roles } from "../../../constants/enums/roles";
 import { resolve } from "../../../di";
 import { IInterviewerController } from "../../../controllers/interviewer/IInterviewerController";
-import { DiControllers } from "../../../di/types";
+import { DI_TOKENS } from "../../../di/types";
 import { uploader } from "../../../middlewares/multer";
 import { ISlotController } from "../../../controllers/slot/ISlotController";
 const router = Router();
 
 const interviewerController = resolve<IInterviewerController>(
- DiControllers.InterviewerController
+  DI_TOKENS.CONTROLLERS.INTERVIEWER_CONTROLLER
 );
-const slotController = resolve<ISlotController>(DiControllers.SlotController);
+const slotController = resolve<ISlotController>(DI_TOKENS.CONTROLLERS.SLOT_CONTROLLER);
 
 router.get(
   "/profile",

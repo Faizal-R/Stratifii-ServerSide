@@ -1,17 +1,18 @@
 import { Router } from "express";
 import { checkRole, verifyToken } from "../../../middlewares/Auth";
 import { checkBlockedUser } from "../../../middlewares/checkBlockedUser";
-import { Roles } from "../../../constants/roles";
+import { Roles } from "../../../constants/enums/roles";
 import { resolve } from "../../../di";
 
-import { DiControllers } from "../../../di/types";
+import { DI_TOKENS } from "../../../di/types";
 import { IInterviewController } from "../../../controllers/interview/IInterviewController";
 
 
 const router = Router();
 
 const interviewController = resolve<IInterviewController>(
-  DiControllers.InterviewController
+  
+  DI_TOKENS.CONTROLLERS.INTERVIEW_CONTROLLER
 );
 
 router.put(

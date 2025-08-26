@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify";
 import { IInterviewService } from "./IInterviewService";
-import { DiRepositories } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 import { IDelegatedCandidateRepository } from "../../repositories/candidate/candidateDelegation/IDelegatedCandidateRepository";
 import {
   generateMockQuestions,
@@ -19,9 +19,10 @@ import { IInterviewRepository } from "../../repositories/interview/IInterviewRep
 @injectable()
 export class InterviewService implements IInterviewService {
   constructor(
-    @inject(DiRepositories.DelegatedCandidateRepository)
+    @inject(DI_TOKENS.REPOSITORIES.DELEGATED_CANDIDATE_REPOSITORY)
     private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository,
-    @inject(DiRepositories.InterviewRepository)
+
+    @inject(DI_TOKENS.REPOSITORIES.INTERVIEW_REPOSITORY)
     private readonly _interviewRepository: IInterviewRepository
   ) {}
   async generateCandidateMockInterviewQuestions(
@@ -156,7 +157,7 @@ export class InterviewService implements IInterviewService {
     try {
       const interviews = await this._interviewRepository.getInterviewDetails({
         candidate: candidateId,
-        status:{$eq:"completed"}
+        status: { $eq: "completed" },
       });
       console.log("interviewsByCandidateId", interviews);
       if (!interviews) {

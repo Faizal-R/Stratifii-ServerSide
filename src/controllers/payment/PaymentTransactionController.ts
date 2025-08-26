@@ -5,14 +5,14 @@ import { HttpStatus } from "../../config/HttpStatusCodes";
 import { PAYMENT_MESSAGES } from "../../constants/messages/PaymentAndSubscriptionMessages";
 import { createResponse, errorResponse } from "../../helper/responseHandler";
 import { inject, injectable } from "inversify";
-import { DiServices } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 
 @injectable()
 export class PaymentTransactionController
   implements IPaymentTransactionController
 {
   constructor(
-    @inject(DiServices.PaymentTransactionService)
+    @inject(DI_TOKENS.SERVICES.PAYMENT_TRANSACTION_SERVICE)
     private readonly _paymentTransactionService: IPaymentTransactionService
   ) {}
   calculatePayment(req: Request, res: Response): void {

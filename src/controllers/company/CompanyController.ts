@@ -9,13 +9,13 @@ import {
 } from "../../constants/messages/UserProfileMessages";
 import { CompanyProfileSchema } from "../../validations/CompanyValidations";
 import { inject, injectable } from "inversify";
-import {  DiServices } from "../../di/types";
+import {  DI_TOKENS } from "../../di/types";
 
 @injectable()
 export class CompanyController implements ICompanyController {
   constructor(
-    @inject(DiServices.CompanyService)
-    private readonly _companyService: ICompanyService
+@inject(DI_TOKENS.SERVICES.COMPANY_SERVICE)
+private readonly _companyService: ICompanyService
   ) {}
 
   async getCompanyById(request: Request, response: Response) {

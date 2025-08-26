@@ -9,19 +9,22 @@ import { uploadOnCloudinary } from "../../helper/cloudinary";
 import { comparePassword, hashPassword } from "../../utils/hash";
 import { USER_COMMON_MESSAGES } from "../../constants/messages/UserProfileMessages";
 import { inject, injectable } from "inversify";
-import { DiRepositories } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 import { IDelegatedCandidateRepository } from "../../repositories/candidate/candidateDelegation/IDelegatedCandidateRepository";
 import { IJobRepository } from "../../repositories/job/IJobRepository";
 
 @injectable()
 export class CompanyService implements ICompanyService {
   constructor(
-    @inject(DiRepositories.CompanyRepository)
-    private _companyRepository: ICompanyRepository,
-    @inject(DiRepositories.DelegatedCandidateRepository)
-    private _delegatedCandidateRepository: IDelegatedCandidateRepository,
-    @inject(DiRepositories.JobRepository)
-    private readonly _jobRepository: IJobRepository
+   @inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)
+private readonly _companyRepository: ICompanyRepository,
+
+@inject(DI_TOKENS.REPOSITORIES.DELEGATED_CANDIDATE_REPOSITORY)
+private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository,
+
+@inject(DI_TOKENS.REPOSITORIES.JOB_REPOSITORY)
+private readonly _jobRepository: IJobRepository
+
   ) {}
 
   async getCompanyById(companyId: string): Promise<ICompany | null> {

@@ -14,6 +14,6 @@ export class SubscriptionRecordRepository
     super(SubscriptionRecord);
   }
     async getSubscriptionRecordDetailsByCompanyId(companyId: string): Promise<ISubscriptionRecord | null> {
-        return await SubscriptionRecord.findOne({subscriberId:companyId})
+        return await this.model.findOne({subscriberId:companyId})
     }
 }

@@ -1,5 +1,5 @@
 import container from ".";
-import { DiControllers } from "./types";
+import { DI_TOKENS } from "./types";
 
 // Controller classes
 import { AuthController } from "../controllers/auth/AuthController";
@@ -25,14 +25,14 @@ import { ISubscriptionController } from "../controllers/subscription/ISubscripto
 import { ISlotController } from "../controllers/slot/ISlotController";
 import { IInterviewController } from "../controllers/interview/IInterviewController";
 
-// Bind controllers with interfaces
-container.bind<IAuthController>(DiControllers.AuthController).to(AuthController);
-container.bind<IAdminController>(DiControllers.AdminController).to(AdminController);
-container.bind<ICompanyController>(DiControllers.CompanyController).to(CompanyController);
-container.bind<IJobController>(DiControllers.JobController).to(JobController);
-container.bind<IInterviewerController>(DiControllers.InterviewerController).to(InterviewerController);
-container.bind<IPaymentTransactionController>(DiControllers.PaymentTransactionController).to(PaymentTransactionController);
-container.bind<ICandidateController>(DiControllers.CandidateController).to(CandidateController);
-container.bind<ISubscriptionController>(DiControllers.SubscriptionController).to(SubscriptionController);
-container.bind<ISlotController>(DiControllers.SlotController).to(SlotController);
-container.bind<IInterviewController>(DiControllers.InterviewController).to(InterviewController);
+// Bind controllers with interfaces using DI_TOKENS
+container.bind<IAuthController>(DI_TOKENS.CONTROLLERS.AUTH_CONTROLLER).to(AuthController);
+container.bind<IAdminController>(DI_TOKENS.CONTROLLERS.ADMIN_CONTROLLER).to(AdminController);
+container.bind<ICompanyController>(DI_TOKENS.CONTROLLERS.COMPANY_CONTROLLER).to(CompanyController);
+container.bind<IJobController>(DI_TOKENS.CONTROLLERS.JOB_CONTROLLER).to(JobController);
+container.bind<IInterviewerController>(DI_TOKENS.CONTROLLERS.INTERVIEWER_CONTROLLER).to(InterviewerController);
+container.bind<IPaymentTransactionController>(DI_TOKENS.CONTROLLERS.PAYMENT_TRANSACTION_CONTROLLER).to(PaymentTransactionController);
+container.bind<ICandidateController>(DI_TOKENS.CONTROLLERS.CANDIDATE_CONTROLLER).to(CandidateController);
+container.bind<ISubscriptionController>(DI_TOKENS.CONTROLLERS.SUBSCRIPTION_CONTROLLER).to(SubscriptionController);
+container.bind<ISlotController>(DI_TOKENS.CONTROLLERS.SLOT_CONTROLLER).to(SlotController);
+container.bind<IInterviewController>(DI_TOKENS.CONTROLLERS.INTERVIEW_CONTROLLER).to(InterviewController);
