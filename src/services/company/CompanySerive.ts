@@ -12,6 +12,8 @@ import { inject, injectable } from "inversify";
 import { DI_TOKENS } from "../../di/types";
 import { IDelegatedCandidateRepository } from "../../repositories/candidate/candidateDelegation/IDelegatedCandidateRepository";
 import { IJobRepository } from "../../repositories/job/IJobRepository";
+import { mapToCompanyResponseDTO } from "../../mapper/company/CompanyMapper";
+import { CompanyResponseDTO } from "../../dto/response/company/CompanyResponseDTO";
 
 @injectable()
 export class CompanyService implements ICompanyService {
@@ -27,12 +29,12 @@ private readonly _jobRepository: IJobRepository
 
   ) {}
 
-  async getCompanyById(companyId: string): Promise<ICompany | null> {
+  async getCompanyProfile(companyId: string): Promise<CompanyResponseDTO | null> {
     try {
       const company = await this._companyRepository.findById(companyId);
       if (!company)
         throw new CustomError("Company not found", HttpStatus.NOT_FOUND);
-      return company;
+      return mapToCompanyResponseDTO(company);
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
@@ -47,7 +49,7 @@ private readonly _jobRepository: IJobRepository
     companyId: string,
     company: ICompanyProfile,
     companyLogoFile?: Express.Multer.File
-  ): Promise<ICompany | null> {
+  ): Promise<CompanyResponseDTO | null> {
     try {
       if (companyLogoFile) {
         const uploadedLogoUrl = await uploadOnCloudinary(companyLogoFile.path);
@@ -57,7 +59,7 @@ private readonly _jobRepository: IJobRepository
         companyId,
         company
       );
-      return updatedCompany;
+      return mapToCompanyResponseDTO(updatedCompany!);
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
@@ -122,9 +124,9 @@ private readonly _jobRepository: IJobRepository
       const totalDelegatedCandidates =
         await this._delegatedCandidateRepository.find({ company: companyId });
       const totalDelegatedCandidatesCount = totalDelegatedCandidates.length;
-      const interviewedCandidatesCount = totalDelegatedCandidates.filter(
-        (candidate) => candidate.status === "final_completed"
-      ).length;
+      // const interviewedCandidatesCount = totalDelegatedCandidates.filter(
+      //   (candidate) => candidate.status === "final_completed"
+      // ).length;
       const shortlistedCandidatesCount = totalDelegatedCandidates.filter(
         (candidate) => candidate.status === "shortlisted"
       ).length;
@@ -137,7 +139,7 @@ private readonly _jobRepository: IJobRepository
 
       const candidateMetrics = {
         total: totalDelegatedCandidatesCount,
-        finalCompleted: interviewedCandidatesCount,
+        // finalCompleted: interviewedCandidatesCount,
         shortlisted: shortlistedCandidatesCount,
         rejected: rejectedCandidatesCount,
         mockPending: mockPendingCandidatesCount,

@@ -28,4 +28,5 @@ export enum AUTH_MESSAGES {
   SESSION_EXPIRED = "Your session has expired. Please log in again.",
   LOGIN_TO_ACCESS = "Please log in to access this feature.",
   ACCESS_DENIED = "You don't have permission to access this feature.",
+CANDIDATE_ACCOUNT_NOT_SETUP="Please check your email to complete account setup before logging in."
 }

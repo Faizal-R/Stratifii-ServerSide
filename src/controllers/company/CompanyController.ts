@@ -18,10 +18,10 @@ export class CompanyController implements ICompanyController {
 private readonly _companyService: ICompanyService
   ) {}
 
-  async getCompanyById(request: Request, response: Response) {
+  async getCompanyProfile(request: Request, response: Response) {
     try {
       const companyId = request.user?.userId;
-      const company = await this._companyService.getCompanyById(companyId!);
+      const company = await this._companyService.getCompanyProfile(companyId!);
       return createResponse(
         response,
         HttpStatus.OK,

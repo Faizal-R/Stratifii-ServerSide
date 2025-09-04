@@ -1,12 +1,13 @@
+import { CompanyResponseDTO } from "../../dto/response/company/CompanyResponseDTO";
 import { ICompany } from "../../models/company/Company";
 import { ICompanyProfile } from "../../validations/CompanyValidations";
 export interface ICompanyService {
-  getCompanyById(companyId: string): Promise<ICompany | null>;
+  getCompanyProfile(companyId: string): Promise<CompanyResponseDTO | null>;
   updateCompanyProfile(
     companyId: string,
     company: ICompanyProfile,
     companyLogoFile?: Express.Multer.File
-  ): Promise<ICompany | null>;
+  ): Promise<CompanyResponseDTO | null>;
   changePassword(currentPassword: string, newPassword: string, companyId: string): Promise<ICompany | null>;
   getCompanyDashboard(companyId: string): Promise<any>;
 }

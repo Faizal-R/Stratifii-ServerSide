@@ -21,4 +21,5 @@ export interface ISlotController {
       request: Request,
       response: Response
     ): Promise<void>;
+    getAllSlotsByInterviewer(request:Request,response:Response):Promise<void>
 }

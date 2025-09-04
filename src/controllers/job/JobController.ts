@@ -128,7 +128,7 @@ private readonly _jobService: IJobService
     const { jobId } = request.params;
     try {
       const candidates = await this._jobService.getCandidatesByJob(jobId);
-      console.log(candidates)
+      
       createResponse(
         response,
         HttpStatus.OK,

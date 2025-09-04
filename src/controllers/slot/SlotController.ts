@@ -134,4 +134,21 @@ async createSlotGenerationRule(
       return errorResponse(response, error);
     }
   }
+
+   async getAllSlotsByInterviewer(request: Request, response: Response): Promise<void> {
+    const interviewerId = request.params.interviewerId;
+    try {
+      const slots = await this._slotService.getSlotsByRule(interviewerId);
+      return createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        "Slots fetched successfully",
+        slots
+      );
+    } catch (error) {
+      return errorResponse(response, error);
+    }
+  }
+
 }

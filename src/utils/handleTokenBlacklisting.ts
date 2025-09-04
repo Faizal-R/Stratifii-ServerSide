@@ -1,10 +1,10 @@
 import redis from "../config/RedisConfig";
 
-export const getBlacklistedToken = async (
-  jti: string
-): Promise<string | null> => {
-  return await redis.get(`blacklisted_${jti}`);
-};
+export const isTokenBlacklisted=async(jti:string):Promise<boolean>=>  {
+  const result = await redis.get(`blacklisted_${jti}`);
+  return result === "true";
+}
+
 
 export const blacklistToken = async (
   jti: string,

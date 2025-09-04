@@ -8,10 +8,11 @@ import { HttpStatus } from "../config/HttpStatusCodes";
 import { generateAccessToken } from "../helper/generateTokens";
 
 import { ACCESS_TOKEN_COOKIE_OPTIONS } from "../config/CookieConfig";
-import { getBlacklistedToken } from "../utils/handleTokenBlacklisting";
+
 import { Tokens } from "../constants/enums/token";
 import { AUTH_MESSAGES } from "../constants/messages/AuthMessages";
 import { AccessTokenPayload, RefreshTokenPayload } from "../types/token";
+import { isTokenBlacklisted } from "../utils/handleTokenBlacklisting";
 
 export async function verifyToken(
   req: Request,
@@ -19,8 +20,8 @@ export async function verifyToken(
   next: NextFunction
 ): Promise<void> {
   try {
-    const accessToken = req.cookies["accessToken"];
-    const refreshToken = req.cookies["refreshToken"];
+    const accessToken = req.cookies[Tokens.ACCESS_TOKEN];
+    const refreshToken = req.cookies[Tokens.REFRESH_TOKEN];
 
     // If no access token, try to refresh
     if (!accessToken) {
@@ -38,7 +39,7 @@ export async function verifyToken(
   } catch (err) {
     if (err instanceof TokenExpiredError) {
       // Access token expired → try refresh
-      const refreshToken = req.cookies["refreshToken"];
+      const refreshToken = req.cookies[Tokens.REFRESH_TOKEN];
       return await handleRefresh(req, res, next, refreshToken);
     }
 
@@ -76,8 +77,8 @@ async function handleRefresh(
     ) as RefreshTokenPayload;
 
     //check this token is blacklisted or not
-    const blackListedToken = await getBlacklistedToken(decodedRefresh.jti);
-    if (blackListedToken) {
+    const isBlackListed = await isTokenBlacklisted(decodedRefresh.jti);
+    if (isBlackListed) {
       return createResponse(
         res,
         HttpStatus.UNAUTHORIZED,

@@ -1,4 +1,4 @@
-import { Model, Document, FilterQuery } from "mongoose";
+import { Model, Document, FilterQuery,UpdateQuery } from "mongoose";
 import { IBaseRepository } from "./IBaseRepository";
 
 export abstract class BaseRepository<T extends Document>
@@ -22,12 +22,8 @@ export abstract class BaseRepository<T extends Document>
     return this.model.findById(id).exec();
   }
 
-  // findAll(query?: FilterQuery<T>): Promise<T[]> {
-  //   return this.model.find(query ?? {}).exec();
-  // }
-
-  update(id: string, data: Partial<T>): Promise<T | null> {
-    return this.model.findByIdAndUpdate(id, data, { new: true }).exec();
+  update(id: string, query: UpdateQuery<T>): Promise<T | null> {
+    return this.model.findByIdAndUpdate(id, query, { new: true }).exec();
   }
 
   delete(id: string): Promise<T | null> {

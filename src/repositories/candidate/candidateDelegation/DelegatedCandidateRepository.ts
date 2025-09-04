@@ -27,12 +27,14 @@ export class DelegatedCandidateRepository
           path: "paymentTransaction", // nested populate
           model: "PaymentTransaction",
         },
-      });
+      })
+      .populate("interviewRounds.interviewer");
   }
   async getDelegatedJobsByCandidateId(
     candidateId: string
   ): Promise<IDelegatedCandidate[]> {
-    return await this.model.find({ candidate: candidateId })
+    return await this.model
+      .find({ candidate: candidateId })
       .populate("job")
       .populate("company");
   }
@@ -40,14 +42,17 @@ export class DelegatedCandidateRepository
   async getDelegatedCandidatesByCompanyId(
     companyId: string
   ): Promise<IDelegatedCandidate[]> {
-    return await this.model.find({ company: companyId })
+    return await this.model
+      .find({ company: companyId })
       .populate("candidate")
-      .populate("job");
+      .populate("job")
+      .populate("interviewRounds.interviewer");
   }
   async getDelegationDetails(
     query: FilterQuery<IDelegatedCandidate>
   ): Promise<IDelegatedCandidate | null> {
-    return await this.model.findOne(query)
+    return await this.model
+      .findOne(query)
       .populate("candidate")
       .populate("job")
       .populate("company");

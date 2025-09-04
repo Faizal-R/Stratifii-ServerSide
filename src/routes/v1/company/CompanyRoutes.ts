@@ -17,18 +17,22 @@ const companyController = resolve<ICompanyController>(
   DI_TOKENS.CONTROLLERS.COMPANY_CONTROLLER
 );
 
-const jobController = resolve<IJobController>(DI_TOKENS.CONTROLLERS.JOB_CONTROLLER);
+const jobController = resolve<IJobController>(
+  DI_TOKENS.CONTROLLERS.JOB_CONTROLLER
+);
 
 const subscriptionController = resolve<ISubscriptionController>(
   DI_TOKENS.CONTROLLERS.SUBSCRIPTION_CONTROLLER
 );
 
-const  slotController = resolve<ISlotController>(DI_TOKENS.CONTROLLERS.SLOT_CONTROLLER);
+const slotController = resolve<ISlotController>(
+  DI_TOKENS.CONTROLLERS.SLOT_CONTROLLER
+);
 
 //company profile
 router.get(
   "/profile",
-  companyController.getCompanyById.bind(companyController)
+  companyController.getCompanyProfile.bind(companyController)
 );
 router.put(
   "/profile",
@@ -48,25 +52,19 @@ router.get(
 
   jobController.getAllJobs.bind(jobController)
 );
+
 router.post(
   "/jobs",
   ensureActiveSubscription,
   jobController.createJob.bind(jobController)
 );
-router.put(
-  "/jobs",
 
-  jobController.updateJob.bind(jobController)
-);
-router.delete(
-  "/jobs/:jobId",
+router.put("/jobs", jobController.updateJob.bind(jobController));
 
-  jobController.deleteJob.bind(jobController)
-);
+router.delete("/jobs/:jobId", jobController.deleteJob.bind(jobController));
 
 router.post(
   "/jobs/:jobId/resumes",
-
   uploader.array("resumes"),
   jobController.createCandidatesFromResumes.bind(jobController)
 );
@@ -87,9 +85,10 @@ router.get(
   jobController.getMockQualifiedCandidatesByJob.bind(jobController)
 );
 
-
-router.get('/jobs/:jobId/matched-interviewers', jobController.getMatchedInterviewersByJobDescription.bind(jobController))
-
+router.get(
+  "/jobs/:jobId/matched-interviewers",
+  jobController.getMatchedInterviewersByJobDescription.bind(jobController)
+);
 
 //creating subscription payment order
 router.post(
@@ -109,14 +108,18 @@ router.get(
   subscriptionController.getSubscriptionPlanDetails.bind(subscriptionController)
 );
 
-
 //book slot for candidate
 
-
-router.post('/book-slot', slotController.bookSlotForCandidate.bind(slotController))
+router.post(
+  "/book-slot",
+  slotController.bookSlotForCandidate.bind(slotController)
+);
+router.get('/slots/:interviewerId',slotController.getAllSlotsByInterviewer.bind(slotController))
 
 //dashboard routes
-router.get('/dashboard', companyController.getCompanyDashboard.bind(companyController))
-
+router.get(
+  "/dashboard",
+  companyController.getCompanyDashboard.bind(companyController)
+);
 
 export default router;

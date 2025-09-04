@@ -1,39 +1,5 @@
-export interface companyRegisterRequestDTO {
-  name: string;
-  email: string;
-  password: string;
-}
 import { z } from "zod";
-
-const statusEnum = z.enum(["pending", "approved", "rejected"]);
-
-const SkillProficiencyLevels = [
-  "beginner",
-  "intermediate",
-  "advanced",
-  "expert",
-] as const;
-const SkillSources = [
-  "professional",
-  "academic",
-  "personal",
-  "certification",
-] as const;
-
-// Skill Expertise Zod schema
-export const SkillExpertiseSchema = z.object({
-  skill: z.string().min(1, "Skill name is required"),
-  proficiencyLevel: z.enum(SkillProficiencyLevels, {
-    errorMap: () => ({ message: "Invalid proficiency level" }),
-  }),
-  yearsOfExperience: z
-    .number()
-    .min(0, "Experience must be a positive number")
-    .optional(),
-  skillSource: z
-    .array(z.enum(SkillSources))
-    .min(1, "At least one skill source is required"),
-});
+import { SkillExpertiseSchema, statusEnum } from "../shared/SharedRequestDTO";
 
 export const InterviewerRegisterSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters long"),
@@ -47,16 +13,13 @@ export const InterviewerRegisterSchema = z.object({
   expertise: z
     .array(SkillExpertiseSchema)
     .min(1, "At least one expertise area is required"),
-
-  // resume: z
-  //   .custom<File | null>((file) => file instanceof File, {
-  //     message: "Resume file is required",
-  //   }),
   status: statusEnum.default("pending").optional(),
   isVerified: z.boolean().optional(),
 });
 
-export const companyRegistrationSchema = z.object({
+
+export const CompanyRegistrationSchema = z.object({
+
   name: z.string().min(3, "Company name must be at least 3 characters."),
   email: z.string().email("Invalid email format."),
   companyWebsite: z.string().url("Invalid website URL."),
@@ -81,11 +44,25 @@ export const companyRegistrationSchema = z.object({
   companyType: z.enum(["product-based", "service-based"], {
     message: "Company type must be one of: ServiceBased or ProductBased.",
   }),
-  isBlocked: z.boolean().optional()
+  isBlocked: z.boolean().optional(),
 });
 
+
+export const  AuthenticateOTPSchema = z.object({
+  email: z.string().email("Invalid email format"),
+  role: z.enum(["interviewer", "company"], {
+    message: "Role must be either 'interviewer' or 'company'",
+  }),
+  otp: z.string().length(6, "OTP must be 6 characters long"),
+})
+
+
+
 export type CompanyRegisterRequestDTO = z.infer<
-  typeof companyRegistrationSchema
+  typeof CompanyRegistrationSchema
+>;
+export type AuthenticateOTPRequestDTO = z.infer<
+  typeof AuthenticateOTPSchema
 >;
 
 export type InterviewerRegisterRequestDTO = z.infer<

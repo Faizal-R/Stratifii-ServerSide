@@ -7,7 +7,7 @@ const ACCESS_COOKIE_EXPIRY =
 
 export const ACCESS_TOKEN_COOKIE_OPTIONS: CookieOptions = {
   httpOnly: true,
-  sameSite: "none",
+  sameSite: "lax",
   secure: true,
   maxAge: ACCESS_COOKIE_EXPIRY,
   path: "/",
@@ -15,7 +15,7 @@ export const ACCESS_TOKEN_COOKIE_OPTIONS: CookieOptions = {
 
 export const REFRESH_TOKEN_COOKIE_OPTIONS: CookieOptions = {
   httpOnly: true,
-  sameSite: "none",
+  sameSite: "lax",
   secure: true,
   maxAge: REFRESH_COOKIE_EXPIRY,
   path: "/",

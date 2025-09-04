@@ -12,18 +12,18 @@ import { ICompany } from "../../models/company/Company";
 
 import { AUTH_MESSAGES } from "../../constants/messages/AuthMessages";
 import { ERROR_MESSAGES } from "../../constants/messages//ErrorMessages";
-// import { TokenPayload } from "../../middlewares/Auth";
-
-import { VALIDATION_MESSAGES } from "../../constants/messages/ValidationMessages";
 import { INTERVIEWER__SUCCESS_MESSAGES } from "../../constants/messages/UserProfileMessages";
 import { inject, injectable } from "inversify";
 import { DI_TOKENS } from "../../di/types";
 import { LoginRequestDTO } from "../../dto/request/auth/LoginRequestDTO";
 import {
-  companyRegisterRequestDTO,
+  AuthenticateOTPRequestDTO,
+  CompanyRegisterRequestDTO,
   InterviewerRegisterRequestDTO,
 } from "../../dto/request/auth/RegisterRequestDTO";
 import { Tokens } from "../../constants/enums/token";
+import { InterviewerAccountSetupRequestDTO } from "../../dto/request/auth/AccountSetupRequestDTO";
+import { GoogleAuthRequestDTO } from "../../dto/request/auth/GoogleAuthRequestDTO";
 
 @injectable()
 export class AuthController implements IAuthController {
@@ -73,7 +73,7 @@ export class AuthController implements IAuthController {
   async registerCompany(request: Request, response: Response): Promise<void> {
     try {
       // Extract request body
-      const companyData: companyRegisterRequestDTO = request.body;
+      const companyData: CompanyRegisterRequestDTO = request.body;
 
       const newCompany = await this._authService.registerCompany(companyData);
 
@@ -126,25 +126,35 @@ export class AuthController implements IAuthController {
     request: Request,
     response: Response
   ): Promise<void> {
-    const { interviewer, interviewerId } = JSON.parse(request.body.data);
+    const {
+      interviewer,
+      interviewerId,
+    }: {
+      interviewer: InterviewerAccountSetupRequestDTO;
+      interviewerId: string;
+    } = JSON.parse(request.body.data);
     const resume = request.file as Express.Multer.File;
     console.log("resumeRequest", request.file);
 
     try {
-      const { accessToken, refreshToken, setupedInterviewer } =
-        await this._authService.setupInterviewerAccount(
-          interviewerId,
-          interviewer,
-          resume
-        );
-
-      //setting Access Token
-      response.cookie(`accessToken`, accessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
-
-      //setting Refresh Token
+      const {
+        accessToken,
+        refreshToken,
+        user: setupedInterviewer,
+      } = await this._authService.setupInterviewerAccount(
+        interviewerId,
+        interviewer,
+        resume
+      );
 
       response.cookie(
-        `refreshToken`,
+        Tokens.ACCESS_TOKEN,
+        accessToken,
+        ACCESS_TOKEN_COOKIE_OPTIONS
+      );
+
+      response.cookie(
+        Tokens.REFRESH_TOKEN,
         refreshToken,
         REFRESH_TOKEN_COOKIE_OPTIONS
       );
@@ -161,26 +171,11 @@ export class AuthController implements IAuthController {
     }
   }
   async authenticateOTP(request: Request, response: Response): Promise<void> {
-    const { otp, email, role } = request.body;
+    const authenticateOTPRequestBody:AuthenticateOTPRequestDTO = request.body;
 
-    if (otp.length !== 6) {
-      return createResponse(
-        response,
-        HttpStatus.BAD_REQUEST,
-        false,
-        AUTH_MESSAGES.INVALID_OTP_FORMAT
-      );
-    }
-    if (!email) {
-      return createResponse(
-        response,
-        HttpStatus.BAD_REQUEST,
-        false,
-        ERROR_MESSAGES.BAD_REQUEST
-      );
-    }
+
     try {
-      await this._authService.authenticateOTP(otp, email, role);
+      await this._authService.authenticateOTP(authenticateOTPRequestBody);
       return createResponse(
         response,
         HttpStatus.OK,
@@ -193,16 +188,11 @@ export class AuthController implements IAuthController {
     }
   }
   async googleAuthentication(request: Request, response: Response) {
-    console.log(request.body);
     try {
-      const { email, name, avatar } = request.body;
+      const GoogleAuthRequesBody:GoogleAuthRequestDTO = request.body;
 
       const { accessToken, refreshToken, user, isRegister } =
-        await this._authService.googleAuthentication(email, name, avatar);
-      console.log(user);
-      console.log("isRegister", isRegister);
-      console.log("accessToken", accessToken);
-      console.log("refreshToken", refreshToken);
+        await this._authService.googleAuthentication(GoogleAuthRequesBody);
 
       if (isRegister) {
         return createResponse(
@@ -213,7 +203,11 @@ export class AuthController implements IAuthController {
           user
         );
       }
-      response.cookie(`accessToken`, accessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
+      response.cookie(
+        Tokens.ACCESS_TOKEN,
+        accessToken,
+        ACCESS_TOKEN_COOKIE_OPTIONS
+      );
       response.cookie(
         `refreshToken`,
         refreshToken,

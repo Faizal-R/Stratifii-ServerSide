@@ -15,6 +15,7 @@ import {
   IInterviewFeedback,
 } from "../../models/interview/Interview";
 import { IInterviewRepository } from "../../repositories/interview/IInterviewRepository";
+import { time } from "console";
 
 @injectable()
 export class InterviewService implements IInterviewService {
@@ -106,6 +107,8 @@ export class InterviewService implements IInterviewService {
         await this._interviewRepository.getInterviewDetails({
           interviewer: interviewerId,
         });
+      console.log(upcomingInterviews);
+
       return upcomingInterviews;
     } catch (error) {
       throw error;
@@ -115,19 +118,38 @@ export class InterviewService implements IInterviewService {
     interviewId: string,
     feedback: IInterviewFeedback
   ): Promise<void> {
+    console.log("feedback", feedback);
     try {
       const interview = await this._interviewRepository.update(interviewId, {
         feedback,
         status: "completed",
       });
+
       const delegatedCandidate =
         await this._delegatedCandidateRepository.findOne({
           candidate: interview?.candidate,
           job: interview?.job,
         });
+
+      const interviewRound = {
+        feedback,
+        status: "completed",
+        type: "followup",
+        roundNumber: delegatedCandidate?.interviewRounds?.length || 1,
+        timeZone: "UTC",
+        interviewer: interview?.interviewer,
+      };
+
       await this._delegatedCandidateRepository.update(
         delegatedCandidate?._id as string,
-        { status: "final_completed", finalInterviewFeedback: feedback }
+        {
+          status: interviewRound.feedback.needsFollowUp
+            ? "in_interview_process"
+            : "interview_completed",
+          $push: { interviewRounds: interviewRound },
+          totalNumberOfRounds:
+            (delegatedCandidate?.totalNumberOfRounds as number) + 1,
+        }
       );
 
       console.log("Updatedinterview", interview);

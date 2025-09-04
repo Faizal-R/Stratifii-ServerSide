@@ -1,11 +1,12 @@
 import mongoose, { Document, Schema, Types } from "mongoose";
+import { TStatus } from "../../types/sharedTypes";
 
 export interface IGoogleInterviewer extends Document {
   name: string;
   email: string;
   avatar?:string;
 }
-export type TStatus = "pending" | "approved" | "rejected";
+
 export type TProficiencyLevel = "beginner" | "intermediate" | "advanced" | "expert";
 export type TSkillSource = "professional" | "academic" | "personal" | "certification";
 

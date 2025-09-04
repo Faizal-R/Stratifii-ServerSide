@@ -6,7 +6,6 @@ import { ICompany } from "../../models/company/Company";
 import {
   IGoogleInterviewer,
   IInterviewer,
-  TStatus,
 } from "../../models/interviewer/Interviewer";
 
 import {
@@ -14,8 +13,6 @@ import {
   generateRefreshToken,
   generateTokenId,
 } from "../../helper/generateTokens";
-
-import { ICandidate } from "../../models/candidate/Candidate";
 import { comparePassword, hashPassword } from "../../utils/hash";
 import { IOtpRepository } from "../../repositories/auth/IOtpRepository";
 import { generateOtp } from "../../utils/otp";
@@ -23,8 +20,10 @@ import { sendEmail } from "../../helper/EmailService";
 import { Document } from "mongoose";
 import redis from "../../config/RedisConfig";
 import { CustomError } from "../../error/CustomError";
-import { companyRegistrationSchema } from "../../dto/request/auth/RegisterRequestDTO";
-import { string, ZodError } from "zod";
+import {
+  AuthenticateOTPRequestDTO,
+  CompanyRegistrationSchema,
+} from "../../dto/request/auth/RegisterRequestDTO";
 import { HttpStatus } from "../../config/HttpStatusCodes";
 import { IAuthService } from "./IAuthService";
 import jwt from "jsonwebtoken";
@@ -38,49 +37,52 @@ import { getUserByRoleAndEmail } from "../../helper/getUserByRoleAndEmail";
 import { uploadOnCloudinary } from "../../helper/cloudinary";
 import { ISubscriptionRecordRepository } from "../../repositories/subscription/subscription-record/ISubscriptionRecordRepository";
 import { ISubscriptionRecord } from "../../models/subscription/SubscriptionRecord";
-import {  inject, injectable } from "inversify";
+import { inject, injectable } from "inversify";
 import { DI_TOKENS } from "../../di/types";
 import {
   LoginRequestDTO,
   LoginRequestSchema,
 } from "../../dto/request/auth/LoginRequestDTO";
-import { TUserType } from "../../types/user";
+import { TStatus, TUserType } from "../../types/sharedTypes";
 import {
   mapToAuthResponseDTO,
   mapToAuthUserResponseDTO,
+  mapToGooleAuthResponseDTO,
 } from "../../mapper/auth/AuthMapper";
 import {
-  AuthLoginResponseDTO,
+  AuthResponseDTO,
   AuthUserResponseDTO,
+  GoogleAuthResponseDTO,
 } from "../../dto/response/auth/AuthResponseDTO";
 import {
-  companyRegisterRequestDTO,
+  CompanyRegisterRequestDTO,
   InterviewerRegisterRequestDTO,
   InterviewerRegisterSchema,
 } from "../../dto/request/auth/RegisterRequestDTO";
 import { blacklistToken } from "../../utils/handleTokenBlacklisting";
+import { InterviewerAccountSetupRequestDTO } from "../../dto/request/auth/AccountSetupRequestDTO";
+import { GoogleAuthRequestDTO } from "../../dto/request/auth/GoogleAuthRequestDTO";
 
 @injectable()
 export class AuthService implements IAuthService {
   constructor(
-   @inject(DI_TOKENS.REPOSITORIES.INTERVIEWER_REPOSITORY)
-private readonly _interviewerRepository: IInterviewerRepository,
+    @inject(DI_TOKENS.REPOSITORIES.INTERVIEWER_REPOSITORY)
+    private readonly _interviewerRepository: IInterviewerRepository,
 
-@inject(DI_TOKENS.REPOSITORIES.CANDIDATE_REPOSITORY)
-private readonly _candidateRepository: ICandidateRepository,
+    @inject(DI_TOKENS.REPOSITORIES.CANDIDATE_REPOSITORY)
+    private readonly _candidateRepository: ICandidateRepository,
 
-@inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)
-private readonly _companyRepository: ICompanyRepository,
+    @inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)
+    private readonly _companyRepository: ICompanyRepository,
 
-@inject(DI_TOKENS.REPOSITORIES.OTP_REPOSITORY)
-private readonly _otpRepository: IOtpRepository,
+    @inject(DI_TOKENS.REPOSITORIES.OTP_REPOSITORY)
+    private readonly _otpRepository: IOtpRepository,
 
-@inject(DI_TOKENS.REPOSITORIES.SUBSCRIPTION_RECORD_REPOSITORY)
-private readonly _subscriptionRecord: ISubscriptionRecordRepository
-
+    @inject(DI_TOKENS.REPOSITORIES.SUBSCRIPTION_RECORD_REPOSITORY)
+    private readonly _subscriptionRecord: ISubscriptionRecordRepository
   ) {}
 
-  async login(authPayload: LoginRequestDTO): Promise<AuthLoginResponseDTO> {
+  async login(authPayload: LoginRequestDTO): Promise<AuthResponseDTO> {
     const validatedAuthPayload = LoginRequestSchema.safeParse(authPayload);
 
     if (!validatedAuthPayload.success) {
@@ -101,6 +103,12 @@ private readonly _subscriptionRecord: ISubscriptionRecordRepository
         break;
       case Roles.CANDIDATE:
         user = await this._candidateRepository?.findByEmail(email);
+        if(!user?.password){
+          throw new CustomError(
+            AUTH_MESSAGES.CANDIDATE_ACCOUNT_NOT_SETUP,
+            HttpStatus.NOT_FOUND
+          );
+        }
         if (user?.status === "pending") {
           user = await this._candidateRepository.update(user._id as string, {
             status: "active",
@@ -116,6 +124,7 @@ private readonly _subscriptionRecord: ISubscriptionRecordRepository
         HttpStatus.NOT_FOUND
       );
     }
+   
     if (!user || !(await comparePassword(password, user.password!))) {
       throw new CustomError(
         VALIDATION_MESSAGES.INVALID_CREDENTIALS,
@@ -174,14 +183,14 @@ private readonly _subscriptionRecord: ISubscriptionRecordRepository
   }
 
   async registerCompany(
-    company: companyRegisterRequestDTO
+    company: CompanyRegisterRequestDTO
   ): Promise<AuthUserResponseDTO> {
     try {
       const {
         data: validatedData,
         success,
         error,
-      } = companyRegistrationSchema.safeParse(company);
+      } = CompanyRegistrationSchema.safeParse(company);
       if (!success) {
         const firstError = error.errors[0];
         throw new CustomError(firstError.message, HttpStatus.BAD_REQUEST);
@@ -257,19 +266,19 @@ private readonly _subscriptionRecord: ISubscriptionRecordRepository
 
   async setupInterviewerAccount(
     interviewerId: string,
-    interviewer: IInterviewer,
+    interviewer: InterviewerAccountSetupRequestDTO,
     resume: Express.Multer.File
-  ): Promise<{
-    accessToken: string;
-    refreshToken: string;
-    setupedInterviewer: IInterviewer;
-  }> {
+  ): Promise<AuthResponseDTO> {
     const findedInterviewer = await this._interviewerRepository.findById(
       interviewerId
     );
-    console.log("resumeInService", resume);
+    if (!resume) {
+      throw new CustomError("Resume is required", HttpStatus.BAD_REQUEST);
+    }
+
     const hashedPassword: string = await hashPassword(interviewer.password!);
     const resumeUrl = await uploadOnCloudinary(resume.path!, "raw");
+
     const setupedInterviewer = await this._interviewerRepository.update(
       interviewerId,
       {
@@ -280,12 +289,14 @@ private readonly _subscriptionRecord: ISubscriptionRecordRepository
         resume: resumeUrl,
       }
     );
+
     if (!setupedInterviewer) {
       throw new CustomError(
         "Failed to setup interviewer account",
         HttpStatus.NOT_FOUND
       );
     }
+
     const accessToken = await generateAccessToken({
       userId: interviewerId,
       role: Roles.INTERVIEWER,
@@ -297,15 +308,25 @@ private readonly _subscriptionRecord: ISubscriptionRecordRepository
       jti: generateTokenId(),
     });
 
-    return { accessToken, refreshToken, setupedInterviewer };
+    return mapToAuthResponseDTO({
+      accessToken,
+      refreshToken,
+      user: setupedInterviewer,
+    });
   }
 
   async authenticateOTP(
-    otp: string,
-    email: string,
-    role: string
+    authenticateOTPPayload: AuthenticateOTPRequestDTO
   ): Promise<void> {
+    const { email, role, otp } = authenticateOTPPayload;
     try {
+      if (otp.length !== 6) {
+        throw new CustomError(
+          AUTH_MESSAGES.INVALID_OTP_FORMAT,
+          HttpStatus.BAD_REQUEST
+        );
+      }
+
       let isOtpExists = await this._otpRepository.otpExists(email);
       if (!isOtpExists) {
         throw new CustomError(
@@ -349,15 +370,9 @@ private readonly _subscriptionRecord: ISubscriptionRecordRepository
   }
 
   async googleAuthentication(
-    email: string,
-    name: string,
-    avatar: string
-  ): Promise<{
-    accessToken?: string;
-    refreshToken?: string;
-    user?: IGoogleInterviewer;
-    isRegister?: boolean;
-  }> {
+   googleAuthPayload:GoogleAuthRequestDTO
+  ): Promise<GoogleAuthResponseDTO> {
+    const { email, name, avatar } = googleAuthPayload;
     try {
       let interviewer = await this._interviewerRepository.findByEmail(email);
 
@@ -379,12 +394,12 @@ private readonly _subscriptionRecord: ISubscriptionRecordRepository
           jti: generateTokenId(),
         });
 
-        return {
+        return mapToGooleAuthResponseDTO({
           accessToken,
           refreshToken,
           user: interviewer,
           isRegister: false,
-        };
+        })
       }
       const newInterviewer: Omit<IGoogleInterviewer, keyof Document> = {
         name,
@@ -394,23 +409,11 @@ private readonly _subscriptionRecord: ISubscriptionRecordRepository
       const createdInterviewer = await this._interviewerRepository.create(
         newInterviewer
       );
-      const accessToken = await generateAccessToken({
-        userId: createdInterviewer._id as string,
-        role: Roles.INTERVIEWER,
-      });
 
-      const refreshToken = await generateRefreshToken({
-        userId: createdInterviewer._id as string,
-        role: Roles.INTERVIEWER,
-        jti: generateTokenId(),
-      });
-
-      return {
+      return mapToGooleAuthResponseDTO({
         isRegister: true,
         user: createdInterviewer,
-        accessToken,
-        refreshToken,
-      };
+      })
     } catch (error) {
       console.log(error);
       if (error instanceof CustomError) {

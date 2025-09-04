@@ -51,7 +51,7 @@ Guidelines:
 - Make the questions confusing but solvable by skilled candidates and also a bit challenging.
 - Questions should reflect real-world issues, edge cases, and traps.
 - Only return valid JSON. No text before or after the array.
-- Keep the total number of questions between 25 and 30.
+-  total number of questions should be 30.
 
 Make sure all questions are based on the given skills and experience.
 `;

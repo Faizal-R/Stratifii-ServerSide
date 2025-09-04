@@ -27,9 +27,8 @@ import { DI_TOKENS } from "../../di/types";
 @injectable()
 export class AdminService implements IAdminService {
   constructor(
-   @inject(DI_TOKENS.REPOSITORIES.ADMIN_REPOSITORY)
-private readonly _adminRepository: IAdminRepository
-
+    @inject(DI_TOKENS.REPOSITORIES.ADMIN_REPOSITORY)
+    private readonly _adminRepository: IAdminRepository
   ) {}
   async getAllCompanies(status: string): Promise<ICompany[] | []> {
     try {
@@ -77,7 +76,6 @@ private readonly _adminRepository: IAdminRepository
         userId: admin._id as string,
         role: Roles.ADMIN,
       });
-    
 
       const refreshToken = generateRefreshToken({
         userId: admin._id as string,

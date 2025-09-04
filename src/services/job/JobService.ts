@@ -169,10 +169,10 @@ export class JobService implements IJobService {
     }
   }
 
-  getCandidatesByJob(jobId: string): Promise<any[] | []> {
+async  getCandidatesByJob(jobId: string): Promise<IDelegatedCandidate[] | []> {
     try {
       const candidates =
-        this._delegatedCandidateRepository.getCandidatesByJob(jobId);
+        await this._delegatedCandidateRepository.getCandidatesByJob(jobId);
       if (!candidates) {
         throw new CustomError(ERROR_MESSAGES.NOT_FOUND, HttpStatus.NOT_FOUND);
       }
