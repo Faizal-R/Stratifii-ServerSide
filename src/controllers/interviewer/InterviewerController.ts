@@ -13,19 +13,22 @@ import { ISlotService } from "../../services/slot/ISlotService";
 import { inject, injectable } from "inversify";
 import { DI_TOKENS } from "../../di/types";
 import { IInterviewService } from "../../services/interview/IInterviewService";
+import { IBankDetails } from "../../models/interviewer/Interviewer";
+import { IWalletService } from "../../services/wallet/IWalletService";
 
 @injectable()
 export class InterviewerController implements IInterviewerController {
   constructor(
-  @inject(DI_TOKENS.SERVICES.INTERVIEWER_SERVICE)
-private readonly _interviewerService: IInterviewerService,
+    @inject(DI_TOKENS.SERVICES.INTERVIEWER_SERVICE)
+    private readonly _interviewerService: IInterviewerService,
 
-@inject(DI_TOKENS.SERVICES.SLOT_SERVICE)
-private readonly _slotService: ISlotService,
+    @inject(DI_TOKENS.SERVICES.SLOT_SERVICE)
+    private readonly _slotService: ISlotService,
 
-@inject(DI_TOKENS.SERVICES.INTERVIEW_SERVICE)
-private readonly _interviewService: IInterviewService
-
+    @inject(DI_TOKENS.SERVICES.INTERVIEW_SERVICE)
+    private readonly _interviewService: IInterviewService,
+    @inject(DI_TOKENS.SERVICES.WALLET_SERVICE)
+    private readonly _walletService: IWalletService
   ) {}
 
   async getInterviewerProfile(request: Request, response: Response) {
@@ -55,8 +58,10 @@ private readonly _interviewService: IInterviewService
       let avatar: Express.Multer.File | undefined;
       let resume: Express.Multer.File | undefined;
       if (request.files && !Array.isArray(request.files)) {
-        avatar = (request.files['avatar']?.[0] as Express.Multer.File) ?? undefined;
-        resume = (request.files['resume']?.[0] as Express.Multer.File) ?? undefined;
+        avatar =
+          (request.files["avatar"]?.[0] as Express.Multer.File) ?? undefined;
+        resume =
+          (request.files["resume"]?.[0] as Express.Multer.File) ?? undefined;
       }
       console.log("avatar", avatar);
       console.log("resume", resume);
@@ -108,7 +113,50 @@ private readonly _interviewService: IInterviewService
       errorResponse(response, error);
     }
   }
-  
+
+  async addBankDetails(request: Request, response: Response): Promise<void> {
+    const bankDetails: IBankDetails = request.body;
+    console.log(bankDetails);
+
+    try {
+      await this._interviewerService.addBankDetails(
+        bankDetails,
+        request.user?.userId!
+      );
+      return createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        INTERVIEWER__SUCCESS_MESSAGES.INTERVIEWER_BANK_DETAILS_ADDED
+      );
+    } catch (error) {
+      console.log(error);
+      errorResponse(response, error);
+    }
+  }
+
+  async getInterviewerWalletAndTransactions(
+    request: Request,
+    response: Response
+  ): Promise<void> {
+    try {
+      console.log("entered getInterviewerWalletAndTransactions");
+      const interviewerId = request.user?.userId;
+      console.log(interviewerId);
+      const { wallet, transactions } =
+        await this._walletService.getUserWalletAndTransactions(interviewerId!);
+      console.log(wallet);
+      createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        INTERVIEWER__SUCCESS_MESSAGES.INTTERVIEWER_WALLET_FETCHED,
+        { wallet, transactions }
+      );
+    } catch (error) {
+      errorResponse(response, error);
+    }
+  }
 
   async getUpcomingInterviews(
     request: Request,

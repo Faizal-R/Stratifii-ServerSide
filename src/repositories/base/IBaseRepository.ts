@@ -6,6 +6,6 @@ export interface IBaseRepository<T> {
   // findAll(query?: FilterQuery<T>): Promise<T[] | []>;
   update(id: string, query: UpdateQuery<T>): Promise<T | null>;
   delete(id: string): Promise<T | null>;
-  find(query?: FilterQuery<T>): Promise<T[]|[]>;
+  find(query?: FilterQuery<T>, limit?: number,sort?:FilterQuery<T>): Promise<T[]|[]>;
   findOne(query: FilterQuery<T>): Promise<T | null>; 
 }

@@ -14,6 +14,10 @@ import { SlotGenerationRepository } from "../repositories/slot/slotGenerationRul
 import { SubscriptionPlanRepository } from "../repositories/subscription/subscription-plan/SubscriptionPlanRepository";
 import { SubscriptionRecordRepository } from "../repositories/subscription/subscription-record/SubscriptionRecordRepository";
 import { InterviewRepository } from "../repositories/interview/InterviewRepository";
+import { WalletRepository } from "../repositories/wallet/WalletRepository";
+import { TransactionRepository } from "../repositories/transaction/TransactionRepository";
+import { PayoutRequestRepository } from "../repositories/payout/payoutRequest/PayoutRequestRepository";
+import PayoutHistoryRepository from "../repositories/payout/payoutHistory/PayoutHistoryRepository";
 
 // Bind repositories to container using DI_TOKENS
 container.bind(DI_TOKENS.REPOSITORIES.ADMIN_REPOSITORY).to(AdminRepository).inSingletonScope();
@@ -28,3 +32,8 @@ container.bind(DI_TOKENS.REPOSITORIES.SLOT_GENERATION_REPOSITORY).to(SlotGenerat
 container.bind(DI_TOKENS.REPOSITORIES.SUBSCRIPTION_PLAN_REPOSITORY).to(SubscriptionPlanRepository).inSingletonScope();
 container.bind(DI_TOKENS.REPOSITORIES.SUBSCRIPTION_RECORD_REPOSITORY).to(SubscriptionRecordRepository).inSingletonScope();
 container.bind(DI_TOKENS.REPOSITORIES.INTERVIEW_REPOSITORY).to(InterviewRepository).inSingletonScope();
+container.bind(DI_TOKENS.REPOSITORIES.WALLET_REPOSITORY).to(WalletRepository).inSingletonScope();
+container.bind(DI_TOKENS.REPOSITORIES.TRANSACTION_REPOSITORY).to(TransactionRepository).inSingletonScope();
+container.bind(DI_TOKENS.REPOSITORIES.PAYOUT_REQUEST_REPOSITORY).to(PayoutRequestRepository).
+inSingletonScope();
+container.bind(DI_TOKENS.REPOSITORIES.PAYOUT_HISTORY_REPOSITORY).to(PayoutHistoryRepository).inSingletonScope();

@@ -57,4 +57,33 @@ export class DelegatedCandidateRepository
       .populate("job")
       .populate("company");
   }
+  // delegatedCandidate.repository.ts
+  async markLastRoundAsFollowUpScheduled(
+    delegatedCandidateId: string
+  ): Promise<void> {
+    await this.model.updateOne({ _id: delegatedCandidateId }, [
+      {
+        $set: {
+          interviewRounds: {
+            $concatArrays: [
+              {
+                $slice: [
+                  "$interviewRounds",
+                  { $subtract: [{ $size: "$interviewRounds" }, 1] },
+                ],
+              },
+              [
+                {
+                  $mergeObjects: [
+                    { $arrayElemAt: ["$interviewRounds", -1] },
+                    { isFollowUpScheduled: true },
+                  ],
+                },
+              ],
+            ],
+          },
+        },
+      },
+    ]);
+  }
 }

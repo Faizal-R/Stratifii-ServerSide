@@ -13,7 +13,7 @@ export interface ICandidate extends Document {
 
 const CandidateSchema: Schema = new Schema(
   {
-    email: { type: String, required: true, unique: true, trim: true },
+    email: { type: String, required: true, unique: true, trim: true, lowercase: true },
     password: { type: String },
     name: { type: String, required: true, trim: true },
     avatar: { type: String },

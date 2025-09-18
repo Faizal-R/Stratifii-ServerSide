@@ -120,7 +120,7 @@ export class SlotService implements ISlotService {
   async updateInterviewerSlotGenerationRule(
     interviewerId: string,
     ruleData: ISlotGenerationRule
-  ): Promise<ISlotGenerationRule | null> {
+  ): Promise<{ rule: ISlotGenerationRule | null; slots: IInterviewSlot[] }> {
     try {
       const existingRule = await this._slotGenerationRepository.findOne({
         interviewerId,
@@ -129,7 +129,10 @@ export class SlotService implements ISlotService {
         existingRule?._id as string,
         ruleData
       );
-      return updatedRule;
+
+      const slots = await this.getSlotsByRule(interviewerId);
+
+      return { rule: updatedRule, slots };
     } catch (error) {
       console.error(
         "[SlotService] Error updating interviewer slot generation rule:",
@@ -145,9 +148,16 @@ export class SlotService implements ISlotService {
     candidate: string;
     job: string;
     bookedBy: string;
+    isFollowUpScheduling?: boolean;
   }): Promise<IInterview> {
-    const { interviewer, slot, candidate, job, bookedBy } =
-      payloadForSlotBooking;
+    const {
+      interviewer,
+      slot,
+      candidate,
+      job,
+      bookedBy,
+      isFollowUpScheduling,
+    } = payloadForSlotBooking;
     try {
       const meetingLink = createMeetingRoom();
       const bookedSlot = await this._interviewRepository.create({
@@ -171,6 +181,12 @@ export class SlotService implements ISlotService {
         scheduledCandidate?._id as string,
         { isInterviewScheduled: true }
       );
+      console.log("isFollowUpScheduling", isFollowUpScheduling);
+      if (isFollowUpScheduling) {
+        await this._delegatedCandidateRepository.markLastRoundAsFollowUpScheduled(
+          scheduledCandidate?._id as string
+        );
+      }
       console.log("bookedSlot", bookedSlot);
       return bookedSlot;
     } catch (error) {

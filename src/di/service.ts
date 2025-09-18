@@ -10,10 +10,12 @@ import { SubscriptionRecordService } from "../services/subscription/subscription
 import { AdminService } from "../services/admin/AdminService";
 import { AuthService } from "../services/auth/AuthService";
 import { PaymentTransactionService } from "../services/payment/PaymentTransactionService";
-import { InterviewerService } from "../services/interviewer/InterviewerService";  
+import { InterviewerService } from "../services/interviewer/InterviewerService";
 import { SlotService } from "../services/slot/SlotService";
 import { InterviewService } from "../services/interview/InterviewService";
+import { PayoutService } from "../services/payout/PayoutService";
 import Redis from "ioredis";
+import { WalletService } from "../services/wallet/WalletService";
 
 // Bind services to container using DI_TOKENS
 container.bind(DI_TOKENS.SERVICES.CANDIDATE_SERVICE).to(CandidateService).inSingletonScope();
@@ -24,9 +26,11 @@ container.bind(DI_TOKENS.SERVICES.SUBSCRIPTION_RECORD_SERVICE).to(SubscriptionRe
 container.bind(DI_TOKENS.SERVICES.ADMIN_SERVICE).to(AdminService).inSingletonScope();
 container.bind(DI_TOKENS.SERVICES.AUTH_SERVICE).to(AuthService).inSingletonScope();
 container.bind(DI_TOKENS.SERVICES.PAYMENT_TRANSACTION_SERVICE).to(PaymentTransactionService).inSingletonScope();
-container.bind(DI_TOKENS.SERVICES.INTERVIEWER_SERVICE).to(InterviewerService).inSingletonScope();  
+container.bind(DI_TOKENS.SERVICES.INTERVIEWER_SERVICE).to(InterviewerService).inSingletonScope();
 container.bind(DI_TOKENS.SERVICES.SLOT_SERVICE).to(SlotService).inSingletonScope();
 container.bind(DI_TOKENS.SERVICES.INTERVIEW_SERVICE).to(InterviewService).inSingletonScope();
+container.bind(DI_TOKENS.SERVICES.PAYOUT_SERVICE).to(PayoutService).inSingletonScope();
+container.bind(DI_TOKENS.SERVICES.WALLET_SERVICE).to(WalletService).inSingletonScope();
 
 // External service
 container.bind<Redis>(DI_TOKENS.EXTERNAL.REDIS).toConstantValue(redis);

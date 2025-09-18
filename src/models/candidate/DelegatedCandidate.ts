@@ -13,7 +13,7 @@ export interface IInterviewFeedback {
   strengths?: string;
   areasForImprovement?: string;
   comments?: string;
-  recommendation?: "hire" | "no-hire" | "maybe";
+  recommendation?: "hire" | "no-hire" | "maybe"|"next-round";
   needsFollowUp?: boolean;
   suggestedFocusAreas?: string[];
   internalNotes?: string;
@@ -23,9 +23,14 @@ export interface IInterviewRound {
   roundNumber: number;
   type: "mock" | "final" | "followup";
   timeZone?: string;
-  status: "pending" | "scheduled" | "started"|"followup" | "completed" | "cancelled";
+  status:
+    | "pending"
+    | "followup"
+    | "completed"
+    | "cancelled";
   feedback?: IInterviewFeedback;
   interviewer: string | IInterviewer;
+  isFollowUpScheduled: boolean;
 }
 
 export interface IDelegatedCandidate extends Document {
@@ -38,17 +43,19 @@ export interface IDelegatedCandidate extends Document {
     | "mock_completed"
     | "mock_failed"
     | "shortlisted"
-    | "interview_rounds"
+    | "in_interview_process"
     | "hired"
     | "rejected";
   interviewRounds: IInterviewRound[];
-  totalNumberOfRounds:number;
+  totalNumberOfRounds: number;
   isQualifiedForFinal?: boolean;
   aiMockResult?: {
     totalQuestions: number;
     correctAnswers: number;
     scoreInPercentage: number;
   };
+
+  mockInterviewDeadline?: Date;
   isInterviewScheduled?: boolean;
 }
 
@@ -64,7 +71,7 @@ const InterviewFeedbackSchema = new Schema<IInterviewFeedback>(
     comments: String,
     recommendation: {
       type: String,
-      enum: ["hire", "no-hire", "maybe"],
+      enum: ["hire", "no-hire", "maybe", "next-round"],
     },
     needsFollowUp: { type: Boolean, default: false },
     suggestedFocusAreas: [{ type: String }],
@@ -75,15 +82,16 @@ const InterviewFeedbackSchema = new Schema<IInterviewFeedback>(
 const InterviewRoundSchema = new Schema<IInterviewRound>(
   {
     roundNumber: { type: Number, required: true },
-    type: { type: String, enum: ["mock", "final", "followup"], required: true },
+    type: { type: String, enum: ["final", "followup"], required: true },
     timeZone: String,
-    interviewer: { type: Types.ObjectId, ref: "Interviewer" },
     status: {
       type: String,
-      enum: ["started","followup", "completed", "cancelled"],
+      enum: [ "followup", "completed", "cancelled"],
       default: "pending",
     },
     feedback: { type: InterviewFeedbackSchema },
+    interviewer: { type: Types.ObjectId, ref: "Interviewer" },
+    isFollowUpScheduled: { type: Boolean, default: false },
   },
   { _id: false }
 );
@@ -113,7 +121,7 @@ const DelegatedCandidateSchema: Schema = new Schema(
         "mock_completed",
         "mock_failed",
         "shortlisted",
-        "interview_rounds",
+        "in_interview_process",
         "hired",
         "rejected",
       ],
@@ -132,6 +140,7 @@ const DelegatedCandidateSchema: Schema = new Schema(
       type: Boolean,
       default: false,
     },
+    mockInterviewDeadline: Date,
     aiMockResult: {
       type: new Schema(
         {

@@ -36,6 +36,15 @@ export const interviewerSchema = z.object({
 });
 
 
+export const bankDetailsSchema = z.object({
+  accountNumber: z.string().min(1, "Account number is required"),
+  ifsc: z.string().min(1, "IFSC code is required"),
+  accountHolderName: z.string().min(1, "Account holder name is required"),
+  upiId: z.string().optional(),
+  addedAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+})
+
 
 
 

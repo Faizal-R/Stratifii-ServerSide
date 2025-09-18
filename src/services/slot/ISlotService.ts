@@ -14,7 +14,7 @@ export interface ISlotService {
      updateInterviewerSlotGenerationRule(
     interviewerId: string,
     ruleData: ISlotGenerationRule
-  ): Promise<ISlotGenerationRule | null>
+  ): Promise<{rule:ISlotGenerationRule | null,slots:IInterviewSlot[]}>
 
   bookSlotForCandidate(payloadForSlotBooking: {
     interviewer: string;
@@ -22,5 +22,6 @@ export interface ISlotService {
     candidate: string;
     job: string;
     bookedBy: string;
+    isFollowUpScheduling: boolean;
   }): Promise<IInterview>;
 }

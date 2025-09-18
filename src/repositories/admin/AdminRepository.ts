@@ -76,7 +76,11 @@ export class AdminRepository
       }
       const updatedInterviewer = await this._interviewerRepository.update(
         interviewerId,
-        { status: isApproved ? 'approved' : 'rejected' }
+        { status: isApproved ? 'approved' : 'rejected' ,
+        resubmissionPeriod : isApproved ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+
+        }
+        
       );
   
       return updatedInterviewer ?? null;

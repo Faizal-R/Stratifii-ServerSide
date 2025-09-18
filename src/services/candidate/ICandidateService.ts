@@ -9,5 +9,7 @@ export interface ICandidateService{
       jobTitle: string;
       name: string;
       mockStatus: string;
+      isQualifiedForFinal: boolean;
+      mockInterviewDeadline: Date | string;
     }[]>
 }

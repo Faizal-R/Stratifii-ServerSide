@@ -3,7 +3,7 @@ import { PaymentConfig } from "../../constants/enums/AppConfig";
 import { IPaymentTransactionRepository } from "../../repositories/payment/IPaymentTransactionRepository";
 import { ICalculatePaymentResponse } from "../../types/payment";
 import { IPaymentTransactionService } from "./IPaymentTransactionService";
-import { razorpay as RazorPay } from "../../config/razorpay";
+import { razorpay as RazorPay } from "../../config/Razorpay";
 import { CustomError } from "../../error/CustomError";
 import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 import { PAYMENT_MESSAGES } from "../../constants/messages/PaymentAndSubscriptionMessages";
@@ -29,23 +29,22 @@ export interface IPaymentVerificationDetails {
 }
 @injectable()
 export class PaymentTransactionService implements IPaymentTransactionService {
-constructor(
-  @inject(DI_TOKENS.REPOSITORIES.PAYMENT_TRANSACTION_REPOSITORY)
-  private readonly _paymentTransactionRepository: IPaymentTransactionRepository,
+  constructor(
+    @inject(DI_TOKENS.REPOSITORIES.PAYMENT_TRANSACTION_REPOSITORY)
+    private readonly _paymentTransactionRepository: IPaymentTransactionRepository,
 
-  @inject(DI_TOKENS.REPOSITORIES.JOB_REPOSITORY)
-  private readonly _jobRepository: IJobRepository,
+    @inject(DI_TOKENS.REPOSITORIES.JOB_REPOSITORY)
+    private readonly _jobRepository: IJobRepository,
 
-  @inject(DI_TOKENS.REPOSITORIES.DELEGATED_CANDIDATE_REPOSITORY)
-  private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository,
+    @inject(DI_TOKENS.REPOSITORIES.DELEGATED_CANDIDATE_REPOSITORY)
+    private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository,
 
-  @inject(DI_TOKENS.REPOSITORIES.CANDIDATE_REPOSITORY)
-  private readonly _candidateRepository: ICandidateRepository,
+    @inject(DI_TOKENS.REPOSITORIES.CANDIDATE_REPOSITORY)
+    private readonly _candidateRepository: ICandidateRepository,
 
-  @inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)
-  private readonly _companyRepository: ICompanyRepository
-) {}
-
+    @inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)
+    private readonly _companyRepository: ICompanyRepository
+  ) {}
 
   calculatePayment(candidatesCount: number): ICalculatePaymentResponse {
     const pricePerInterview = PaymentConfig.RATE_PER_CANDIDATE;
@@ -53,6 +52,7 @@ constructor(
     const platformFeeAmount = PaymentConfig.PLATFORM_FEE;
     const taxAmount = (subTotal + platformFeeAmount) * PaymentConfig.GST_RATE;
     const finalPayableAmount = subTotal + platformFeeAmount + taxAmount;
+    
 
     return {
       pricePerInterview,
@@ -67,6 +67,7 @@ constructor(
   async createInterviewProcessPaymentOrder(
     amount: number
   ): Promise<Orders.RazorpayOrder> {
+    
     try {
       const options = {
         amount: amount * 100,
@@ -93,6 +94,13 @@ constructor(
     companyId,
     candidatesCount,
   }: IPaymentVerificationDetails): Promise<boolean> {
+    const existingJob=await this._paymentTransactionRepository.findOne({job:jobId})
+    if(existingJob){
+      throw new CustomError(
+        PAYMENT_MESSAGES.ALREADY_PAYMENT_VERIFIED_AND_INTERVIEW_PROCESS_STARTED,
+        HttpStatus.BAD_REQUEST
+      );
+    }
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_SECRET_KEY!)
@@ -110,7 +118,7 @@ constructor(
     const calculatedPaymentSummary = this.calculatePayment(candidatesCount);
     const paymentTransaction = await this._paymentTransactionRepository.create({
       jobId,
-      companyId,
+     company: companyId,
       ...calculatedPaymentSummary,
       status: "PAID",
       paymentGatewayTransactionId: razorpay_payment_id,
@@ -119,13 +127,22 @@ constructor(
     // Update Job Status
     await this._jobRepository.update(String(jobId), {
       status: "in-progress",
-      paymentTransaction:paymentTransaction._id as Types.ObjectId
+      paymentTransaction: paymentTransaction._id as Types.ObjectId,
     });
 
     //  Fetch candidates from DelegatedCandidate collection
     const delegatedCandidates = await this._delegatedCandidateRepository.find({
-      job:jobId
+      job: jobId,
     });
+
+    await Promise.all(
+      delegatedCandidates.map(async (dc) => {
+        return await this._delegatedCandidateRepository.update(String(dc._id), {
+          mockInterviewDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000), // +24h
+        });
+      })
+    );
+
     console.log("Delegated Candidates", delegatedCandidates);
 
     //  Extract Candidate IDs who need onboarding
@@ -137,12 +154,21 @@ constructor(
     });
 
     //  Filter only those who have no password (i.e., not onboarded yet)
-    const candidatesToOnboard = candidates.filter((c) => !c.password);
-   console.log("Candidates to onboard", candidatesToOnboard);
+    const candidatesToOnboard = candidates.filter((c) => c.status !== "active");
+
+    const candidateAllReadyOnboarded = candidates.filter(
+      (c) => c.status === "active"
+    );
+
+    console.log("Candidates to onboard", candidatesToOnboard);
+
     const company = await this._companyRepository.findById(String(companyId));
     console.log("Company", company);
+
     //  Send onboarding emails
     await sendCreatePasswordEmail(candidatesToOnboard, company?.name!);
+
+    //todo: send mail to candidates who are already onboarded
 
     return true;
   }

@@ -17,4 +17,18 @@ export class CompanyRepository
     const company = await this.model.findOne({ email }).exec();
     return company ;
   }
+  getCompaniesWithJoinedMonth(): Promise<{ _id: number; numberOfCompanies: number; }[]> {
+    return this.model.aggregate([
+      {
+        $group: {
+          _id: {
+            $month: "$createdAt",
+          },
+          numberOfCompanies: {
+            $sum: 1,
+          },
+        },
+      },
+    ]);
+  }
 }

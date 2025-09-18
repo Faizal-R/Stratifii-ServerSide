@@ -7,7 +7,7 @@ import { uploadOnCloudinary } from "../../helper/cloudinary";
 import { AccessTokenPayload } from "../../types/token";
 import { ICandidate } from "../../models/candidate/Candidate";
 import { ICandidateRepository } from "../../repositories/candidate/ICandidateRepository";
-import {  hashPassword } from "../../utils/hash";
+import { hashPassword } from "../../utils/hash";
 import { ICandidateService } from "./ICandidateService";
 import jwt from "jsonwebtoken";
 import { DI_TOKENS } from "../../di/types";
@@ -18,12 +18,11 @@ import { ICompany } from "../../models/company/Company";
 @injectable()
 export class CandidateService implements ICandidateService {
   constructor(
-  @inject(DI_TOKENS.REPOSITORIES.CANDIDATE_REPOSITORY)
-private readonly _candidateRepository: ICandidateRepository,
+    @inject(DI_TOKENS.REPOSITORIES.CANDIDATE_REPOSITORY)
+    private readonly _candidateRepository: ICandidateRepository,
 
-@inject(DI_TOKENS.REPOSITORIES.DELEGATED_CANDIDATE_REPOSITORY)
-private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository
-
+    @inject(DI_TOKENS.REPOSITORIES.DELEGATED_CANDIDATE_REPOSITORY)
+    private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository
   ) {}
   async setupCandiateProfile(
     avatar: Express.Multer.File,
@@ -31,14 +30,13 @@ private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository
     token: string
   ): Promise<ICandidate | null> {
     try {
-     
       const decoded = jwt.verify(
         token,
         process.env.ACCESS_TOKEN_SECRET as string
       ) as AccessTokenPayload;
-      console.log("decoded", decoded);
+
       const userId = decoded.userId;
-      console.log("userId", userId);
+
       const storedToken = await redis.get(`createPasswordToken:${userId}`);
 
       console.log("storedToken", storedToken);
@@ -102,6 +100,8 @@ private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository
       jobTitle: string;
       name: string;
       mockStatus: string;
+      isQualifiedForFinal: boolean;
+      mockInterviewDeadline: Date | string;
     }[]
   > {
     console.log(candidateId);
@@ -124,7 +124,8 @@ private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository
         jobTitle: job.position,
         name: company.name,
         mockStatus: dc.status,
-        isQualifiedForFinal: dc.isQualifiedForFinal,
+        isQualifiedForFinal: dc.isQualifiedForFinal as boolean,
+        mockInterviewDeadline: dc.mockInterviewDeadline as Date | string,
       };
     });
 

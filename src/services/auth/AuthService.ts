@@ -17,7 +17,7 @@ import { comparePassword, hashPassword } from "../../utils/hash";
 import { IOtpRepository } from "../../repositories/auth/IOtpRepository";
 import { generateOtp } from "../../utils/otp";
 import { sendEmail } from "../../helper/EmailService";
-import { Document } from "mongoose";
+import { Document, Types } from "mongoose";
 import redis from "../../config/RedisConfig";
 import { CustomError } from "../../error/CustomError";
 import {
@@ -62,6 +62,7 @@ import {
 import { blacklistToken } from "../../utils/handleTokenBlacklisting";
 import { InterviewerAccountSetupRequestDTO } from "../../dto/request/auth/AccountSetupRequestDTO";
 import { GoogleAuthRequestDTO } from "../../dto/request/auth/GoogleAuthRequestDTO";
+import { IWalletRepository } from "../../repositories/wallet/IWalletRepository";
 
 @injectable()
 export class AuthService implements IAuthService {
@@ -79,7 +80,10 @@ export class AuthService implements IAuthService {
     private readonly _otpRepository: IOtpRepository,
 
     @inject(DI_TOKENS.REPOSITORIES.SUBSCRIPTION_RECORD_REPOSITORY)
-    private readonly _subscriptionRecord: ISubscriptionRecordRepository
+    private readonly _subscriptionRecord: ISubscriptionRecordRepository,
+
+    @inject(DI_TOKENS.REPOSITORIES.WALLET_REPOSITORY)
+    private readonly _walletRepository: IWalletRepository
   ) {}
 
   async login(authPayload: LoginRequestDTO): Promise<AuthResponseDTO> {
@@ -103,7 +107,7 @@ export class AuthService implements IAuthService {
         break;
       case Roles.CANDIDATE:
         user = await this._candidateRepository?.findByEmail(email);
-        if(!user?.password){
+        if (!user?.password) {
           throw new CustomError(
             AUTH_MESSAGES.CANDIDATE_ACCOUNT_NOT_SETUP,
             HttpStatus.NOT_FOUND
@@ -124,7 +128,7 @@ export class AuthService implements IAuthService {
         HttpStatus.NOT_FOUND
       );
     }
-   
+
     if (!user || !(await comparePassword(password, user.password!))) {
       throw new CustomError(
         VALIDATION_MESSAGES.INVALID_CREDENTIALS,
@@ -140,6 +144,12 @@ export class AuthService implements IAuthService {
         HttpStatus.FORBIDDEN
       );
     }
+
+    // if(role===Roles.INTERVIEWER){
+    //   if((user as IInterviewer).status==="rejected"){
+    //     throw new CustomError("Your account has been rejected. Please contact support.",HttpStatus.LOCKED)
+    //   }
+    // }
 
     const accessToken = await generateAccessToken({
       userId: user._id as string,
@@ -211,6 +221,10 @@ export class AuthService implements IAuthService {
       const createdCompany = await this._companyRepository.create(
         validatedData
       );
+      await this._walletRepository.create({
+        userId: createdCompany._id as Types.ObjectId,
+        userType: Roles.COMPANY,
+      });
       await this.sendVerificationCode(createdCompany.email);
       return mapToAuthUserResponseDTO(createdCompany);
     } catch (error) {
@@ -259,6 +273,11 @@ export class AuthService implements IAuthService {
     const createdInterviewer = await this._interviewerRepository.create(
       validatedInterviewer
     );
+
+    await this._walletRepository.create({
+      userId: createdInterviewer._id as Types.ObjectId,
+      userType: Roles.INTERVIEWER,
+    });
     await this.sendVerificationCode(createdInterviewer.email);
 
     return mapToAuthUserResponseDTO(createdInterviewer);
@@ -296,6 +315,10 @@ export class AuthService implements IAuthService {
         HttpStatus.NOT_FOUND
       );
     }
+    await this._walletRepository.create({
+      userId: setupedInterviewer._id as Types.ObjectId,
+      userType: Roles.INTERVIEWER,
+    });
 
     const accessToken = await generateAccessToken({
       userId: interviewerId,
@@ -370,19 +393,19 @@ export class AuthService implements IAuthService {
   }
 
   async googleAuthentication(
-   googleAuthPayload:GoogleAuthRequestDTO
+    googleAuthPayload: GoogleAuthRequestDTO
   ): Promise<GoogleAuthResponseDTO> {
     const { email, name, avatar } = googleAuthPayload;
     try {
       let interviewer = await this._interviewerRepository.findByEmail(email);
 
       if (interviewer) {
-        if (interviewer.status === "rejected") {
-          throw new CustomError(
-            "Your account has been rejected. Please contact support.",
-            HttpStatus.FORBIDDEN
-          );
-        }
+        // if (interviewer.status === "rejected") {
+        //   throw new CustomError(
+        //     "Your account has been rejected. Please contact support.",
+        //     HttpStatus.LOCKED
+        //   );
+        // }
         const accessToken = await generateAccessToken({
           userId: interviewer._id as string,
           role: Roles.INTERVIEWER,
@@ -399,7 +422,7 @@ export class AuthService implements IAuthService {
           refreshToken,
           user: interviewer,
           isRegister: false,
-        })
+        });
       }
       const newInterviewer: Omit<IGoogleInterviewer, keyof Document> = {
         name,
@@ -413,7 +436,7 @@ export class AuthService implements IAuthService {
       return mapToGooleAuthResponseDTO({
         isRegister: true,
         user: createdInterviewer,
-      })
+      });
     } catch (error) {
       console.log(error);
       if (error instanceof CustomError) {

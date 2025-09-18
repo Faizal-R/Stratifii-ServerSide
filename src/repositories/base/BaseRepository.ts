@@ -10,8 +10,8 @@ export abstract class BaseRepository<T extends Document>
     return this.model.create(data);
   }
 
-  find(query: FilterQuery<T>): Promise<T[]> {
-    return this.model.find(query??{}).exec();
+  find(query: FilterQuery<T>, limit?: number,sort?:FilterQuery<T>): Promise<T[]> {
+    return this.model.find(query??{}).limit(limit??100).sort(sort??{createdAt:1}).exec();
   }
 
   findOne(query: FilterQuery<T>): Promise<T | null> {

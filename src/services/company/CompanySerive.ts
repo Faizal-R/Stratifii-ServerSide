@@ -14,6 +14,10 @@ import { IDelegatedCandidateRepository } from "../../repositories/candidate/cand
 import { IJobRepository } from "../../repositories/job/IJobRepository";
 import { mapToCompanyResponseDTO } from "../../mapper/company/CompanyMapper";
 import { CompanyResponseDTO } from "../../dto/response/company/CompanyResponseDTO";
+import { IJob } from "../../models/job/Job";
+import { IDelegatedCandidate } from "../../models/candidate/DelegatedCandidate";
+import { IPaymentTransactionRepository } from "../../repositories/payment/IPaymentTransactionRepository";
+import { IPaymentTransaction } from "../../models/payment/PaymentTransaction";
 
 @injectable()
 export class CompanyService implements ICompanyService {
@@ -25,7 +29,10 @@ private readonly _companyRepository: ICompanyRepository,
 private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository,
 
 @inject(DI_TOKENS.REPOSITORIES.JOB_REPOSITORY)
-private readonly _jobRepository: IJobRepository
+private readonly _jobRepository: IJobRepository,
+@inject(DI_TOKENS.REPOSITORIES.PAYMENT_TRANSACTION_REPOSITORY)
+  private readonly _paymentTransactionRepository: IPaymentTransactionRepository
+
 
   ) {}
 
@@ -101,54 +108,21 @@ private readonly _jobRepository: IJobRepository
     }
   }
 
-  async getCompanyDashboard(companyId: string): Promise<any> {
+  async getCompanyDashboard(companyId: string): Promise<{jobs:IJob[],candidates:IDelegatedCandidate[],payments:IPaymentTransaction[]}> {
     try {
-      // const jobMetrics = await this._jobRepository.getJobStatsForDashboard(
-      //   companyId
-      // );
-      // console.log("jobMetrics", jobMetrics);
+     
 
-      const AllJobs= await this._jobRepository.find({company:companyId});
-      const totalJobsCount=AllJobs.length;
-
-      const openJobsCount=AllJobs.filter((job)=>job.status==="open").length;
-      const inProgressJobs=AllJobs.filter((job)=>job.status==="in-progress").length;
-      const completedJobs=AllJobs.filter((job)=>job.status==="completed").length;
-      const jobMetrics = {
-        total: totalJobsCount,
-        open: openJobsCount,
-        inProgress: inProgressJobs,
-        completed: completedJobs,
+      const jobs= await this._jobRepository.find({company:companyId});
+      const candidates = await this._delegatedCandidateRepository.find({company:companyId});
+      const payments=await this._paymentTransactionRepository.find({company:companyId});
+      return { 
+        jobs,
+        candidates,
+        payments
+      
       };
-
-      const totalDelegatedCandidates =
-        await this._delegatedCandidateRepository.find({ company: companyId });
-      const totalDelegatedCandidatesCount = totalDelegatedCandidates.length;
-      // const interviewedCandidatesCount = totalDelegatedCandidates.filter(
-      //   (candidate) => candidate.status === "final_completed"
-      // ).length;
-      const shortlistedCandidatesCount = totalDelegatedCandidates.filter(
-        (candidate) => candidate.status === "shortlisted"
-      ).length;
-      const rejectedCandidatesCount = totalDelegatedCandidates.filter(
-        (candidate) => candidate.status === "rejected"
-      ).length;
-      const mockPendingCandidatesCount = totalDelegatedCandidates.filter(
-        (candidate) => candidate.status === "mock_pending"
-      ).length;
-
-      const candidateMetrics = {
-        total: totalDelegatedCandidatesCount,
-        // finalCompleted: interviewedCandidatesCount,
-        shortlisted: shortlistedCandidatesCount,
-        rejected: rejectedCandidatesCount,
-        mockPending: mockPendingCandidatesCount,
-      };
-
-      return {
-        jobMetrics,
-        candidateMetrics: candidateMetrics,
-      };
-    } catch (error) {}
+    } catch (error) {
+      throw error;
+    }
   }
 }

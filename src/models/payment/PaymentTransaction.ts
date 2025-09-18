@@ -1,7 +1,7 @@
 import { Schema, model, Types, Document } from "mongoose";
 
 export interface IPaymentTransaction extends Document {
-  companyId: Types.ObjectId;
+  company: Types.ObjectId;
   jobId: Types.ObjectId;
   candidatesCount: number;
   pricePerInterview: number;
@@ -17,7 +17,7 @@ export interface IPaymentTransaction extends Document {
 
 const PaymentTransactionSchema: Schema = new Schema(
   {
-    companyId: { type: Types.ObjectId, ref: "Company", required: true },
+    company: { type: Types.ObjectId, ref: "Company", required: true },
     jobId: { type: Types.ObjectId, ref: "Job", required: true },
     candidatesCount: { type: Number, required: true },
     pricePerInterview: { type: Number, required: true },

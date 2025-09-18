@@ -5,5 +5,6 @@ export interface IInterviewerController{
     updateInterviewerProfile(request: Request, response: Response): Promise<void>;
     changePassword(request: Request, response: Response): Promise<void>;
   getUpcomingInterviews(request: Request, response: Response): Promise<void>
-    
+  addBankDetails(request: Request, response: Response): Promise<void>
+  getInterviewerWalletAndTransactions(request: Request, response: Response): Promise<void>
 }

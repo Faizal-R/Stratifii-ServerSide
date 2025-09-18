@@ -23,12 +23,27 @@ import {
 } from "../../helper/wrapHtml";
 import { inject, injectable } from "inversify";
 import { DI_TOKENS } from "../../di/types";
+import { IPaymentTransactionRepository } from "../../repositories/payment/IPaymentTransactionRepository";
+import { ISubscriptionRecordRepository } from "../../repositories/subscription/subscription-record/ISubscriptionRecordRepository";
+import { convertNumberToMonth } from "../../utils/convertNumberToMonth";
+import { IInterviewerRepository } from "../../repositories/interviewer/IInterviewerRepository";
+import { ICompanyRepository } from "../../repositories/company/ICompanyRepository";
+import { mapToCompanyResponseDTO } from "../../mapper/company/CompanyMapper";
+import { TStatus } from "../../types/sharedTypes";
 
 @injectable()
 export class AdminService implements IAdminService {
   constructor(
     @inject(DI_TOKENS.REPOSITORIES.ADMIN_REPOSITORY)
-    private readonly _adminRepository: IAdminRepository
+    private readonly _adminRepository: IAdminRepository,
+    @inject(DI_TOKENS.REPOSITORIES.PAYMENT_TRANSACTION_REPOSITORY)
+    private readonly _paymentTransactionRepository: IPaymentTransactionRepository,
+    @inject(DI_TOKENS.REPOSITORIES.SUBSCRIPTION_RECORD_REPOSITORY)
+    private readonly _subscriptionRecordRepository: ISubscriptionRecordRepository,
+    @inject(DI_TOKENS.REPOSITORIES.INTERVIEWER_REPOSITORY)
+    private readonly _interviewerRepository: IInterviewerRepository,
+    @inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)
+    private readonly _companyRepository: ICompanyRepository
   ) {}
   async getAllCompanies(status: string): Promise<ICompany[] | []> {
     try {
@@ -207,5 +222,116 @@ export class AdminService implements IAdminService {
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
+  }
+  async getAdminDashboard(): Promise<{
+    keyMetrics: {
+      activeCompanies: number;
+      totalInterviewers: number;
+      totalRevenue: number;
+      totalActiveSubscription: number;
+    };
+    monthlyRevenue: {
+      month: string;
+      interviews: number;
+      subscriptions: number;
+      total: number;
+    }[];
+    monthlyUserGrowth: {
+      month: string;
+      companies: number;
+      interviewers: number;
+    }[];
+    subscriptionDistribution: {
+      name: string;
+      value: number;
+    }[];
+    recentCompanies: {
+      name: string;
+      email: string;
+      _id: string;
+      status: TStatus;
+      companyLogo: string | null;
+    }[];
+  }> {
+    const activeCompanies = (
+      await this._adminRepository.getAllCompanies("approved")
+    ).length;
+
+    const totalInterviewers = (
+      await this._adminRepository.getAllInterviewers("approved")
+    ).length;
+
+    const totalRevenueFromInterview =
+      await this._paymentTransactionRepository.getTotalRevenueFromInterview();
+    const totalActiveSubscription = (
+      await this._subscriptionRecordRepository.find({ status: "active" })
+    ).length;
+
+    //subscription and interview revenue with month
+    const subscriptionRevenue =
+      await this._subscriptionRecordRepository.getTotalSubscriptionRevenueWithMonth();
+    const interviewRevenue =
+      await this._paymentTransactionRepository.getTotalRevenueFromInterviewWithMonth();
+    console.log("interviewRevenueWithMonth", interviewRevenue);
+    const monthlyRevenue = [];
+    for (let i = 1; i <= 12; i++) {
+      monthlyRevenue.push({
+        month: convertNumberToMonth(i),
+        subscriptions:
+          subscriptionRevenue.find((r) => r._id === i)?.totalRevenue || 0,
+        interviews:
+          interviewRevenue.find((r) => r._id === i)?.totalRevenue || 0,
+        total:
+          (subscriptionRevenue.find((r) => r._id === i)?.totalRevenue || 0) +
+          (interviewRevenue.find((r) => r._id === i)?.totalRevenue || 0),
+      });
+    }
+    console.log("monthlyRevenue", monthlyRevenue);
+
+    const getInterviewersWithJoinedMonth =
+      await this._interviewerRepository.getInterviewersWithJoinedMonth();
+
+    const getCompaniesWithJoinedMonth =
+      await this._companyRepository.getCompaniesWithJoinedMonth();
+
+    const monthlyUserGrowth = [];
+    for (let i = 1; i <= 12; i++) {
+      monthlyUserGrowth.push({
+        month: convertNumberToMonth(i),
+        interviewers:
+          getInterviewersWithJoinedMonth.find((r) => r._id === i)
+            ?.numberOfInterviewers || 0,
+        companies:
+          getCompaniesWithJoinedMonth.find((r) => r._id === i)
+            ?.numberOfCompanies || 0,
+      });
+    }
+
+    const subscriptionDistribution =
+      await this._subscriptionRecordRepository.getSubscriptionDistribution();
+    console.log("subscriptionDistribution", subscriptionDistribution);
+
+    const recentCompanies = await this._companyRepository.find({}, 5, {
+      createdAt: -1,
+    });
+
+    return {
+      keyMetrics: {
+        activeCompanies,
+        totalInterviewers,
+        totalRevenue: totalRevenueFromInterview,
+        totalActiveSubscription,
+      },
+      monthlyRevenue,
+      monthlyUserGrowth,
+      subscriptionDistribution,
+      recentCompanies: recentCompanies.map((company) => ({
+        name: company.name,
+        email: company.email,
+        status: company.status,
+        _id: company._id as string,
+        companyLogo: company.companyLogo ?? null
+      })),
+    };
   }
 }

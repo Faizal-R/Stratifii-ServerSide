@@ -21,6 +21,7 @@ import { generateSlotsFromRule } from "../../utils/generateSlots";
 
 import { IInterviewRepository } from "../../repositories/interview/IInterviewRepository";
 import { IInterview } from "../../models/interview/Interview";
+import { normalizeSkill } from "../../utils/handleSkills";
 
 injectable();
 export class JobService implements IJobService {
@@ -233,73 +234,150 @@ async  getCandidatesByJob(jobId: string): Promise<IDelegatedCandidate[] | []> {
       );
     }
   }
+  // async getMatchedInterviewersByJobDescription(
+  //   jobId: string
+  // ): Promise<{ interviewer: IInterviewer; slots: IInterviewSlot[] }[] | []> {
+  //   try {
+  //     const jobDetails = await this._jobRepository.findById(jobId);
+  //     if (!jobDetails) return [];
+
+  //     const allInterviewers = await this._interviewerRepository.find();
+
+  //     const matchedInterviewers = allInterviewers
+  //       .map((interviewer) => {
+  //         const matchCount = (interviewer.expertise||[]).filter((exp) =>
+  //           jobDetails.requiredSkills.includes(exp.skill)
+  //         ).length;
+
+  //         return { interviewer, matchCount };
+  //       })
+  //       .filter(({ matchCount }) => matchCount > 0)
+  //       .sort((a, b) => b.matchCount - a.matchCount);
+  //     console.log("Matched Interviewers", matchedInterviewers);
+
+  //     const interviewersWithSlots = await Promise.all(
+  //       matchedInterviewers.map(async ({ interviewer }) => {
+  //         const rule = await this._slotGenerationRepository.findOne({
+  //           interviewerId: interviewer._id,
+  //         });
+
+  //         const slots = generateSlotsFromRule(rule); // [{ startTime, endTime, duration }]
+
+  //         // Fetch all booked slots with exact match on start and end times for this interviewer
+  //         const bookedSlots = await this._interviewRepository.find({
+  //           interviewer: interviewer._id,
+  //           status: { $ne: "cancelled" },
+  //         });
+
+  //         const enrichedSlots : IInterviewSlot[] = slots.map((slot) => {
+  //           const exactBooked = bookedSlots.find(
+  //             (booked: IInterview) =>
+  //               new Date(booked.startTime).getTime() ===
+  //                 new Date(slot.startTime).getTime() &&
+  //               new Date(booked.endTime).getTime() ===
+  //                 new Date(slot.endTime).getTime()
+  //           );
+
+  //           return {
+  //             interviewerId: interviewer._id,
+  //             startTime: slot.startTime,
+  //             endTime: slot.endTime,
+  //             duration: slot.duration,
+  //             isAvailable: !exactBooked,
+  //             status: exactBooked ? "booked" : "available",
+  //             ruleId: rule?._id as string,
+  //           };
+  //         });
+
+  //         return { interviewer, slots: enrichedSlots };
+  //       })
+  //     );
+
+  //     console.log("final InterviewerWithSlots", interviewersWithSlots);
+  //     return interviewersWithSlots;
+  //   } catch (error) {
+  //     console.log("Error in getMatchedInterviewersByJobDescription", error);
+  //     throw new CustomError(
+  //       ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+  //       HttpStatus.INTERNAL_SERVER_ERROR
+  //     );
+  //   }
+  // }
+
   async getMatchedInterviewersByJobDescription(
-    jobId: string
-  ): Promise<{ interviewer: IInterviewer; slots: IInterviewSlot[] }[] | []> {
-    try {
-      const jobDetails = await this._jobRepository.findById(jobId);
-      if (!jobDetails) return [];
+  jobId: string
+): Promise<{ interviewer: IInterviewer; slots: IInterviewSlot[] }[] | []> {
+  try {
+    const jobDetails = await this._jobRepository.findById(jobId);
+    if (!jobDetails) return [];
 
-      const allInterviewers = await this._interviewerRepository.find();
+    const allInterviewers = await this._interviewerRepository.find();
 
-      const matchedInterviewers = allInterviewers
-        .map((interviewer) => {
-          const matchCount = (interviewer.expertise||[]).filter((exp) =>
-            jobDetails.requiredSkills.includes(exp.skill)
-          ).length;
+    // normalize job required skills once
+    const requiredSkills = (jobDetails.requiredSkills || []).map(normalizeSkill);
 
-          return { interviewer, matchCount };
-        })
-        .filter(({ matchCount }) => matchCount > 0)
-        .sort((a, b) => b.matchCount - a.matchCount);
-      console.log("Matched Interviewers", matchedInterviewers);
+    const matchedInterviewers = allInterviewers
+      .map((interviewer) => {
+        const interviewerSkills = (interviewer.expertise || []).map((exp: any) =>
+          normalizeSkill(typeof exp === "string" ? exp : exp.skill)
+        );
 
-      const interviewersWithSlots = await Promise.all(
-        matchedInterviewers.map(async ({ interviewer }) => {
-          const rule = await this._slotGenerationRepository.findOne({
+        const matchCount = interviewerSkills.filter((s) =>
+          requiredSkills.includes(s)
+        ).length;
+
+        return { interviewer, matchCount };
+      })
+      .filter(({ matchCount }) => matchCount > 0)
+      .sort((a, b) => b.matchCount - a.matchCount);
+
+    console.log("Matched Interviewers", matchedInterviewers);
+
+    const interviewersWithSlots = await Promise.all(
+      matchedInterviewers.map(async ({ interviewer }) => {
+        const rule = await this._slotGenerationRepository.findOne({
+          interviewerId: interviewer._id,
+        });
+
+        const slots = generateSlotsFromRule(rule);
+
+        const bookedSlots = await this._interviewRepository.find({
+          interviewer: interviewer._id,
+          status: { $ne: "cancelled" },
+        });
+
+        const enrichedSlots: IInterviewSlot[] = slots.map((slot) => {
+          const exactBooked = bookedSlots.find(
+            (booked: IInterview) =>
+              new Date(booked.startTime).getTime() ===
+                new Date(slot.startTime).getTime() &&
+              new Date(booked.endTime).getTime() ===
+                new Date(slot.endTime).getTime()
+          );
+
+          return {
             interviewerId: interviewer._id,
-          });
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            duration: slot.duration,
+            isAvailable: !exactBooked,
+            status: exactBooked ? "booked" : "available",
+            ruleId: rule?._id as string,
+          };
+        });
 
-          const slots = generateSlotsFromRule(rule); // [{ startTime, endTime, duration }]
+        return { interviewer, slots: enrichedSlots };
+      })
+    );
 
-          // Fetch all booked slots with exact match on start and end times for this interviewer
-          const bookedSlots = await this._interviewRepository.find({
-            interviewer: interviewer._id,
-            status: { $ne: "cancelled" },
-          });
-
-          const enrichedSlots : IInterviewSlot[] = slots.map((slot) => {
-            const exactBooked = bookedSlots.find(
-              (booked: IInterview) =>
-                new Date(booked.startTime).getTime() ===
-                  new Date(slot.startTime).getTime() &&
-                new Date(booked.endTime).getTime() ===
-                  new Date(slot.endTime).getTime()
-            );
-
-            return {
-              interviewerId: interviewer._id,
-              startTime: slot.startTime,
-              endTime: slot.endTime,
-              duration: slot.duration,
-              isAvailable: !exactBooked,
-              status: exactBooked ? "booked" : "available",
-              ruleId: rule?._id as string,
-            };
-          });
-
-          return { interviewer, slots: enrichedSlots };
-        })
-      );
-
-      console.log("final InterviewerWithSlots", interviewersWithSlots);
-      return interviewersWithSlots;
-    } catch (error) {
-      console.log("Error in getMatchedInterviewersByJobDescription", error);
-      throw new CustomError(
-        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
+    console.log("final InterviewerWithSlots", interviewersWithSlots);
+    return interviewersWithSlots;
+  } catch (error) {
+    console.log("Error in getMatchedInterviewersByJobDescription", error);
+    throw new CustomError(
+      ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+      HttpStatus.INTERNAL_SERVER_ERROR
+    );
   }
+}
 }

@@ -12,6 +12,7 @@ import { CandidateController } from "../controllers/candidate/CandidateControlle
 import { SubscriptionController } from "../controllers/subscription/SubscriptionController";
 import { SlotController } from "../controllers/slot/SlotController";
 import { InterviewController } from "../controllers/interview/InterviewController";
+import { PayoutController } from "../controllers/payout/PayoutController";
 
 // Interfaces
 import { IAuthController } from "../controllers/auth/IAuthController";
@@ -24,6 +25,7 @@ import { ICandidateController } from "../controllers/candidate/ICandidateControl
 import { ISubscriptionController } from "../controllers/subscription/ISubscriptonController";
 import { ISlotController } from "../controllers/slot/ISlotController";
 import { IInterviewController } from "../controllers/interview/IInterviewController";
+import { IPayoutController } from "../controllers/payout/IPayoutController";
 
 // Bind controllers with interfaces using DI_TOKENS
 container.bind<IAuthController>(DI_TOKENS.CONTROLLERS.AUTH_CONTROLLER).to(AuthController);
@@ -36,3 +38,4 @@ container.bind<ICandidateController>(DI_TOKENS.CONTROLLERS.CANDIDATE_CONTROLLER)
 container.bind<ISubscriptionController>(DI_TOKENS.CONTROLLERS.SUBSCRIPTION_CONTROLLER).to(SubscriptionController);
 container.bind<ISlotController>(DI_TOKENS.CONTROLLERS.SLOT_CONTROLLER).to(SlotController);
 container.bind<IInterviewController>(DI_TOKENS.CONTROLLERS.INTERVIEW_CONTROLLER).to(InterviewController);
+container.bind<IPayoutController>(DI_TOKENS.CONTROLLERS.PAYOUT_CONTROLLER).to(PayoutController);

@@ -20,6 +20,10 @@ export const DI_TOKENS = {
     SUBSCRIPTION_RECORD_REPOSITORY: "SubscriptionRecordRepository",
     INTERVIEW_SLOT_REPOSITORY: "InterviewSlotRepository",
     SLOT_GENERATION_REPOSITORY: "SlotGenerationRepository",
+    WALLET_REPOSITORY: "WalletRepository",
+    TRANSACTION_REPOSITORY: "TransactionRepository",
+    PAYOUT_REQUEST_REPOSITORY: "PayoutRequestRepository",
+    PAYOUT_HISTORY_REPOSITORY: "PayoutHistoryRepository",
   },
 
   SERVICES: {
@@ -34,6 +38,9 @@ export const DI_TOKENS = {
     INTERVIEWER_SERVICE: "InterviewerService",
     SLOT_SERVICE: "SlotService",
     INTERVIEW_SERVICE: "InterviewService",
+    WALLET_SERVICE: "WalletService",
+    PAYOUT_SERVICE: "PayoutService",
+
   },
 
   CONTROLLERS: {
@@ -47,6 +54,8 @@ export const DI_TOKENS = {
     INTERVIEWER_CONTROLLER: "InterviewerController",
     SLOT_CONTROLLER: "SlotController",
     INTERVIEW_CONTROLLER: "InterviewController",
+    WALLET_CONTROLLER: "WalletController",
+    PAYOUT_CONTROLLER: "PayoutController",
   },
 
   EXTERNAL: {

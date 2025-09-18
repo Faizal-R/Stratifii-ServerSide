@@ -11,7 +11,6 @@ import { IInterviewController } from "../../../controllers/interview/IInterviewC
 const router = Router();
 
 const interviewController = resolve<IInterviewController>(
-  
   DI_TOKENS.CONTROLLERS.INTERVIEW_CONTROLLER
 );
 

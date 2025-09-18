@@ -1,6 +1,7 @@
 import { IAdmin } from "../../models/admin/Admin";
 import { ICompany } from "../../models/company/Company";
 import { IInterviewer } from "../../models/interviewer/Interviewer";
+import { TStatus } from "../../types/sharedTypes";
 
 export interface IAdminService{
     login(email:string,password:string):Promise<{accessToken:string,refreshToken:string}>
@@ -12,5 +13,35 @@ export interface IAdminService{
 
     handleCompanyVerification(companyId:string,isApproved:boolean,reasonForRejection?:string): Promise<ICompany|null>
     handleInterviewerVerification(interviewerId:string,isApproved:boolean,interviewerName:string,interviewerEmail:string,reasonForRejection?:string): Promise<IInterviewer|null>
-    
-}  
+
+    getAdminDashboard(): Promise<{
+    keyMetrics: {
+      activeCompanies: number;
+      totalInterviewers: number;
+      totalRevenue: number;
+      totalActiveSubscription: number;
+    };
+    monthlyRevenue: {
+      month: string;
+      interviews: number;
+      subscriptions: number;
+      total: number;
+    }[];
+     monthlyUserGrowth:{
+      month: string;
+      companies: number;
+      interviewers: number;
+    }[]
+    subscriptionDistribution: {
+      name: string;
+      value: number;
+    }[];
+     recentCompanies:{
+      name: string;
+      email: string;
+      _id: string;
+      status: TStatus;
+      companyLogo:string|null
+    }[]
+  }>
+}

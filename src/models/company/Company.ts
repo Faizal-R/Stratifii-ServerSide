@@ -38,6 +38,7 @@ const CompanySchema: Schema = new Schema(
       required: true,
       unique: true,
       trim: true,
+      lowercase: true,
     },
     companyWebsite: {
       type: String,

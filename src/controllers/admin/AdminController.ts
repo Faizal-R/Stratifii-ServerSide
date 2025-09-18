@@ -216,4 +216,20 @@ export class AdminController implements IAdminController {
       errorResponse(response, error);
     }
   }
+
+  getAdminDashboard = async (request: Request, response: Response) => {
+    try {
+      const dashboard = await this._adminService.getAdminDashboard();
+      console.log("Dashboard Data:", dashboard);
+      return createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        ADMIN_SUCCESS_MESSAGES.ADMIN_DASHBOARD_FETCHED,
+        dashboard
+      );
+    } catch (error) {
+      return errorResponse(response, error);
+    }
+  };
 }
