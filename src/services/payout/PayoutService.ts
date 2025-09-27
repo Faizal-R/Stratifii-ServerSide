@@ -7,6 +7,7 @@ import { IPayoutRequest } from "../../models/payout/PayoutRequest";
 import { Types } from "mongoose";
 import { CustomError } from "../../error/CustomError";
 import { HttpStatus } from "../../config/HttpStatusCodes";
+import { IWalletRepository } from "../../repositories/wallet/IWalletRepository";
 
 @injectable()
 export class PayoutService implements IPayoutService {
@@ -14,13 +15,15 @@ export class PayoutService implements IPayoutService {
     @inject(DI_TOKENS.REPOSITORIES.PAYOUT_REQUEST_REPOSITORY)
     private readonly _payoutRequestRepository: IPayoutRequestRepository,
     @inject(DI_TOKENS.REPOSITORIES.PAYOUT_HISTORY_REPOSITORY)
-    private readonly _payoutHistoryRepository: IPayoutHistoryRepository
+    private readonly _payoutHistoryRepository: IPayoutHistoryRepository,
+    @inject(DI_TOKENS.REPOSITORIES.WALLET_REPOSITORY)
+    private readonly _walletRepository: IWalletRepository
   ) {}
 
   createPayoutRequest(payoutRequestPayload: {
     interviewerId: Types.ObjectId;
     amount: number;
-    interviewerName:string
+    interviewerName: string;
   }): Promise<IPayoutRequest> {
     const { interviewerId, amount, interviewerName } = payoutRequestPayload;
     if (!interviewerId)
@@ -36,21 +39,58 @@ export class PayoutService implements IPayoutService {
     const payoutRequest = this._payoutRequestRepository.create({
       interviewerId,
       amount,
-      interviewerName
-    }); 
+      interviewerName,
+    });
     return payoutRequest;
   }
 
-  getAllInterviewersPayoutRequests(): Promise<IPayoutRequest[]> {
+  async getAllInterviewersPayoutRequests(): Promise<IPayoutRequest[]> {
     try {
-      const payoutRequests = this._payoutRequestRepository.find();
+      const payoutRequests = await this._payoutRequestRepository.find();
       return payoutRequests;
-    } catch (error) { 
+    } catch (error) {
       throw error;
     }
   }
 
-  payoutInterviewer(data: any): Promise<any> {
-    throw new Error("Method not implemented.");
+  async updateInterviewerPayoutRequestStatus(
+    payoutRequestId: string,
+    status: string
+  ): Promise<IPayoutRequest | null> {
+    try {
+      const updatedPayoutRequest = await this._payoutRequestRepository.update(
+        payoutRequestId,
+        {
+          status,
+          approvedAt: status === "approved" ? Date.now() : null,
+        }
+      );
+      if (status === "completed") {
+        await this._payoutHistoryRepository.create({
+          interviewerId: updatedPayoutRequest?.interviewerId,
+          amount: updatedPayoutRequest?.amount,
+          payoutId: updatedPayoutRequest?._id as string,
+          status: "succeeded",
+          transferId: `trans_${Math.random() * 10000}`,
+        });
+        const userWallet = await this._walletRepository.findOne({
+          userId: updatedPayoutRequest?.interviewerId,
+          userType: "interviewer",
+        });
+        if (typeof updatedPayoutRequest?.amount !== "number") {
+          throw new CustomError(
+            "Payout amount is undefined",
+            HttpStatus.BAD_REQUEST
+          );
+        }
+        await this._walletRepository.update(userWallet?._id as string, {
+          balance: (userWallet?.balance || 0) - updatedPayoutRequest.amount,
+        });
+      }
+      return updatedPayoutRequest;
+    } catch (error) {
+      throw error;
+    }
   }
+ 
 }

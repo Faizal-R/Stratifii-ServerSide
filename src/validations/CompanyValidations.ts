@@ -30,7 +30,7 @@ export const CompanyProfileSchema = z.object({
   numberOfEmployees: z.string().optional(),
   headquartersLocation: z.string().optional(),
   companySize: z.string().optional(),
-  companyLogo: z.string().optional(),
+  companyLogoKey: z.string().optional(),
 });
 
 export type ICompanyProfile = z.infer<typeof CompanyProfileSchema>;

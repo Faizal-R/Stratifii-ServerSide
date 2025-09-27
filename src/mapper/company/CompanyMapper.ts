@@ -1,12 +1,17 @@
-import { CompanyResponseDTO } from "../../dto/response/company/CompanyResponseDTO";  // adjust path
+// company.profile.ts
+import { CompanyBasicDTO, CompanyResponseDTO } from "../../dto/response/company/CompanyResponseDTO";
+import { generateSignedUrl } from "../../helper/s3Helper";
 import { ICompany } from "../../models/company/Company";
 
-export const mapToCompanyResponseDTO = (company: ICompany): CompanyResponseDTO => {
-  return {
+export const CompanyMapper = {
+  toResponse: (
+    company: ICompany,
+    companyLogoUrl: string|null=null
+  ): CompanyResponseDTO => ({
     _id: company._id?.toString(),
     name: company.name,
     email: company.email,
-    phone:company.phone,
+    phone: company.phone,
     description: company.description,
     registrationCertificateNumber: company.registrationCertificateNumber,
     status: company.status,
@@ -15,6 +20,15 @@ export const mapToCompanyResponseDTO = (company: ICompany): CompanyResponseDTO =
     linkedInProfile: company.linkedInProfile,
     headquartersLocation: company.headquartersLocation,
     companySize: company.companySize,
-    companyLogo: company.companyLogo,
-  };
+    companyLogo: companyLogoUrl||null,
+  }),
+
+  toSummary: (company: ICompany, companyLogoUrl: string|null=null):CompanyBasicDTO => ({
+    _id: company._id?.toString(),
+    name: company.name,
+    email: company.email,
+    phone: company.phone,
+    companyLogo: companyLogoUrl||null,
+    status:company.status
+  }),
 };

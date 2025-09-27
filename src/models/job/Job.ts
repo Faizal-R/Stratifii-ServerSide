@@ -1,7 +1,9 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
+import { ICompany } from "../company/Company";
 
 export interface IJob extends Document {
-  company: Types.ObjectId;
+  _id:string;
+  company: Types.ObjectId | ICompany;
   position: string;
   description?: string;
   requiredSkills: string[];

@@ -5,10 +5,9 @@ import { registerSignalingHandlers } from "./registers/signaling/SignalingRegist
 export const initializeSocket = (io: Server) => {
   // Handle connections
   io.on("connection", (socket: Socket) => {
-    console.log(`🔌 User connected: (${socket.id})`);
+   
 
-    // Register all event handlers
-
+    
     registerRoomHandlers(io, socket);
     registerSignalingHandlers(io, socket);
 
@@ -21,7 +20,7 @@ export const initializeSocket = (io: Server) => {
       socket.join(roomId);
       socket.to(roomId).emit("user-joined", socket.id);
 
-      console.log(`User ${socket.id} joined room ${roomId}`);
+     
     });
 
     socket.on("signal", ({ roomId, data }) => {
@@ -29,9 +28,9 @@ export const initializeSocket = (io: Server) => {
     });
 
     // Handle disconnection
-    socket.on("disconnect", (reason) => {
-      console.log(`🔌 User disconnected: ${socket.id} - Reason: ${reason}`);
-    });
+    // socket.on("disconnect", (reason) => {
+     
+    // });
   });
 
   return io;

@@ -10,7 +10,17 @@ export interface CompanyResponseDTO {
   linkedInProfile: string;
   headquartersLocation?: string;
   companySize?: string;
-  companyLogo?: string;
+  companyLogo: string|null;
   phone: string;
 }
 
+
+ 
+export interface CompanyBasicDTO  {
+  _id: string;
+  name: string;
+  email: string;
+  phone: string;
+  companyLogo: string|null; 
+  status:string;
+}

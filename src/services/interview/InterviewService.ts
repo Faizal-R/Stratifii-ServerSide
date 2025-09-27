@@ -15,11 +15,11 @@ import {
   IInterviewFeedback,
 } from "../../models/interview/Interview";
 import { IInterviewRepository } from "../../repositories/interview/IInterviewRepository";
-import { time } from "console";
+
 import { IWalletRepository } from "../../repositories/wallet/IWalletRepository";
 import { ITransactionRepository } from "../../repositories/transaction/ITransactionRepository";
 import { Types } from "mongoose";
-import { Roles } from "../../constants/enums/roles";
+
 
 @injectable()
 export class InterviewService implements IInterviewService {

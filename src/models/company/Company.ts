@@ -5,7 +5,7 @@ export interface ICompany extends Document {
   _id: Types.ObjectId|string;
   name: string;
   email: string;
-  companyLogo?: string;
+  companyLogoKey?: string;
   headquartersLocation?: string;
   companyWebsite: string;
   registrationCertificateNumber: string;
@@ -81,7 +81,7 @@ const CompanySchema: Schema = new Schema(
     headquartersLocation: {
       type: String,
     },
-    companyLogo: {
+    companyLogoKey: {
       type: String,
     },
     isVerified: {

@@ -30,17 +30,9 @@ export class SlotService implements ISlotService {
     try {
       const rule = await this._slotGenerationRepository.create(ruleData);
       const slots = generateSlotsFromRule(rule);
-      console.log("slots", slots);
-
-      console.log(
-        `[SlotService] Created ${slots.length} slots for rule: ${rule._id}`
-      );
       return slots;
     } catch (error) {
-      console.error(
-        "[SlotService] Error creating slot generation rule:",
-        error
-      );
+   
       throw error;
     }
   }
@@ -106,13 +98,10 @@ export class SlotService implements ISlotService {
       const rule = await this._slotGenerationRepository.findOne({
         interviewerId,
       });
-      console.log("rule", rule);
+     
       return rule || null;
     } catch (error) {
-      console.error(
-        "[SlotService] Error getting interviewer slot generation rule:",
-        error
-      );
+      
       throw error;
     }
   }

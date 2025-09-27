@@ -1,3 +1,4 @@
+import { InterviewerResponseDTO } from "../../dto/response/interviewer/InterviewerResponseDTO";
 import {
   IBankDetails,
   IInterviewer,
@@ -5,13 +6,13 @@ import {
 import { IWallet } from "../../models/wallet/Wallet";
 
 export interface IInterviewerService {
-  getInterviewerById(interviewerId: string): Promise<IInterviewer | null>;
-  updateInterviewerProfile(
+  getInterviewerById(interviewerId: string): Promise<InterviewerResponseDTO | null>;
+ updateInterviewerProfile(
     interviewerId: string,
-    interviewer: any,
+    interviewer: Partial<IInterviewer>,
     avatar?: Express.Multer.File,
     resume?: Express.Multer.File
-  ): Promise<IInterviewer | null>;
+  ): Promise<InterviewerResponseDTO> 
   changePassword(
     currentPassword: string,
     newPassword: string,

@@ -50,7 +50,7 @@ import { ISlotGenerationRule } from "../models/slot/slotGenerationRule";
 
       return slots;
     } catch (error) {
-      console.error("[SlotService] Error generating slots from rule:", error);
+    
       throw error;
     }
   }

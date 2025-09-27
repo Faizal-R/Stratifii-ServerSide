@@ -3,7 +3,7 @@ import { HttpStatus } from "../../config/HttpStatusCodes";
 import redis from "../../config/RedisConfig";
 import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 import { CustomError } from "../../error/CustomError";
-import { uploadOnCloudinary } from "../../helper/cloudinary";
+
 import { AccessTokenPayload } from "../../types/token";
 import { ICandidate } from "../../models/candidate/Candidate";
 import { ICandidateRepository } from "../../repositories/candidate/ICandidateRepository";
@@ -14,6 +14,13 @@ import { DI_TOKENS } from "../../di/types";
 import { IDelegatedCandidateRepository } from "../../repositories/candidate/candidateDelegation/IDelegatedCandidateRepository";
 import { IJob } from "../../models/job/Job";
 import { ICompany } from "../../models/company/Company";
+import { ICompanyProfile } from "../../validations/CompanyValidations";
+
+import { JobMapper } from "../../mapper/job/JobMapper";
+import { JobBasicDTO } from "../../dto/response/job/JobResponseDTO";
+import { generateSignedUrl, uploadFileToS3 } from "../../helper/s3Helper";
+import { CandidateMapper } from "../../mapper/candidate/CandidateMapper";
+import { CandidateDTO } from "../../dto/response/candidate/CandidateResponseDTO";
 
 @injectable()
 export class CandidateService implements ICandidateService {
@@ -28,7 +35,7 @@ export class CandidateService implements ICandidateService {
     avatar: Express.Multer.File,
     password: string,
     token: string
-  ): Promise<ICandidate | null> {
+  ): Promise<CandidateDTO> {
     try {
       const decoded = jwt.verify(
         token,
@@ -49,16 +56,16 @@ export class CandidateService implements ICandidateService {
       }
       const hashedPassword = await hashPassword(password);
       console.log("hashedPassword", hashedPassword);
-      const avatarUrl = await uploadOnCloudinary(avatar.path);
-      console.log("avatarUrl", avatarUrl);
+      const avatarKey = await uploadFileToS3(avatar);
 
       const candidate = await this._candidateRepository.update(userId, {
         password: hashedPassword,
-        avatar: avatarUrl,
+        avatarKey: avatarKey,
       });
       console.log("candidate", candidate);
-
-      return candidate;
+      const avatarUrl = await generateSignedUrl(avatarKey);
+      const resumeAvatar = await generateSignedUrl(candidate?.resumeKey!);
+      return CandidateMapper.toResponse(candidate!, avatarUrl!, resumeAvatar!);
     } catch (error) {
       console.log(error);
       if (error instanceof CustomError) {
@@ -70,7 +77,7 @@ export class CandidateService implements ICandidateService {
       );
     }
   }
-  async getCandidateProfile(candidateId: string): Promise<ICandidate | null> {
+  async getCandidateProfile(candidateId: string): Promise<CandidateDTO> {
     try {
       const candidate = await this._candidateRepository.findById(candidateId);
       if (!candidate) {
@@ -80,7 +87,9 @@ export class CandidateService implements ICandidateService {
           HttpStatus.NOT_FOUND
         );
       }
-      return candidate;
+      const avatarUrl = await generateSignedUrl(candidate.avatarKey!);
+      const resumeUrl = await generateSignedUrl(candidate.resumeKey);
+      return CandidateMapper.toResponse(candidate, avatarUrl!, resumeUrl!);
     } catch (error) {
       console.log("error in getCandidateProfile", error);
       if (error instanceof CustomError) {
@@ -96,9 +105,8 @@ export class CandidateService implements ICandidateService {
   async getDelegatedJobs(candidateId: string): Promise<
     {
       delegatedCandidateId: string;
-      jobId: string;
-      jobTitle: string;
-      name: string;
+      job: JobBasicDTO;
+      companyName: string;
       mockStatus: string;
       isQualifiedForFinal: boolean;
       mockInterviewDeadline: Date | string;
@@ -109,7 +117,7 @@ export class CandidateService implements ICandidateService {
       await this._delegatedCandidateRepository.getDelegatedJobsByCandidateId(
         candidateId
       );
-    console.log(delegations);
+
     if (!delegations || delegations.length === 0) {
       throw new CustomError("No Delegations Found", HttpStatus.BAD_REQUEST);
     }
@@ -120,9 +128,8 @@ export class CandidateService implements ICandidateService {
 
       return {
         delegatedCandidateId: dc._id as string,
-        jobId: job._id as string,
-        jobTitle: job.position,
-        name: company.name,
+        job: JobMapper.toSummary(job),
+        companyName: company.name,
         mockStatus: dc.status,
         isQualifiedForFinal: dc.isQualifiedForFinal as boolean,
         mockInterviewDeadline: dc.mockInterviewDeadline as Date | string,

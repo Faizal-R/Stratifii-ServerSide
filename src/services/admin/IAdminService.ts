@@ -1,3 +1,5 @@
+import { CompanyBasicDTO, CompanyResponseDTO } from "../../dto/response/company/CompanyResponseDTO";
+import { InterviewerResponseDTO } from "../../dto/response/interviewer/InterviewerResponseDTO";
 import { IAdmin } from "../../models/admin/Admin";
 import { ICompany } from "../../models/company/Company";
 import { IInterviewer } from "../../models/interviewer/Interviewer";
@@ -5,10 +7,10 @@ import { TStatus } from "../../types/sharedTypes";
 
 export interface IAdminService{
     login(email:string,password:string):Promise<{accessToken:string,refreshToken:string}>
-    getAllCompanies(status:string):Promise<ICompany[]|[]>
-    updateCompanyStatus(companyId:string):Promise<ICompany|null>
+    getAllCompanies(status:string):Promise<CompanyResponseDTO[]|[]>
+    updateCompanyStatus(companyId:string):Promise<CompanyResponseDTO|null>
 
-    getAllInterivewers(status:string):Promise<IInterviewer[]|[]>
+    getAllInterivewers(status: string): Promise<InterviewerResponseDTO[] | []>
     updateInterviewerStatus(interviewerId:string):Promise<IInterviewer|null>
 
     handleCompanyVerification(companyId:string,isApproved:boolean,reasonForRejection?:string): Promise<ICompany|null>
@@ -36,12 +38,6 @@ export interface IAdminService{
       name: string;
       value: number;
     }[];
-     recentCompanies:{
-      name: string;
-      email: string;
-      _id: string;
-      status: TStatus;
-      companyLogo:string|null
-    }[]
+     recentCompanies:CompanyBasicDTO[]
   }>
 }

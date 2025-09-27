@@ -12,36 +12,41 @@ import { inject, injectable } from "inversify";
 import { DI_TOKENS } from "../../di/types";
 import { IDelegatedCandidateRepository } from "../../repositories/candidate/candidateDelegation/IDelegatedCandidateRepository";
 import { IJobRepository } from "../../repositories/job/IJobRepository";
-import { mapToCompanyResponseDTO } from "../../mapper/company/CompanyMapper";
-import { CompanyResponseDTO } from "../../dto/response/company/CompanyResponseDTO";
+import { CompanyMapper } from "../../mapper/company/CompanyMapper";
+import {
+  CompanyBasicDTO,
+  CompanyResponseDTO,
+} from "../../dto/response/company/CompanyResponseDTO";
 import { IJob } from "../../models/job/Job";
 import { IDelegatedCandidate } from "../../models/candidate/DelegatedCandidate";
 import { IPaymentTransactionRepository } from "../../repositories/payment/IPaymentTransactionRepository";
 import { IPaymentTransaction } from "../../models/payment/PaymentTransaction";
+import { generateSignedUrl, uploadFileToS3 } from "../../helper/s3Helper";
 
 @injectable()
 export class CompanyService implements ICompanyService {
   constructor(
-   @inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)
-private readonly _companyRepository: ICompanyRepository,
+    @inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)
+    private readonly _companyRepository: ICompanyRepository,
 
-@inject(DI_TOKENS.REPOSITORIES.DELEGATED_CANDIDATE_REPOSITORY)
-private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository,
+    @inject(DI_TOKENS.REPOSITORIES.DELEGATED_CANDIDATE_REPOSITORY)
+    private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository,
 
-@inject(DI_TOKENS.REPOSITORIES.JOB_REPOSITORY)
-private readonly _jobRepository: IJobRepository,
-@inject(DI_TOKENS.REPOSITORIES.PAYMENT_TRANSACTION_REPOSITORY)
-  private readonly _paymentTransactionRepository: IPaymentTransactionRepository
-
-
+    @inject(DI_TOKENS.REPOSITORIES.JOB_REPOSITORY)
+    private readonly _jobRepository: IJobRepository,
+    @inject(DI_TOKENS.REPOSITORIES.PAYMENT_TRANSACTION_REPOSITORY)
+    private readonly _paymentTransactionRepository: IPaymentTransactionRepository
   ) {}
 
-  async getCompanyProfile(companyId: string): Promise<CompanyResponseDTO | null> {
+  async getCompanyProfile(
+    companyId: string
+  ): Promise<CompanyResponseDTO | null> {
     try {
       const company = await this._companyRepository.findById(companyId);
       if (!company)
         throw new CustomError("Company not found", HttpStatus.NOT_FOUND);
-      return mapToCompanyResponseDTO(company);
+      const companyLogo = await generateSignedUrl(company.companyLogoKey!);
+      return CompanyMapper.toResponse(company, companyLogo);
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
@@ -59,14 +64,15 @@ private readonly _jobRepository: IJobRepository,
   ): Promise<CompanyResponseDTO | null> {
     try {
       if (companyLogoFile) {
-        const uploadedLogoUrl = await uploadOnCloudinary(companyLogoFile.path);
-        company.companyLogo = uploadedLogoUrl;
+        const companyLogoKey = await uploadFileToS3(companyLogoFile);
+        company.companyLogoKey = companyLogoKey;
       }
       const updatedCompany = await this._companyRepository.update(
         companyId,
         company
       );
-      return mapToCompanyResponseDTO(updatedCompany!);
+      const companyLogo = await generateSignedUrl(company.companyLogoKey!);
+      return CompanyMapper.toResponse(updatedCompany!, companyLogo);
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
@@ -81,7 +87,7 @@ private readonly _jobRepository: IJobRepository,
     currentPassword: string,
     newPassword: string,
     companyId: string
-  ): Promise<ICompany | null> {
+  ): Promise<CompanyBasicDTO | null> {
     try {
       const company = await this._companyRepository.findById(companyId);
       if (!company || !comparePassword(currentPassword, company.password)) {
@@ -94,7 +100,7 @@ private readonly _jobRepository: IJobRepository,
       const updatedCompany = await this._companyRepository.update(companyId, {
         password: hashedPassword,
       });
-      return updatedCompany;
+      return CompanyMapper.toSummary(updatedCompany!);
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
@@ -108,18 +114,24 @@ private readonly _jobRepository: IJobRepository,
     }
   }
 
-  async getCompanyDashboard(companyId: string): Promise<{jobs:IJob[],candidates:IDelegatedCandidate[],payments:IPaymentTransaction[]}> {
+  async getCompanyDashboard(companyId: string): Promise<{
+    jobs: IJob[];
+    candidates: IDelegatedCandidate[];
+    payments: IPaymentTransaction[];
+  }> {
     try {
-     
+      const jobs = await this._jobRepository.find({ company: companyId });
+      const candidates = await this._delegatedCandidateRepository.find({
+        company: companyId,
+      });
+      const payments = await this._paymentTransactionRepository.find({
+        company: companyId,
+      });
 
-      const jobs= await this._jobRepository.find({company:companyId});
-      const candidates = await this._delegatedCandidateRepository.find({company:companyId});
-      const payments=await this._paymentTransactionRepository.find({company:companyId});
-      return { 
+      return {
         jobs,
         candidates,
-        payments
-      
+        payments,
       };
     } catch (error) {
       throw error;

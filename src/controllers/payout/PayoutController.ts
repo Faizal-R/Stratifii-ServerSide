@@ -11,7 +11,7 @@ import { IPayoutRequest } from "../../models/payout/PayoutRequest";
 export class PayoutController implements IPayoutController {
   constructor(
     @inject(DI_TOKENS.SERVICES.PAYOUT_SERVICE)
-    private readonly payoutService: IPayoutService
+    private readonly _payoutService: IPayoutService
   ) {}
   async getAllInterviewersPayoutRequest(
     request: Request,
@@ -19,7 +19,7 @@ export class PayoutController implements IPayoutController {
   ): Promise<void> {
     try {
       const payoutRequest: IPayoutRequest[] =
-        await this.payoutService.getAllInterviewersPayoutRequests();
+        await this._payoutService.getAllInterviewersPayoutRequests();
       createResponse(
         response,
         HttpStatus.OK,
@@ -38,12 +38,12 @@ export class PayoutController implements IPayoutController {
   ): Promise<void> {
     try {
       const interviewerId = request.user.userId;
-      const { amount,interviewerName } = request.body;
+      const { amount, interviewerName } = request.body;
       console.log(interviewerId, amount);
-      const payoutRequest = await this.payoutService.createPayoutRequest({
+      const payoutRequest = await this._payoutService.createPayoutRequest({
         interviewerId,
         amount,
-        interviewerName
+        interviewerName,
       });
       createResponse(
         response,
@@ -57,13 +57,35 @@ export class PayoutController implements IPayoutController {
     }
   }
 
-  async payoutInterviewer(request: Request, response: Response): Promise<void> {
+  async updateInterviewersPayoutRequestStatus(
+    request: Request,
+    response: Response
+  ): Promise<void> {
     try {
-      const data = request.body;
-      //   const result = await this.payoutService.payoutInterviewer(data);
-      //   response.status(200).json(result);
+      const payoutRequestId = request.params.payoutRequestId;
+      console.log(payoutRequestId);
+      const { status } = request.body;
+      console.log(status);
+
+      const updatedPayoutRequest =
+        await this._payoutService.updateInterviewerPayoutRequestStatus(
+          payoutRequestId,
+          status
+        );
+      console.log(updatedPayoutRequest);
+      return createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        status === "approved"
+          ? "Payout request approved successfully"
+          : status === "completed"
+          ? "Payout request completed successfully And Amount Transferred"
+          : "Payout request updated successfully",
+        updatedPayoutRequest
+      );
     } catch (error) {
-      response.status(500).json({ error: "Failed to process payout" });
+      return errorResponse(response, error);
     }
   }
 }

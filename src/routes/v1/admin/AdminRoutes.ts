@@ -63,6 +63,13 @@ router.get(
   payoutController.getAllInterviewersPayoutRequest.bind(payoutController)
 );
 
+router.patch(
+  "/payouts/:payoutRequestId",
+verifyToken,
+  checkRole([Roles.ADMIN]),
+  payoutController.updateInterviewersPayoutRequestStatus.bind(payoutController)
+)
+
 router.get(
   "/dashboard",
   adminController.getAdminDashboard.bind(adminController)

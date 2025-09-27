@@ -44,7 +44,7 @@ export interface IAuthService {
   ): Promise<void>;
 
   googleAuthentication(
-    googleAuthPayload:GoogleAuthRequestDTO
+    googleAuthPayload: GoogleAuthRequestDTO
   ): Promise<GoogleAuthResponseDTO>;
 
   requestPasswordReset(email: string, role: string): Promise<void>;

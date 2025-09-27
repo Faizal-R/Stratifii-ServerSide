@@ -5,8 +5,8 @@ export interface ICandidate extends Document {
   email: string;
   password?: string;
   name: string;
-  resume: string;
-  avatar?: string;
+  resumeKey: string;
+  avatarKey?: string;
   status?: "active" | "pending" | "deactive";
   isBlocked?: boolean;
 }
@@ -16,8 +16,8 @@ const CandidateSchema: Schema = new Schema(
     email: { type: String, required: true, unique: true, trim: true, lowercase: true },
     password: { type: String },
     name: { type: String, required: true, trim: true },
-    avatar: { type: String },
-    resume: { type: String },
+    avatarKey: { type: String },
+    resumeKey: { type: String },
     status: { type: String, enum: ["active", "pending", "deactive"], default: "pending" },
     isBlocked: { type: Boolean, default: false },
   },

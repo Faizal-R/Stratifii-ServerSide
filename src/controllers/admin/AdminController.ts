@@ -14,12 +14,16 @@ import { inject, injectable } from "inversify";
 import { DI_TOKENS } from "../../di/types";
 import { adminLoginSchema } from "../../validations/AdminValidation";
 import { ZodError } from "zod";
+import { IPayoutRequestRepository } from "../../repositories/payout/payoutRequest/IPayoutRequestRepository";
+import { IPayoutService } from "../../services/payout/IPayoutService";
 
 @injectable()
 export class AdminController implements IAdminController {
   constructor(
     @inject(DI_TOKENS.SERVICES.ADMIN_SERVICE)
-    private readonly _adminService: IAdminService
+    private readonly _adminService: IAdminService,
+   @inject(DI_TOKENS.SERVICES.PAYOUT_SERVICE)
+   private readonly _payoutService: IPayoutService
   ) {}
   async signin(request: Request, response: Response): Promise<void> {
     try {
@@ -232,4 +236,6 @@ export class AdminController implements IAdminController {
       return errorResponse(response, error);
     }
   };
+
+
 }

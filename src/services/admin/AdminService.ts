@@ -28,8 +28,12 @@ import { ISubscriptionRecordRepository } from "../../repositories/subscription/s
 import { convertNumberToMonth } from "../../utils/convertNumberToMonth";
 import { IInterviewerRepository } from "../../repositories/interviewer/IInterviewerRepository";
 import { ICompanyRepository } from "../../repositories/company/ICompanyRepository";
-import { mapToCompanyResponseDTO } from "../../mapper/company/CompanyMapper";
+import { CompanyMapper } from "../../mapper/company/CompanyMapper";
 import { TStatus } from "../../types/sharedTypes";
+import { CompanyBasicDTO, CompanyResponseDTO } from "../../dto/response/company/CompanyResponseDTO";
+import { generateSignedUrl } from "../../helper/s3Helper";
+import { InterviewerResponseDTO } from "../../dto/response/interviewer/InterviewerResponseDTO";
+import { InterviewerMapper } from "../../mapper/interviewer/InterviewerMapper";
 
 @injectable()
 export class AdminService implements IAdminService {
@@ -45,10 +49,13 @@ export class AdminService implements IAdminService {
     @inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)
     private readonly _companyRepository: ICompanyRepository
   ) {}
-  async getAllCompanies(status: string): Promise<ICompany[] | []> {
+  async getAllCompanies(status: string): Promise<CompanyResponseDTO[] | []> {
     try {
       const companies = await this._adminRepository.getAllCompanies(status);
-      return companies;
+      const mappedCompanies = companies.map((company: ICompany) =>
+        CompanyMapper.toResponse(company)
+      );
+      return mappedCompanies;
     } catch (error) {
       throw new CustomError(
         ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
@@ -56,16 +63,19 @@ export class AdminService implements IAdminService {
       );
     }
   }
-  async getAllInterivewers(status: string): Promise<IInterviewer[] | []> {
+  async getAllInterivewers(status: string): Promise<InterviewerResponseDTO[] | []> {
     try {
       console.log(status);
-      const interviewers = await this._adminRepository.getAllInterviewers(
-        status
-      );
-      return interviewers;
+      const interviewers =
+        await this._adminRepository.getAllInterviewers(status);
+      const mappedInterviewersWithResumeAttached=await Promise.all(interviewers.map(async(interivewer)=>{
+        const resumeUrl=await generateSignedUrl(interivewer.resumeKey!)
+        return InterviewerMapper.toResponse(interivewer,resumeUrl!)
+      })
+      )
+      return mappedInterviewersWithResumeAttached
     } catch (error) {
-      console.log(error);
-      throw new CustomError(
+       throw new CustomError(
         ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
         HttpStatus.INTERNAL_SERVER_ERROR
       );
@@ -110,12 +120,13 @@ export class AdminService implements IAdminService {
     }
   }
 
-  async updateCompanyStatus(companyId: string): Promise<ICompany | null> {
+  async updateCompanyStatus(
+    companyId: string
+  ): Promise<CompanyResponseDTO | null> {
     try {
-      let updatedCompany = await this._adminRepository.updateCompanyStatus(
-        companyId
-      );
-      return updatedCompany;
+      let updatedCompany =
+        await this._adminRepository.updateCompanyStatus(companyId);
+      return CompanyMapper.toResponse(updatedCompany!);
     } catch (error) {
       if (error instanceof CustomError) throw error;
       throw new CustomError(
@@ -128,9 +139,8 @@ export class AdminService implements IAdminService {
     interviewerId: string
   ): Promise<IInterviewer | null> {
     try {
-      let updatedInviewer = await this._adminRepository.updateInterviewerStatus(
-        interviewerId
-      );
+      let updatedInviewer =
+        await this._adminRepository.updateInterviewerStatus(interviewerId);
       return updatedInviewer;
     } catch (error) {
       if (error instanceof CustomError) throw error;
@@ -245,13 +255,7 @@ export class AdminService implements IAdminService {
       name: string;
       value: number;
     }[];
-    recentCompanies: {
-      name: string;
-      email: string;
-      _id: string;
-      status: TStatus;
-      companyLogo: string | null;
-    }[];
+    recentCompanies: CompanyBasicDTO[];
   }> {
     const activeCompanies = (
       await this._adminRepository.getAllCompanies("approved")
@@ -315,6 +319,12 @@ export class AdminService implements IAdminService {
       createdAt: -1,
     });
 
+    const recentCompanyWithLogoAttached = await Promise.all(
+      recentCompanies.map(async (company) => {
+        const companyLogoUrl = await generateSignedUrl(company.companyLogoKey!);
+        return CompanyMapper.toSummary(company, companyLogoUrl);
+      })
+    );
     return {
       keyMetrics: {
         activeCompanies,
@@ -325,13 +335,7 @@ export class AdminService implements IAdminService {
       monthlyRevenue,
       monthlyUserGrowth,
       subscriptionDistribution,
-      recentCompanies: recentCompanies.map((company) => ({
-        name: company.name,
-        email: company.email,
-        status: company.status,
-        _id: company._id as string,
-        companyLogo: company.companyLogo ?? null
-      })),
+      recentCompanies: recentCompanyWithLogoAttached,
     };
   }
 }

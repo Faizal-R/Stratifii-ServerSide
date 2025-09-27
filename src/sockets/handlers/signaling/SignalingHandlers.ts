@@ -1,5 +1,4 @@
 import { Server, Socket } from "socket.io";
-import { WEBRTC_EVENTS } from "../../../constants/socket/events/WebRTCEvents";
 
 // export const handleOffer =
 //   (io: Server, socket: Socket) =>

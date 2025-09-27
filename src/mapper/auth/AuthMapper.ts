@@ -1,5 +1,4 @@
-// Input: Domain Model or Raw Entity
-
+// auth.mapper.ts
 import {
   AuthResponseDTO,
   GoogleAuthResponseDTO,
@@ -9,40 +8,35 @@ import { IInterviewer } from "../../models/interviewer/Interviewer";
 import { ISubscriptionRecord } from "../../models/subscription/SubscriptionRecord";
 import { TUserType } from "../../types/sharedTypes";
 
-// Output: DTO formatted for response
-export function mapToAuthResponseDTO(data: {
-  accessToken: string;
-  refreshToken: string;
-  user: TUserType;
-  subscriptionDetails?: ISubscriptionRecord | null;
-}): AuthResponseDTO {
-  return {
+export const AuthMapper = {
+  toAuthResponse: (data: {
+    accessToken: string;
+    refreshToken: string;
+    user: TUserType;
+    subscriptionDetails?: ISubscriptionRecord | null;
+  }): AuthResponseDTO => ({
     accessToken: data.accessToken,
     refreshToken: data.refreshToken,
-    user: mapToAuthUserResponseDTO(data.user),
-    subscription: data.subscriptionDetails ? data.subscriptionDetails : null,
-  };
-}
+    user: AuthMapper.toAuthUserResponse(data.user),
+    subscription: data.subscriptionDetails ?? null,
+  }),
 
-export function mapToGooleAuthResponseDTO(data: {
-  accessToken?: string;
-  refreshToken?: string;
-  user?: IInterviewer | ICompany;
-  isRegister: boolean;
-}): GoogleAuthResponseDTO {
-  return {
+  toGoogleAuthResponse: (data: {
+    accessToken?: string;
+    refreshToken?: string;
+    user?: IInterviewer | ICompany;
+    isRegister: boolean;
+  }): GoogleAuthResponseDTO => ({
     accessToken: data.accessToken,
     refreshToken: data.refreshToken,
-    user: data.user ? mapToAuthUserResponseDTO(data.user) : undefined,
+    user: data.user ? AuthMapper.toAuthUserResponse(data.user) : undefined,
     isRegister: data.isRegister,
-  };
-}
+  }),
 
-export function mapToAuthUserResponseDTO(data: TUserType) {
-  return {
+  toAuthUserResponse: (data: TUserType) => ({
     _id: data._id.toString(),
     name: data.name,
     email: data.email,
     isVerified: "isVerified" in data ? data.isVerified : undefined,
-  };
-}
+  }),
+};

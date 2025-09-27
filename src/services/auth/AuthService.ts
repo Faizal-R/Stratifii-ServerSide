@@ -34,7 +34,7 @@ import { AUTH_MESSAGES } from "../../constants/messages/AuthMessages";
 import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 import { VALIDATION_MESSAGES } from "../../constants/messages/ValidationMessages";
 import { getUserByRoleAndEmail } from "../../helper/getUserByRoleAndEmail";
-import { uploadOnCloudinary } from "../../helper/cloudinary";
+
 import { ISubscriptionRecordRepository } from "../../repositories/subscription/subscription-record/ISubscriptionRecordRepository";
 import { ISubscriptionRecord } from "../../models/subscription/SubscriptionRecord";
 import { inject, injectable } from "inversify";
@@ -44,11 +44,7 @@ import {
   LoginRequestSchema,
 } from "../../dto/request/auth/LoginRequestDTO";
 import { TStatus, TUserType } from "../../types/sharedTypes";
-import {
-  mapToAuthResponseDTO,
-  mapToAuthUserResponseDTO,
-  mapToGooleAuthResponseDTO,
-} from "../../mapper/auth/AuthMapper";
+import { AuthMapper } from "../../mapper/auth/AuthMapper";
 import {
   AuthResponseDTO,
   AuthUserResponseDTO,
@@ -63,6 +59,7 @@ import { blacklistToken } from "../../utils/handleTokenBlacklisting";
 import { InterviewerAccountSetupRequestDTO } from "../../dto/request/auth/AccountSetupRequestDTO";
 import { GoogleAuthRequestDTO } from "../../dto/request/auth/GoogleAuthRequestDTO";
 import { IWalletRepository } from "../../repositories/wallet/IWalletRepository";
+import { uploadFileToS3 } from "../../helper/s3Helper";
 
 @injectable()
 export class AuthService implements IAuthService {
@@ -170,7 +167,7 @@ export class AuthService implements IAuthService {
       });
     }
 
-    return mapToAuthResponseDTO({
+    return AuthMapper.toAuthResponse({
       accessToken,
       refreshToken,
       user,
@@ -218,15 +215,14 @@ export class AuthService implements IAuthService {
 
       validatedData.password = await hashPassword(validatedData.password);
 
-      const createdCompany = await this._companyRepository.create(
-        validatedData
-      );
+      const createdCompany =
+        await this._companyRepository.create(validatedData);
       await this._walletRepository.create({
         userId: createdCompany._id as Types.ObjectId,
         userType: Roles.COMPANY,
       });
       await this.sendVerificationCode(createdCompany.email);
-      return mapToAuthUserResponseDTO(createdCompany);
+      return AuthMapper.toAuthUserResponse(createdCompany);
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
@@ -260,19 +256,18 @@ export class AuthService implements IAuthService {
     }
 
     const hashedPassword = await hashPassword(validatedData.password);
-    const resumeUrl = await uploadOnCloudinary(resume?.path!, "raw");
+    const resumeKey= await uploadFileToS3(resume)
 
     const validatedInterviewer = {
       ...validatedData,
       password: hashedPassword,
-      resume: resumeUrl,
+      resume: resumeKey,
       status: "pending" as TStatus,
       isBlocked: false,
     };
 
-    const createdInterviewer = await this._interviewerRepository.create(
-      validatedInterviewer
-    );
+    const createdInterviewer =
+      await this._interviewerRepository.create(validatedInterviewer);
 
     await this._walletRepository.create({
       userId: createdInterviewer._id as Types.ObjectId,
@@ -280,7 +275,7 @@ export class AuthService implements IAuthService {
     });
     await this.sendVerificationCode(createdInterviewer.email);
 
-    return mapToAuthUserResponseDTO(createdInterviewer);
+    return AuthMapper.toAuthUserResponse(createdInterviewer);
   }
 
   async setupInterviewerAccount(
@@ -288,15 +283,14 @@ export class AuthService implements IAuthService {
     interviewer: InterviewerAccountSetupRequestDTO,
     resume: Express.Multer.File
   ): Promise<AuthResponseDTO> {
-    const findedInterviewer = await this._interviewerRepository.findById(
-      interviewerId
-    );
+    const findedInterviewer =
+      await this._interviewerRepository.findById(interviewerId);
     if (!resume) {
       throw new CustomError("Resume is required", HttpStatus.BAD_REQUEST);
     }
 
     const hashedPassword: string = await hashPassword(interviewer.password!);
-    const resumeUrl = await uploadOnCloudinary(resume.path!, "raw");
+    const resumeKey = await uploadFileToS3(resume);
 
     const setupedInterviewer = await this._interviewerRepository.update(
       interviewerId,
@@ -305,7 +299,7 @@ export class AuthService implements IAuthService {
         email: findedInterviewer?.email,
         name: findedInterviewer?.name,
         password: hashedPassword,
-        resume: resumeUrl,
+        resumeKey: resumeKey,
       }
     );
 
@@ -331,7 +325,7 @@ export class AuthService implements IAuthService {
       jti: generateTokenId(),
     });
 
-    return mapToAuthResponseDTO({
+    return AuthMapper.toAuthResponse({
       accessToken,
       refreshToken,
       user: setupedInterviewer,
@@ -417,7 +411,7 @@ export class AuthService implements IAuthService {
           jti: generateTokenId(),
         });
 
-        return mapToGooleAuthResponseDTO({
+        return AuthMapper.toGoogleAuthResponse({
           accessToken,
           refreshToken,
           user: interviewer,
@@ -429,11 +423,10 @@ export class AuthService implements IAuthService {
         email,
         avatar: avatar,
       };
-      const createdInterviewer = await this._interviewerRepository.create(
-        newInterviewer
-      );
+      const createdInterviewer =
+        await this._interviewerRepository.create(newInterviewer);
 
-      return mapToGooleAuthResponseDTO({
+      return AuthMapper.toGoogleAuthResponse({
         isRegister: true,
         user: createdInterviewer,
       });

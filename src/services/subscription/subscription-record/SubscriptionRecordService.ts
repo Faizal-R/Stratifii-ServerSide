@@ -36,8 +36,8 @@ export class SubscriptionRecordService implements ISubscriptionRecordService {
       const order = await RazorPay.orders.create(options);
       return order;
     } catch (error) {
-      console.log(error);
       throw new CustomError(
+       
         SUBSCRIPTION_ERROR_MESSAGES.SUBSCRIPTION_PAYMENT_FAILED,
         HttpStatus.INTERNAL_SERVER_ERROR
       );
@@ -98,12 +98,12 @@ export class SubscriptionRecordService implements ISubscriptionRecordService {
         startDate: new Date(),
         endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
         transactionId,
-        status: "active" as "active",
+        status: "active" as const,
       };
       const subscriptionRecord = await this._subscriptionRepository.create(
         subscriptionRecordData
       );
-      console.log(data.features);
+      
       this._companyRepository.update(subscriberId as string, {
         activePlan: subscriptionRecord._id as Types.ObjectId,
         usage: {
@@ -113,7 +113,7 @@ export class SubscriptionRecordService implements ISubscriptionRecordService {
       });
       return subscriptionRecord;
     } catch (error) {
-      console.log(error);
+     
       throw new CustomError(
         ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
         HttpStatus.INTERNAL_SERVER_ERROR

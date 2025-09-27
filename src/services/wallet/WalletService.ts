@@ -17,6 +17,7 @@ export class WalletService implements IWalletService {
     const userWallet = await this._walletRepository.create(walletPayload);
     return userWallet;
   }
+  
   async getUserWalletAndTransactions(
     userId: string
   ): Promise<{ wallet: IWallet | null; transactions: ITransaction[] }> {

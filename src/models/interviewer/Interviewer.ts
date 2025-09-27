@@ -43,14 +43,13 @@ export interface IInterviewer extends Document {
   experience?: number;
   linkedinProfile?: string;
   expertise?: ISkillExpertise[];
-  avatar?: string;
+  avatarKey?: string;
   isVerified: boolean;
-  rating?: number;
   status?: TStatus;
   isBlocked?: boolean;
   stripeAccountId?:string;
   bankDetails?: IBankDetails;
-  resume?: string | Express.Multer.File;
+  resumeKey?: string 
   resubmissionPeriod?:string|null;
   resubmissionNotes:string;
   resubmissionCount:number;
@@ -123,7 +122,7 @@ const interviewerSchema: Schema = new Schema(
     expertise: {
       type: [skillExpertiseSchema],
     },
-    avatar: {
+    avatarKey: {
       type: String,
       default: null,
     },
@@ -131,22 +130,21 @@ const interviewerSchema: Schema = new Schema(
       type: Boolean,
       default: false,
     },
-    rating: {
-      type: Number,
-      min: 0,
-      max: 5,
-      default: 0,
-    },
+   
     stripeAccountId:{
       type: String
     },
     bankDetails: {
-      accountHolderName: String,
-      accountNumber: String,
-      ifsc: String,
-      upiId: String,
-      addedAt: Date,
-      updatedAt: Date,
+      type:{
+
+        accountHolderName: String,
+        accountNumber: String,
+        ifsc: String,
+        upiId: String,
+        addedAt: Date,
+        updatedAt: Date,
+      },
+      default:null
     },
     status: {
       type: String,
@@ -157,7 +155,7 @@ const interviewerSchema: Schema = new Schema(
       type: Boolean,
       default: false,
     },
-    resume: {
+    resumeKey: {
       type: String,
       default: null,
     },
