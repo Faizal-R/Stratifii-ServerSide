@@ -38,5 +38,6 @@ export const AuthMapper = {
     name: data.name,
     email: data.email,
     isVerified: "isVerified" in data ? data.isVerified : undefined,
+    status:data.status as string
   }),
 };

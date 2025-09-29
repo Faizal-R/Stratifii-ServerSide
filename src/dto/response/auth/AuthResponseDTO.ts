@@ -6,6 +6,7 @@ export interface AuthUserResponseDTO {
   name: string;
   email: string;
   isVerified?:boolean;
+  status:string;
 }
 
 export interface AuthResponseDTO {

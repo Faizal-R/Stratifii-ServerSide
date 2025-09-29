@@ -12,6 +12,8 @@ export interface CompanyResponseDTO {
   companySize?: string;
   companyLogo: string|null;
   phone: string;
+  createdAt:string;
+  updatedAt?: string;
 }
 
 

@@ -37,5 +37,13 @@ router.post(
     paymentTransactionController
   )
 );
+router.patch(
+  "/retry/:jobId",
+  verifyToken,
+  checkBlockedUser,
+  paymentTransactionController.handleRetryInterviewProcessInitializationPayment.bind(
+    paymentTransactionController
+  )
+);
 
 export default router;

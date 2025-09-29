@@ -50,5 +50,7 @@ export const InterviewerMapper = {
       : null,
     resubmissionNotes: interviewer.resubmissionNotes ?? null,
     resubmissionCount: interviewer.resubmissionCount ?? 0,
+    createdAt: interviewer.createdAt.toISOString(),
+    updatedAt: interviewer.updatedAt?.toISOString(),
   }),
 };

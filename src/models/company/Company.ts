@@ -24,6 +24,8 @@ export interface ICompany extends Document {
     candidatesAddedThisMonth: number;
     jobPostsThisMonth: number;
   };
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const CompanySchema: Schema = new Schema(

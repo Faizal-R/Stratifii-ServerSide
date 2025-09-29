@@ -72,4 +72,25 @@ export class PaymentTransactionController
       errorResponse(res, error);
     }
   }
+
+  async handleRetryInterviewProcessInitializationPayment(
+    req: Request,
+    res: Response
+  ): Promise<void> {
+    const jobId = req.params.jobId;
+    console.log("jobId", jobId);
+    try {
+      await this._paymentTransactionService.handleRetryInterviewProcessInitializationPayment(
+        jobId
+      );
+      createResponse(
+        res,
+        HttpStatus.OK,
+        true,
+        PAYMENT_MESSAGES.PAYMENT_VERIFIED_AND_PAYMENT_RECORDED
+      );
+    } catch (error) {
+      errorResponse(res, error);
+    }
+  }
 }

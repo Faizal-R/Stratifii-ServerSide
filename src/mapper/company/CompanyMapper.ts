@@ -1,6 +1,5 @@
 // company.profile.ts
 import { CompanyBasicDTO, CompanyResponseDTO } from "../../dto/response/company/CompanyResponseDTO";
-import { generateSignedUrl } from "../../helper/s3Helper";
 import { ICompany } from "../../models/company/Company";
 
 export const CompanyMapper = {
@@ -21,6 +20,7 @@ export const CompanyMapper = {
     headquartersLocation: company.headquartersLocation,
     companySize: company.companySize,
     companyLogo: companyLogoUrl||null,
+    createdAt: company.createdAt.toISOString(),
   }),
 
   toSummary: (company: ICompany, companyLogoUrl: string|null=null):CompanyBasicDTO => ({

@@ -53,6 +53,8 @@ export interface IInterviewer extends Document {
   resubmissionPeriod?:string|null;
   resubmissionNotes:string;
   resubmissionCount:number;
+  createdAt: Date;
+  updatedAt?: Date;
 }
 
 // Skill expertise sub-schema
