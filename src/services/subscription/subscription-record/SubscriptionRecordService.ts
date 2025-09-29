@@ -1,5 +1,5 @@
 import { Orders } from "razorpay/dist/types/orders";
-import { razorpay as RazorPay } from "../../../config/razorpay";
+import { razorpay as RazorPay } from "../../../config/Razorpay";
 import { ISubscriptionRecordRepository } from "../../../repositories/subscription/subscription-record/ISubscriptionRecordRepository";
 import { ISubscriptionRecordService } from "./ISubscriptionRecordService";
 import { CustomError } from "../../../error/CustomError";
@@ -12,15 +12,15 @@ import mongoose, { Types } from "mongoose";
 import { ICompanyRepository } from "../../../repositories/company/ICompanyRepository";
 import { ISubscriptionRecord } from "../../../models/subscription/SubscriptionRecord";
 import { inject, injectable } from "inversify";
-import { DiRepositories } from "../../../di/types";
+import { DI_TOKENS } from "../../../di/types";
 
 injectable();
 export class SubscriptionRecordService implements ISubscriptionRecordService {
   constructor(
-  @inject(DiRepositories.SubscriptionRecordRepository)
+  @inject(DI_TOKENS.REPOSITORIES.SUBSCRIPTION_RECORD_REPOSITORY)
   private readonly _subscriptionRepository: ISubscriptionRecordRepository,
 
-  @inject(DiRepositories.CompanyRepository)
+  @inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)
   private readonly _companyRepository: ICompanyRepository
 ) {}
   
@@ -36,8 +36,8 @@ export class SubscriptionRecordService implements ISubscriptionRecordService {
       const order = await RazorPay.orders.create(options);
       return order;
     } catch (error) {
-      console.log(error);
       throw new CustomError(
+       
         SUBSCRIPTION_ERROR_MESSAGES.SUBSCRIPTION_PAYMENT_FAILED,
         HttpStatus.INTERNAL_SERVER_ERROR
       );
@@ -98,12 +98,12 @@ export class SubscriptionRecordService implements ISubscriptionRecordService {
         startDate: new Date(),
         endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
         transactionId,
-        status: "active" as "active",
+        status: "active" as const,
       };
       const subscriptionRecord = await this._subscriptionRepository.create(
         subscriptionRecordData
       );
-      console.log(data.features);
+      
       this._companyRepository.update(subscriberId as string, {
         activePlan: subscriptionRecord._id as Types.ObjectId,
         usage: {
@@ -113,7 +113,7 @@ export class SubscriptionRecordService implements ISubscriptionRecordService {
       });
       return subscriptionRecord;
     } catch (error) {
-      console.log(error);
+     
       throw new CustomError(
         ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
         HttpStatus.INTERNAL_SERVER_ERROR
@@ -127,4 +127,6 @@ export class SubscriptionRecordService implements ISubscriptionRecordService {
       companyId
     );
   }
+
+  
 }

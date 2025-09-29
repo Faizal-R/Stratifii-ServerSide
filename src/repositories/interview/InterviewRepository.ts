@@ -21,6 +21,5 @@ export class InterviewRepository
       .populate("job")
       .populate("interviewer")
       .populate("bookedBy")
-      .populate("rescheduledFrom");
   }
 }

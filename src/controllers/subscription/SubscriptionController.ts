@@ -11,13 +11,17 @@ import { ISubscriptionRecordService } from "../../services/subscription/subscrip
 import mongoose from "mongoose";
 import { ISubscriptionRecord } from "../../models/subscription/SubscriptionRecord";
 import { inject, injectable } from "inversify";
-import { DiServices } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 
 @injectable()
 export class SubscriptionController implements ISubscriptionController {
   constructor(
-  @inject(DiServices.SubscriptionPlanService)  private readonly _subscriptionService?: ISubscriptionPlanService,
-  @inject(DiServices.SubscriptionRecordService)  private readonly _subscriptionRecordService?: ISubscriptionRecordService
+  @inject(DI_TOKENS.SERVICES.SUBSCRIPTION_PLAN_SERVICE)
+private readonly _subscriptionService?: ISubscriptionPlanService,
+
+@inject(DI_TOKENS.SERVICES.SUBSCRIPTION_RECORD_SERVICE)
+private readonly _subscriptionRecordService?: ISubscriptionRecordService
+
   ) {}
 
   async createSubscription(

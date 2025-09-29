@@ -7,7 +7,7 @@ import companyRoutes from './company/CompanyRoutes'
 import authRoutes from './auth/AuthRoutes'
 import { checkRole, verifyToken } from "../../middlewares/Auth";
 import paymentRoutes from "./payment/PaymentRoutes";
-import { Roles } from "../../constants/roles";
+import { Roles } from "../../constants/enums/roles";
 import subscriptionRoutes from "./subscription/SubscriptionRoutes";
 import { checkBlockedUser } from "../../middlewares/checkBlockedUser";
 

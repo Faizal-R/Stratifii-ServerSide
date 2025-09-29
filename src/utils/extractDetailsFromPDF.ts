@@ -17,8 +17,8 @@ interface ExtractedDetails {
  * 
  **/
 
-const extractDetailsFromPDF = async (filePath: string): Promise<ExtractedDetails> => {
-  const fileBuffer = fs.readFileSync(filePath);
+const extractDetailsFromPDF = async (fileBuffer:Buffer): Promise<ExtractedDetails> => {
+
   const data = await pdfParse(fileBuffer);
   const text = data.text;
 

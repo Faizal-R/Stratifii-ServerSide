@@ -5,14 +5,14 @@ import { HttpStatus } from "../../config/HttpStatusCodes";
 import { PAYMENT_MESSAGES } from "../../constants/messages/PaymentAndSubscriptionMessages";
 import { createResponse, errorResponse } from "../../helper/responseHandler";
 import { inject, injectable } from "inversify";
-import { DiServices } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 
 @injectable()
 export class PaymentTransactionController
   implements IPaymentTransactionController
 {
   constructor(
-    @inject(DiServices.PaymentTransactionService)
+    @inject(DI_TOKENS.SERVICES.PAYMENT_TRANSACTION_SERVICE)
     private readonly _paymentTransactionService: IPaymentTransactionService
   ) {}
   calculatePayment(req: Request, res: Response): void {
@@ -67,6 +67,27 @@ export class PaymentTransactionController
         true,
         PAYMENT_MESSAGES.PAYMENT_VERIFIED_AND_PAYMENT_RECORDED,
         isVerified
+      );
+    } catch (error) {
+      errorResponse(res, error);
+    }
+  }
+
+  async handleRetryInterviewProcessInitializationPayment(
+    req: Request,
+    res: Response
+  ): Promise<void> {
+    const jobId = req.params.jobId;
+    console.log("jobId", jobId);
+    try {
+      await this._paymentTransactionService.handleRetryInterviewProcessInitializationPayment(
+        jobId
+      );
+      createResponse(
+        res,
+        HttpStatus.OK,
+        true,
+        PAYMENT_MESSAGES.PAYMENT_VERIFIED_AND_PAYMENT_RECORDED
       );
     } catch (error) {
       errorResponse(res, error);

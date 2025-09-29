@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify";
 import { IInterviewController } from "./IInterviewController";
-import { DiServices } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 import { IInterviewService } from "../../services/interview/IInterviewService";
 import { Request,Response } from "express";
 import { createResponse, errorResponse } from "../../helper/responseHandler";
@@ -8,8 +8,9 @@ import { HttpStatus } from "../../config/HttpStatusCodes";
 @injectable()
 export class InterviewController implements IInterviewController {
   constructor(
-    @inject(DiServices.InterviewService)
-    private readonly _interviewService: IInterviewService
+  @inject(DI_TOKENS.SERVICES.INTERVIEW_SERVICE)
+private readonly _interviewService: IInterviewService
+
   ) {}
  async updateAndSubmitFeedback(
     request: Request,
@@ -42,4 +43,18 @@ export class InterviewController implements IInterviewController {
       errorResponse(response, error);
     }
   }
+
+ async getAllInterviewsByCandidateId(request: Request, response: Response): Promise<void> {
+    const candidateId = request.params.candidateId;
+    try {
+      console.log("entered getAllInterviewsByCandidateId");
+      const interviews = await this._interviewService.getAllInterviewsByCandidateId(candidateId);
+      return createResponse(response, HttpStatus.OK, true,"Interviews fetched successfully",interviews)
+    } catch (error) {
+      console.log(error);
+      errorResponse(response, error);
+    }
+  }
+
+  
 }

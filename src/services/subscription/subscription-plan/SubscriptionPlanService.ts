@@ -5,12 +5,12 @@ import { CustomError } from "../../../error/CustomError";
 import { ISubscriptionPlan } from "../../../models/subscription/SubscriptionPlan";
 import { ISubscriptionPlanRepository } from "../../../repositories/subscription/subscription-plan/ISubscriptionPlanRepository";
 import { ISubscriptionPlanService } from "./ISubscriptionPlanService";
-import { DiRepositories } from "../../../di/types";
+import { DI_TOKENS } from "../../../di/types";
 
 @injectable()
 export class SubscriptionPlanService implements ISubscriptionPlanService {
   constructor(
-    @inject(DiRepositories.SubscriptionPlanRepository)
+    @inject(DI_TOKENS.REPOSITORIES.SUBSCRIPTION_PLAN_REPOSITORY)
     private readonly _subscriptionPlanRepository: ISubscriptionPlanRepository
   ) {}
 

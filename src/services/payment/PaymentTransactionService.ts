@@ -1,24 +1,23 @@
 import { Orders } from "razorpay/dist/types/orders";
-import { PaymentConfig } from "../../constants/AppConfig";
+import { PaymentConfig } from "../../constants/enums/AppConfig";
 import { IPaymentTransactionRepository } from "../../repositories/payment/IPaymentTransactionRepository";
 import { ICalculatePaymentResponse } from "../../types/payment";
 import { IPaymentTransactionService } from "./IPaymentTransactionService";
-import { razorpay as RazorPay } from "../../config/razorpay";
+import { razorpay as RazorPay } from "../../config/Razorpay";
 import { CustomError } from "../../error/CustomError";
 import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
-import { INTERVIEWER__SUCCESS_MESSAGES } from "../../constants/messages/UserProfileMessages";
 import { PAYMENT_MESSAGES } from "../../constants/messages/PaymentAndSubscriptionMessages";
 import { HttpStatus } from "../../config/HttpStatusCodes";
 import crypto from "crypto";
 import { Types } from "mongoose";
 import { IJobRepository } from "../../repositories/job/IJobRepository";
-import { JobRepository } from "../../repositories/job/JobRepository";
+
 import { sendCreatePasswordEmail } from "../../helper/sendCreatePasswordEmail";
 import { IDelegatedCandidateRepository } from "../../repositories/candidate/candidateDelegation/IDelegatedCandidateRepository";
 import { ICandidateRepository } from "../../repositories/candidate/ICandidateRepository";
 import { ICompanyRepository } from "../../repositories/company/ICompanyRepository";
 import { inject, injectable } from "inversify";
-import { DiRepositories } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 
 export interface IPaymentVerificationDetails {
   razorpay_order_id: string;
@@ -27,25 +26,26 @@ export interface IPaymentVerificationDetails {
   jobId: Types.ObjectId;
   companyId: Types.ObjectId;
   candidatesCount: number;
+  isPaymentFailed: boolean;
 }
 @injectable()
 export class PaymentTransactionService implements IPaymentTransactionService {
-constructor(
-  @inject(DiRepositories.PaymentTransactionRepository)
-  private readonly _paymentTransactionRepository: IPaymentTransactionRepository,
+  constructor(
+    @inject(DI_TOKENS.REPOSITORIES.PAYMENT_TRANSACTION_REPOSITORY)
+    private readonly _paymentTransactionRepository: IPaymentTransactionRepository,
 
-  @inject(DiRepositories.JobRepository)
-  private readonly _jobRepository: IJobRepository,
+    @inject(DI_TOKENS.REPOSITORIES.JOB_REPOSITORY)
+    private readonly _jobRepository: IJobRepository,
 
-  @inject(DiRepositories.DelegatedCandidateRepository)
-  private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository,
+    @inject(DI_TOKENS.REPOSITORIES.DELEGATED_CANDIDATE_REPOSITORY)
+    private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository,
 
-  @inject(DiRepositories.CandidateRepository)
-  private readonly _candidateRepository: ICandidateRepository,
+    @inject(DI_TOKENS.REPOSITORIES.CANDIDATE_REPOSITORY)
+    private readonly _candidateRepository: ICandidateRepository,
 
-  @inject(DiRepositories.CompanyRepository)
-  private readonly _companyRepository: ICompanyRepository
-) {}
+    @inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)
+    private readonly _companyRepository: ICompanyRepository
+  ) {}
 
   calculatePayment(candidatesCount: number): ICalculatePaymentResponse {
     const pricePerInterview = PaymentConfig.RATE_PER_CANDIDATE;
@@ -92,58 +92,122 @@ constructor(
     jobId,
     companyId,
     candidatesCount,
+    isPaymentFailed,
   }: IPaymentVerificationDetails): Promise<boolean> {
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
-    const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_SECRET_KEY!)
-      .update(body)
-      .digest("hex");
-
-    if (expectedSignature !== razorpay_signature) {
+    const existingJob = await this._paymentTransactionRepository.findOne({
+      job: jobId,
+    });
+    if (existingJob) {
       throw new CustomError(
-        PAYMENT_MESSAGES.PAYMENT_VERIFICATION_FAILED,
+        PAYMENT_MESSAGES.ALREADY_PAYMENT_VERIFIED_AND_INTERVIEW_PROCESS_STARTED,
         HttpStatus.BAD_REQUEST
       );
+    }
+    if (!isPaymentFailed) {
+      const body = razorpay_order_id + "|" + razorpay_payment_id;
+      const expectedSignature = crypto
+        .createHmac("sha256", process.env.RAZORPAY_SECRET_KEY!)
+        .update(body)
+        .digest("hex");
+
+      if (expectedSignature !== razorpay_signature) {
+        throw new CustomError(
+          PAYMENT_MESSAGES.PAYMENT_VERIFICATION_FAILED,
+          HttpStatus.BAD_REQUEST
+        );
+      }
     }
 
     // Create Payment Transaction Record
     const calculatedPaymentSummary = this.calculatePayment(candidatesCount);
     const paymentTransaction = await this._paymentTransactionRepository.create({
-      jobId,
-      companyId,
+      job:jobId,
+      company: companyId,
       ...calculatedPaymentSummary,
-      status: "PAID",
-      paymentGatewayTransactionId: razorpay_payment_id,
+      status: isPaymentFailed ? "FAILED" : "PAID",
+      paymentGatewayTransactionId: razorpay_payment_id || undefined,
     });
 
     // Update Job Status
     await this._jobRepository.update(String(jobId), {
-      status: "in-progress",
-      paymentTransaction:paymentTransaction._id as Types.ObjectId
+      status: isPaymentFailed ? "open" : "in-progress",
+      paymentTransaction: paymentTransaction._id as Types.ObjectId,
     });
 
-    //  Fetch candidates from DelegatedCandidate collection
-    const delegatedCandidates = await this._delegatedCandidateRepository.find({
-      job:jobId
-    });
-    console.log("Delegated Candidates", delegatedCandidates);
+    if (!isPaymentFailed) {
+      //  Fetch candidates from DelegatedCandidate collection
+      const delegatedCandidates = await this._delegatedCandidateRepository.find(
+        {
+          job: jobId,
+        }
+      );
 
-    //  Extract Candidate IDs who need onboarding
-    const candidateIds = delegatedCandidates.map((dc) => dc.candidate);
-    console.log("Candidate IDs to onboard", candidateIds);
+      await Promise.all(
+        delegatedCandidates.map(async (dc) => {
+          return await this._delegatedCandidateRepository.update(
+            String(dc._id),
+            {
+              mockInterviewDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000), // +24h
+            }
+          );
+        })
+      );
 
-    const candidates = await this._candidateRepository.find({
-      _id: { $in: candidateIds },
-    });
+      console.log("Delegated Candidates", delegatedCandidates);
 
-    //  Filter only those who have no password (i.e., not onboarded yet)
-    const candidatesToOnboard = candidates.filter((c) => !c.password);
-   console.log("Candidates to onboard", candidatesToOnboard);
-    const company = await this._companyRepository.findById(String(companyId));
-    console.log("Company", company);
-    //  Send onboarding emails
-    await sendCreatePasswordEmail(candidatesToOnboard, company?.name!);
+      //  Extract Candidate IDs who need onboarding
+      const candidateIds = delegatedCandidates.map((dc) => dc.candidate);
+      console.log("Candidate IDs to onboard", candidateIds);
+
+      const candidates = await this._candidateRepository.find({
+        _id: { $in: candidateIds },
+      });
+
+      //  Filter only those who have no password (i.e., not onboarded yet)
+      const candidatesToOnboard = candidates.filter(
+        (c) => c.status !== "active"
+      );
+
+      const candidateAllReadyOnboarded = candidates.filter(
+        (c) => c.status === "active"
+      );
+
+      console.log("Candidates to onboard", candidatesToOnboard);
+
+      const company = await this._companyRepository.findById(String(companyId));
+      console.log("Company", company);
+
+      //  Send onboarding emails
+      await sendCreatePasswordEmail(candidatesToOnboard, company?.name!);
+    }
+    //todo: send mail to candidates who are already onboarded
 
     return true;
+  }
+
+  async handleRetryInterviewProcessInitializationPayment(
+    jobId: string
+  ): Promise<void> {
+    try {
+      const existingJob = await this._paymentTransactionRepository.findOne({
+        job: jobId,
+      });
+      if (!existingJob) {
+        throw new CustomError(
+          PAYMENT_MESSAGES.PAYMENT_VERIFICATION_FAILED,
+          HttpStatus.BAD_REQUEST
+        );
+      }
+      await this._paymentTransactionRepository.update(String(existingJob._id), {
+        status: "PAID",
+      });
+
+      await this._jobRepository.update(jobId, {
+        status: "in-progress",
+      });
+     
+    } catch (error) {
+      throw error;
+    }
   }
 }

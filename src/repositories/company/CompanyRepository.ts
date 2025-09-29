@@ -14,7 +14,21 @@ export class CompanyRepository
   }
 
   async findByEmail(email: string): Promise<ICompany | null> {
-    const company = await Company.findOne({ email }).exec();
+    const company = await this.model.findOne({ email }).exec();
     return company ;
+  }
+  getCompaniesWithJoinedMonth(): Promise<{ _id: number; numberOfCompanies: number; }[]> {
+    return this.model.aggregate([
+      {
+        $group: {
+          _id: {
+            $month: "$createdAt",
+          },
+          numberOfCompanies: {
+            $sum: 1,
+          },
+        },
+      },
+    ]);
   }
 }

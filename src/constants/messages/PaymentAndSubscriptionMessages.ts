@@ -19,5 +19,7 @@ export enum SUBSCRIPTION_SUCCESS_MESSAGES {
     PAYMENT_ORDER_CREATED = "Payment order created successfully",
     PAYMENT_VERIFIED_AND_PAYMENT_RECORDED = "Payment verified and recorded successfully",
     PAYMENT_VERIFICATION_FAILED="Payment Verification Failed ",
+    ALREADY_PAYMENT_VERIFIED_AND_INTERVIEW_PROCESS_STARTED = "Payment already verified and interview process started",
+    
   };
   

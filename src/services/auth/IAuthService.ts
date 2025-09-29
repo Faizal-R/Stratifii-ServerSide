@@ -7,15 +7,24 @@ import {
 
 import { LoginRequestDTO } from "../../dto/request/auth/LoginRequestDTO";
 import {
-  AuthLoginResponseDTO,
+  AuthResponseDTO,
   AuthUserResponseDTO,
+  GoogleAuthResponseDTO,
 } from "../../dto/response/auth/AuthResponseDTO";
-import { InterviewerRegisterRequestDTO } from "../../dto/request/auth/RegisterRequestDTO";
+import {
+  AuthenticateOTPRequestDTO,
+  CompanyRegisterRequestDTO,
+  InterviewerRegisterRequestDTO,
+} from "../../dto/request/auth/RegisterRequestDTO";
+import { InterviewerAccountSetupRequestDTO } from "../../dto/request/auth/AccountSetupRequestDTO";
+import { GoogleAuthRequestDTO } from "../../dto/request/auth/GoogleAuthRequestDTO";
 
 export interface IAuthService {
-  login(AuthPayload: LoginRequestDTO): Promise<AuthLoginResponseDTO>;
+  login(AuthPayload: LoginRequestDTO): Promise<AuthResponseDTO>;
 
-  registerCompany(company: ICompany): Promise<AuthUserResponseDTO>;
+  registerCompany(
+    company: CompanyRegisterRequestDTO
+  ): Promise<AuthUserResponseDTO>;
 
   sendVerificationCode(email: string): Promise<void>;
 
@@ -23,27 +32,20 @@ export interface IAuthService {
     interviewer: InterviewerRegisterRequestDTO,
     resume?: Express.Multer.File
   ): Promise<AuthUserResponseDTO>;
+
   setupInterviewerAccount(
     interviewerId: string,
-    interviewer: IInterviewer,
+    interviewer: InterviewerAccountSetupRequestDTO,
     resume: Express.Multer.File
-  ): Promise<{
-    accessToken: string;
-    refreshToken: string;
-    setupedInterviewer: IInterviewer;
-  }>;
+  ): Promise<AuthResponseDTO>;
 
-  authenticateOTP(otp: string, email: string, role: string): Promise<void>;
+  authenticateOTP(
+    authenticateOTPPayload: AuthenticateOTPRequestDTO
+  ): Promise<void>;
 
   googleAuthentication(
-    email: string,
-    name: string
-  ): Promise<{
-    accessToken?: string;
-    refreshToken?: string;
-    user?: IGoogleInterviewer;
-    isRegister?: boolean;
-  }>;
+    googleAuthPayload: GoogleAuthRequestDTO
+  ): Promise<GoogleAuthResponseDTO>;
 
   requestPasswordReset(email: string, role: string): Promise<void>;
 
@@ -53,8 +55,5 @@ export interface IAuthService {
     token: string
   ): Promise<void>;
 
-  refreshAccessToken(
-    userId: string,
-    refreshToken: string
-  ): Promise<{ accessToken: string; refreshToken: string }>;
+  signout(refreshToken: string): Promise<boolean>;
 }

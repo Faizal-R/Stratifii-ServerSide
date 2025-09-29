@@ -5,6 +5,8 @@ export enum COMPANY_SUCCESS_MESSAGES {
   export enum INTERVIEWER__SUCCESS_MESSAGES {
     INTERVIEWER_PROFILE_UPDATED = "Interviewer profile updated successfully",
     INTERVIEWER_PROFILE_FETCHED = "Interviewer profile fetched successfully",
+    INTERVIEWER_BANK_DETAILS_ADDED = "Bank details added successfully",
+    INTTERVIEWER_WALLET_FETCHED = "Interviewer wallet fetched successfully",
   }
 
   

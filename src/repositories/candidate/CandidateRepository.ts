@@ -12,6 +12,6 @@ export class CandidateRepository
         super(Candidate);
     }
     async findByEmail(email: string): Promise<ICandidate | null> {
-        return Candidate.findOne({ email }).exec();
+        return this.model.findOne({ email }).exec();
     }
 }

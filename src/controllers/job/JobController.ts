@@ -3,22 +3,22 @@ import { IJob } from "../../models/job/Job";
 import { IJobService } from "../../services/job/IJobService";
 import { createResponse, errorResponse } from "../../helper/responseHandler";
 import { HttpStatus } from "../../config/HttpStatusCodes";
-import { JOB_SUCCESS_MESSAGES } from "../../constants/messages";
+import { JOB_SUCCESS_MESSAGES } from "../../constants/enums/messages";
 import { IJobController } from "./IJobController";
 import mongoose from "mongoose";
 import { inject, injectable } from "inversify";
-import { DiServices } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 
 @injectable()
 export class JobController implements IJobController {
-  constructor(@inject(DiServices.JobService) private readonly _jobService: IJobService) {}
-  getJobById(request: Request, response: Response): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
+  constructor(
+    @inject(DI_TOKENS.SERVICES.JOB_SERVICE)
+    private readonly _jobService: IJobService
+  ) {}
 
   async getAllJobs(request: Request, response: Response): Promise<void> {
     const companyId = request.user?.userId;
-   
+
     try {
       const jobs = await this._jobService.getJobs(companyId!);
 
@@ -92,19 +92,18 @@ export class JobController implements IJobController {
     request: Request,
     response: Response
   ): Promise<void> {
-    const { jobId:SJobId } = request.params;
+    const { jobId: SJobId } = request.params;
     console.log(SJobId, request.params);
     const resumes = request.files as Express.Multer.File[];
     try {
       const companyId = new mongoose.Types.ObjectId(request.user?.userId);
-      const jobId=new mongoose.Types.ObjectId(SJobId)
+      const jobId = new mongoose.Types.ObjectId(SJobId);
       console.log(resumes);
-      const candidates =
-        await this._jobService.createCandidatesFromResumes(
-          jobId,
-          resumes,
-          companyId
-        );
+      const candidates = await this._jobService.createCandidatesFromResumes(
+        jobId,
+        resumes,
+        companyId
+      );
       console.log(candidates);
       createResponse(
         response,
@@ -126,7 +125,7 @@ export class JobController implements IJobController {
     const { jobId } = request.params;
     try {
       const candidates = await this._jobService.getCandidatesByJob(jobId);
-      console.log(candidates)
+
       createResponse(
         response,
         HttpStatus.OK,
@@ -140,12 +139,14 @@ export class JobController implements IJobController {
     }
   }
 
-  async getJobsInProgress(request:Request,response:Response):Promise<void>{
+  async getJobsInProgress(request: Request, response: Response): Promise<void> {
     console.log(request.user?.userId);
 
     try {
-      const jobs = await this._jobService.getJobsInProgress(request.user?.userId!);
-      console.log(jobs)
+      const jobs = await this._jobService.getJobsInProgress(
+        request.user?.userId!
+      );
+      console.log(jobs);
       createResponse(
         response,
         HttpStatus.OK,
@@ -159,13 +160,18 @@ export class JobController implements IJobController {
     }
   }
 
-  async getMockQualifiedCandidatesByJob(request: Request, response: Response): Promise<void> {
+  async getMockQualifiedCandidatesByJob(
+    request: Request,
+    response: Response
+  ): Promise<void> {
     try {
-      const job=request.params.jobId
-      console.log(job)
-      console.log("entered GetMockQualified")
-      const candidates = await this._jobService.getMockQualifiedCandidatesByJob(job!)
-      console.log(candidates)
+      const job = request.params.jobId;
+      console.log(job);
+      console.log("entered GetMockQualified");
+      const candidates = await this._jobService.getMockQualifiedCandidatesByJob(
+        job!
+      );
+      console.log(candidates);
       createResponse(
         response,
         HttpStatus.OK,
@@ -178,13 +184,17 @@ export class JobController implements IJobController {
       errorResponse(response, error);
     }
   }
-  async getMatchedInterviewersByJobDescription(request: Request, response: Response): Promise<void> {
+  async getMatchedInterviewersByJobDescription(
+    request: Request,
+    response: Response
+  ): Promise<void> {
     try {
-      const job=request.params.jobId
-      console.log(job)
-      console.log("entered GetMockQualified")
-      const candidates = await this._jobService.getMatchedInterviewersByJobDescription(job!)
-      console.log(candidates)
+      const job = request.params.jobId;
+      console.log(job);
+      console.log("entered GetMockQualified");
+      const candidates =
+        await this._jobService.getMatchedInterviewersByJobDescription(job!);
+      console.log(candidates);
       createResponse(
         response,
         HttpStatus.OK,

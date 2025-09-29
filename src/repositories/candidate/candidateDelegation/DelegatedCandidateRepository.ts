@@ -13,31 +13,77 @@ export class DelegatedCandidateRepository
   constructor() {
     super(DelegatedCandidate);
   }
-  async getCandidatesByJob(jobId: string,query?: FilterQuery<IDelegatedCandidate>): Promise<IDelegatedCandidate[]> {
-    return await DelegatedCandidate.find({ job: jobId, ...query})
+  async getCandidatesByJob(
+    jobId: string,
+    query?: FilterQuery<IDelegatedCandidate>
+  ): Promise<IDelegatedCandidate[]> {
+    return await this.model
+      .find({ job: jobId, ...query })
       .populate("candidate")
       .populate("company")
       .populate({
-    path: "job",
-    populate: {
-      path: "paymentTransaction", // nested populate
-      model: "PaymentTransaction",
-    },
-  })
+        path: "job",
+        populate: {
+          path: "paymentTransaction", // nested populate
+          model: "PaymentTransaction",
+        },
+      })
+      .populate("interviewRounds.interviewer");
   }
   async getDelegatedJobsByCandidateId(
     candidateId: string
   ): Promise<IDelegatedCandidate[]> {
-    return await DelegatedCandidate.find({ candidate: candidateId })
+    return await this.model
+      .find({ candidate: candidateId })
       .populate("job")
       .populate("company");
+  }
+
+  async getDelegatedCandidatesByCompanyId(
+    companyId: string
+  ): Promise<IDelegatedCandidate[]> {
+    return await this.model
+      .find({ company: companyId })
+      .populate("candidate")
+      .populate("job")
+      .populate("interviewRounds.interviewer");
   }
   async getDelegationDetails(
     query: FilterQuery<IDelegatedCandidate>
   ): Promise<IDelegatedCandidate | null> {
-    return await DelegatedCandidate.findOne(query)
+    return await this.model
+      .findOne(query)
       .populate("candidate")
       .populate("job")
       .populate("company");
+  }
+  // delegatedCandidate.repository.ts
+  async markLastRoundAsFollowUpScheduled(
+    delegatedCandidateId: string
+  ): Promise<void> {
+    await this.model.updateOne({ _id: delegatedCandidateId }, [
+      {
+        $set: {
+          interviewRounds: {
+            $concatArrays: [
+              {
+                $slice: [
+                  "$interviewRounds",
+                  { $subtract: [{ $size: "$interviewRounds" }, 1] },
+                ],
+              },
+              [
+                {
+                  $mergeObjects: [
+                    { $arrayElemAt: ["$interviewRounds", -1] },
+                    { isFollowUpScheduled: true },
+                  ],
+                },
+              ],
+            ],
+          },
+        },
+      },
+    ]);
   }
 }

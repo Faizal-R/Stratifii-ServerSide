@@ -1,7 +1,6 @@
 // src/schemas/LoginRequestSchema.ts
 import { z } from "zod";
-import { Roles } from "../../../constants/roles";
-
+import { Roles } from "../../../constants/enums/roles";
 
 export const LoginRequestSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -11,6 +10,5 @@ export const LoginRequestSchema = z.object({
     invalid_type_error: "Invalid role",
   }),
 });
-
 
 export type LoginRequestDTO = z.infer<typeof LoginRequestSchema>;

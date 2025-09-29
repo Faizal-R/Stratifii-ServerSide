@@ -1,3 +1,4 @@
+import {  Express } from "express";
 import { z } from "zod";
 ;
 // Define allowed status values
@@ -35,6 +36,15 @@ export const interviewerSchema = z.object({
   }).optional()
 });
 
+
+export const bankDetailsSchema = z.object({
+  accountNumber: z.string().min(1, "Account number is required"),
+  ifsc: z.string().min(1, "IFSC code is required"),
+  accountHolderName: z.string().min(1, "Account holder name is required"),
+  upiId: z.string().optional(),
+  addedAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+})
 
 
 

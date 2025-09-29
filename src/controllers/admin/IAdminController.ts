@@ -18,4 +18,7 @@ export interface IAdminController {
     request: Request,
     response: Response
   ): Promise<void>;
+
+  getAdminDashboard(request: Request, response: Response): Promise<void>;
+  
 }

@@ -21,4 +21,8 @@ export interface IInterviewService {
   ): Promise<void>;
 
   getScheduledInterviews(candidateId: string): Promise<IInterview[] | []>;
+
+  getAllInterviewsByCandidateId(
+    candidateId: string
+  ): Promise<IInterview[] | []>;
 }

@@ -11,18 +11,24 @@ import {
 import { ISlotService } from "../../services/slot/ISlotService";
 
 import { inject, injectable } from "inversify";
-import { DiServices } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 import { IInterviewService } from "../../services/interview/IInterviewService";
+import { IBankDetails } from "../../models/interviewer/Interviewer";
+import { IWalletService } from "../../services/wallet/IWalletService";
 
 @injectable()
 export class InterviewerController implements IInterviewerController {
   constructor(
-    @inject(DiServices.InterviewerService)
+    @inject(DI_TOKENS.SERVICES.INTERVIEWER_SERVICE)
     private readonly _interviewerService: IInterviewerService,
-    @inject(DiServices.SlotService)
+
+    @inject(DI_TOKENS.SERVICES.SLOT_SERVICE)
     private readonly _slotService: ISlotService,
-    @inject(DiServices.InterviewService)
-    private readonly _interviewService: IInterviewService
+
+    @inject(DI_TOKENS.SERVICES.INTERVIEW_SERVICE)
+    private readonly _interviewService: IInterviewService,
+    @inject(DI_TOKENS.SERVICES.WALLET_SERVICE)
+    private readonly _walletService: IWalletService
   ) {}
 
   async getInterviewerProfile(request: Request, response: Response) {
@@ -45,10 +51,20 @@ export class InterviewerController implements IInterviewerController {
   }
   async updateInterviewerProfile(request: Request, response: Response) {
     try {
+      console.log(request.files, "files in update profile");
+
       const interviewerId = request.user?.userId ?? request.body.interviewerId;
       const interviewer = JSON.parse(request.body.interviewer); //request.body
-      console.log(interviewer);
-      const avatar = request.file as Express.Multer.File;
+      let avatar: Express.Multer.File | undefined;
+      let resume: Express.Multer.File | undefined;
+      if (request.files && !Array.isArray(request.files)) {
+        avatar =
+          (request.files["avatar"]?.[0] as Express.Multer.File) ?? undefined;
+        resume =
+          (request.files["resume"]?.[0] as Express.Multer.File) ?? undefined;
+      }
+      console.log("avatar", avatar);
+      console.log("resume", resume);
       // if (!interviewer.success) {
       //   return createResponse(
       //     response,
@@ -62,7 +78,8 @@ export class InterviewerController implements IInterviewerController {
         this._interviewerService.updateInterviewerProfile(
           interviewerId!,
           interviewer,
-          avatar
+          avatar,
+          resume
         );
       return createResponse(
         response,
@@ -96,72 +113,48 @@ export class InterviewerController implements IInterviewerController {
       errorResponse(response, error);
     }
   }
-  async createSlotGenerationRule(
+
+  async addBankDetails(request: Request, response: Response): Promise<void> {
+    const bankDetails: IBankDetails = request.body;
+    console.log(bankDetails);
+
+    try {
+      await this._interviewerService.addBankDetails(
+        bankDetails,
+        request.user?.userId!
+      );
+      return createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        INTERVIEWER__SUCCESS_MESSAGES.INTERVIEWER_BANK_DETAILS_ADDED
+      );
+    } catch (error) {
+      console.log(error);
+      errorResponse(response, error);
+    }
+  }
+
+  async getInterviewerWalletAndTransactions(
     request: Request,
     response: Response
   ): Promise<void> {
     try {
-      const ruleData = request.body;
-      console.log(request.body);
+      console.log("entered getInterviewerWalletAndTransactions");
       const interviewerId = request.user?.userId;
-      const slots = await this._slotService.createSlotGenerationRule({
-        ...ruleData,
-        interviewerId,
-        duration: ruleData.slotDuration,
-        buffer: ruleData.bufferRate,
-      });
-      return createResponse(
+      console.log(interviewerId);
+      const { wallet, transactions } =
+        await this._walletService.getUserWalletAndTransactions(interviewerId!);
+      console.log(wallet);
+      createResponse(
         response,
         HttpStatus.OK,
         true,
-        "Slots Generation Rule Created successfully"
-        // INTERVIEWER__SUCCESS_MESSAGES.SLOTS_GENERATED,
-        // slots
+        INTERVIEWER__SUCCESS_MESSAGES.INTTERVIEWER_WALLET_FETCHED,
+        { wallet, transactions }
       );
     } catch (error) {
-      console.error("Error generating slots:", error);
-      return errorResponse(response, error);
-    }
-  }
-  async getSlotsByRule(request: Request, response: Response): Promise<void> {
-    const interviewerId = request.params.id;
-    try {
-      const slots = await this._slotService.getSlotsByRule(interviewerId);
-      console.log("slots", slots);
-
-      return createResponse(
-        response,
-        HttpStatus.OK,
-        true,
-        "Slots fetched successfully",
-        //  INTERVIEWER__SUCCESS_MESSAGES.SLOTS_FETCHED,
-        slots
-      );
-    } catch (error) {
-      return errorResponse(response, error);
-    }
-  }
-
-  async getInterviewerSlotGenerationRule(
-    request: Request,
-    response: Response
-  ): Promise<void> {
-    const interviewerId = request.params.id;
-    try {
-      const rule =
-        await this._slotService.getInterviewerSlotGenerationRule(interviewerId);
-      console.log(interviewerId, "Rule in Interviewer Controller", rule);
-      return createResponse(
-        response,
-        HttpStatus.OK,
-        true,
-        "Successfully fetched interviewer slot generation rule",
-        // "Slots fetched successfully",
-        //  INTERVIEWER__SUCCESS_MESSAGES.SLOTS_FETCHED,
-        rule
-      );
-    } catch (error) {
-      return errorResponse(response, error);
+      errorResponse(response, error);
     }
   }
 

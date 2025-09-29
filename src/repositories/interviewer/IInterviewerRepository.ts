@@ -3,4 +3,5 @@ import { IBaseRepository } from "../base/IBaseRepository";
 
 export interface IInterviewerRepository extends IBaseRepository<IInterviewer>{
     findByEmail(email:string):Promise<IInterviewer | null>
+    getInterviewersWithJoinedMonth():Promise<{_id:number;numberOfInterviewers:number}[]>
 }

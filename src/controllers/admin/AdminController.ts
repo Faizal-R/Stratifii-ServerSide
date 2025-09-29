@@ -5,33 +5,52 @@ import { Request, Response } from "express";
 import { HttpStatus } from "../../config/HttpStatusCodes";
 
 import { ADMIN_SUCCESS_MESSAGES } from "../../constants/messages/AdminMessages";
-import { Roles } from "../../constants/roles";
-import { COOKIE_OPTIONS } from "../../config/CookieConfig";
+import { Roles } from "../../constants/enums/roles";
+import {
+  REFRESH_TOKEN_COOKIE_OPTIONS,
+  ACCESS_TOKEN_COOKIE_OPTIONS,
+} from "../../config/CookieConfig";
 import { inject, injectable } from "inversify";
-import { DiServices } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 import { adminLoginSchema } from "../../validations/AdminValidation";
 import { ZodError } from "zod";
+import { IPayoutRequestRepository } from "../../repositories/payout/payoutRequest/IPayoutRequestRepository";
+import { IPayoutService } from "../../services/payout/IPayoutService";
 
 @injectable()
 export class AdminController implements IAdminController {
   constructor(
-    @inject(DiServices.AdminService)
-    private readonly _adminService: IAdminService
+    @inject(DI_TOKENS.SERVICES.ADMIN_SERVICE)
+    private readonly _adminService: IAdminService,
+   @inject(DI_TOKENS.SERVICES.PAYOUT_SERVICE)
+   private readonly _payoutService: IPayoutService
   ) {}
   async signin(request: Request, response: Response): Promise<void> {
     try {
       const { email, password } = request.body;
       // Validate input using Zod
-      const parsedData = adminLoginSchema.parse({ email, password });
+      const validatedData = adminLoginSchema.safeParse({ email, password });
+
+      if (!validatedData.success) {
+        return createResponse(
+          response,
+          HttpStatus.BAD_REQUEST,
+          false,
+          validatedData.error.issues[0].message
+        );
+      }
 
       const { accessToken, refreshToken } = await this._adminService.login(
-        parsedData.email,
-        parsedData.password
+        validatedData.data.email,
+        validatedData.data.password
       );
+
+      response.cookie(`accessToken`, accessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
+
       response.cookie(
         `refreshToken`,
         refreshToken,
-        COOKIE_OPTIONS
+        REFRESH_TOKEN_COOKIE_OPTIONS
       );
 
       return createResponse(
@@ -39,18 +58,9 @@ export class AdminController implements IAdminController {
         HttpStatus.OK,
         true,
         // AUTH_MESSAGES.LOGGED_IN,
-        "Admin logged  in successfully",
-        accessToken
+        "Admin logged  in successfully"
       );
     } catch (error) {
-      if (error instanceof ZodError) {
-        return createResponse(
-          response,
-          HttpStatus.BAD_REQUEST,
-          false,
-          error.errors[0].message
-        );
-      }
       return errorResponse(response, error);
     }
   }
@@ -140,6 +150,9 @@ export class AdminController implements IAdminController {
   ): Promise<void> {
     const companyId = request.params.companyId;
     const isApproved = request.body.isApproved;
+    const reasonForRejection = request.body.reasonForRejection;
+    console.log("RequstBody of CompanyVerification", request.body);
+
     if (!companyId) {
       return createResponse(
         response,
@@ -152,7 +165,8 @@ export class AdminController implements IAdminController {
     try {
       const updatedCompany = await this._adminService.handleCompanyVerification(
         companyId,
-        isApproved
+        isApproved,
+        reasonForRejection
       );
       return createResponse(
         response,
@@ -170,7 +184,7 @@ export class AdminController implements IAdminController {
     response: Response
   ): Promise<void> {
     const { interviewerId } = request.params;
-    console.log("RequstBody of InterviewerVerification",request.body);
+    console.log("RequstBody of InterviewerVerification", request.body);
     const {
       isApproved,
       interviewerName,
@@ -206,4 +220,22 @@ export class AdminController implements IAdminController {
       errorResponse(response, error);
     }
   }
+
+  getAdminDashboard = async (request: Request, response: Response) => {
+    try {
+      const dashboard = await this._adminService.getAdminDashboard();
+      console.log("Dashboard Data:", dashboard);
+      return createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        ADMIN_SUCCESS_MESSAGES.ADMIN_DASHBOARD_FETCHED,
+        dashboard
+      );
+    } catch (error) {
+      return errorResponse(response, error);
+    }
+  };
+
+
 }

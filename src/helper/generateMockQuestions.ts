@@ -30,40 +30,62 @@ export async function generateMockQuestions(
   jobDesc: string
 ): Promise<IQuestion[] | void> {
   const prompt = `
-You are an expert technical interviewer.
+You are a senior-level technical interviewer with 15+ years of real-world industry experience.  
 
-Generate 30 advanced multiple-choice questions for the following job post:
+Your task is to generate **40 advanced and highly challenging multiple-choice technical questions** for the following job post:
 
 Job Title: ${jobTitle}  
-Experience Level: ${requiredExp} year  
-Required Skills: ${requiredSkills.join(", ")}  
-Job Description: ${jobDesc}
+Experience Level: ${requiredExp} years  
+Required Skills: ${requiredSkills}  
+Job Description: ${jobDesc}  
 
-Instructions:
-- Return the result as a JSON array.
-- Each question object must include:
-  - "question": (string, the question text)
-  - "options": (object with keys A, B, C, D and string values)
-  - "answer": (the correct key, e.g., "C")
+### Output Format (STRICT):
+Return ONLY a valid JSON array of 40 objects.  
+Each object must have the following structure:
+{
+  "question": "string",
+  "options": {
+    "A": "string",
+    "B": "string",
+    "C": "string",
+    "D": "string"
+  },
+  "answer": "A" | "B" | "C" | "D"
+}
 
-Guidelines:
-- Do NOT return explanations or markdown.
-- Make the questions confusing but solvable by skilled candidates and also a bit challenging.
-- Questions should reflect real-world issues, edge cases, and traps.
-- Only return valid JSON. No text before or after the array.
-- Keep the total number of questions between 25 and 30.
+### Question Guidelines:
+1. Difficulty: Extremely challenging — only strong, skilled candidates should be able to solve them.  
+2. Content:  
+   - Cover edge cases, tricky scenarios, and real-world system-level problems.  
+   - Include performance bottlenecks, scalability trade-offs, debugging traps, and security pitfalls.  
+   - For coding-related skills, focus on algorithmic complexity, memory optimization, concurrency, and architectural decisions.  
+3. Style:  
+   - Questions must feel like they could come directly from a **high-bar technical interview (FAANG-level)**.  
+   - Avoid theory-only; prioritize applied, practical, real-world challenges.  
+   - Each question must be unique and non-repetitive.  
+4. Answer Rules:  
+   - Ensure exactly one correct answer.  
+   - Do not include explanations, reasoning, or markdown formatting.  
+   - No text before or after the JSON array.  
 
-Make sure all questions are based on the given skills and experience.
+### Important:
+- Return exactly 40 questions.  
+- Output must be **strict JSON** with no additional text, comments, or formatting.  
+
 `;
 
+
   try {
+   
     const completion = await groq.chat.completions.create({
-      model: "llama3-70b-8192",
+      model: "llama-3.3-70b-versatile",
       messages: [{ role: "user", content: prompt }],
     });
+  
+     console.log("completion",completion);
 
     const result = completion.choices[0].message.content;
-
+  
     if (!result) {
       throw new CustomError(
         "Empty response from Groq API",
@@ -83,6 +105,7 @@ Make sure all questions are based on the given skills and experience.
 
     try {
       const parsed = JSON.parse(match[0]);
+      console.log("parsed questions",parsed);
       if (!Array.isArray(parsed)) {
         throw new Error();
       }
@@ -94,6 +117,7 @@ Make sure all questions are based on the given skills and experience.
       );
     }
   } catch (err) {
+    console.log("Error while generating mock questions",err)
     if (err instanceof CustomError) {
       console.error("❌ API Error or Invalid JSON:", err.message);
       throw err;

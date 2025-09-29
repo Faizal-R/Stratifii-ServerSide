@@ -14,6 +14,9 @@ export interface IInterviewFeedback {
   areasForImprovement?: string;
   comments?: string;
   recommendation?: "hire" | "no-hire" | "maybe";
+  needsFollowUp?: boolean;
+  suggestedFocusAreas?: string[];
+  internalNotes?: string;
 }
 
 export interface IInterview extends Document {
@@ -73,18 +76,20 @@ const InterviewSchema = new Schema<IInterview>(
     recordingUrl: { type: String },
 
     feedback: {
-      technicalScore: { type: Number },
-      communicationScore: { type: Number },
-      problemSolvingScore: { type: Number },
-      culturalFitScore: { type: Number },
-      overallScore: { type: Number },
-      strengths: { type: String },
-      areasForImprovement: { type: String },
-      comments: { type: String },
+      technicalScore: Number,
+      communicationScore: Number,
+      problemSolvingScore: Number,
+      culturalFitScore: Number,
+      overallScore: Number,
+      strengths: String,
+      areasForImprovement: String,
+      comments: String,
       recommendation: {
         type: String,
         enum: ["hire", "no-hire", "maybe"],
       },
+      needsFollowUp: { type: Boolean, default: false },
+      suggestedFocusAreas: [{ type: String }],
     },
 
     payoutStatus: {

@@ -9,19 +9,19 @@ import {
 } from "../../constants/messages/UserProfileMessages";
 import { CompanyProfileSchema } from "../../validations/CompanyValidations";
 import { inject, injectable } from "inversify";
-import { DiControllers, DiServices } from "../../di/types";
+import {  DI_TOKENS } from "../../di/types";
 
 @injectable()
 export class CompanyController implements ICompanyController {
   constructor(
-    @inject(DiServices.CompanyService)
-    private readonly _companyService: ICompanyService
+@inject(DI_TOKENS.SERVICES.COMPANY_SERVICE)
+private readonly _companyService: ICompanyService
   ) {}
 
-  async getCompanyById(request: Request, response: Response) {
+  async getCompanyProfile(request: Request, response: Response) {
     try {
       const companyId = request.user?.userId;
-      const company = await this._companyService.getCompanyById(companyId!);
+      const company = await this._companyService.getCompanyProfile(companyId!);
       return createResponse(
         response,
         HttpStatus.OK,
@@ -88,5 +88,23 @@ export class CompanyController implements ICompanyController {
     } catch (error) {
       errorResponse(response, error);
     }
+  }
+
+  async getCompanyDashboard(request: Request, response: Response): Promise<void> {
+    try {
+      const companyId = request.user?.userId;
+      console.log("companyId", companyId);
+      const dashboardData = await this._companyService.getCompanyDashboard(companyId!);
+      console.log("dashboardData", dashboardData);
+      return createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        "Company dashboard data fetched successfully",
+        dashboardData
+      );
+    } catch (error) {
+      errorResponse(response, error);
+    } 
   }
 }

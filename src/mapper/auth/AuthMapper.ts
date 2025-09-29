@@ -1,39 +1,43 @@
-// Input: Domain Model or Raw Entity
-
-import { AuthLoginResponseDTO } from "../../dto/response/auth/AuthResponseDTO";
+// auth.mapper.ts
+import {
+  AuthResponseDTO,
+  GoogleAuthResponseDTO,
+} from "../../dto/response/auth/AuthResponseDTO";
+import { ICompany } from "../../models/company/Company";
+import { IInterviewer } from "../../models/interviewer/Interviewer";
 import { ISubscriptionRecord } from "../../models/subscription/SubscriptionRecord";
-import { TUserType } from "../../types/user";
+import { TUserType } from "../../types/sharedTypes";
 
-
-// Output: DTO formatted for response
-export function mapToAuthResponseDTO(data: {
-  accessToken:string,
-  refreshToken:string,
-  user:TUserType ;
-  subscriptionDetails?: ISubscriptionRecord | null ;
-}):AuthLoginResponseDTO {
-   console.log(data);
-  return {
+export const AuthMapper = {
+  toAuthResponse: (data: {
+    accessToken: string;
+    refreshToken: string;
+    user: TUserType;
+    subscriptionDetails?: ISubscriptionRecord | null;
+  }): AuthResponseDTO => ({
     accessToken: data.accessToken,
     refreshToken: data.refreshToken,
-    
-    user: {
-      _id: data.user._id.toString(),
-      name: data.user.name,
-      email: data.user.email,
-    },
-    subscription: data.subscriptionDetails
-      ? data.subscriptionDetails
-      : null,
-  };
-}
+    user: AuthMapper.toAuthUserResponse(data.user),
+    subscription: data.subscriptionDetails ?? null,
+  }),
 
+  toGoogleAuthResponse: (data: {
+    accessToken?: string;
+    refreshToken?: string;
+    user?: IInterviewer | ICompany;
+    isRegister: boolean;
+  }): GoogleAuthResponseDTO => ({
+    accessToken: data.accessToken,
+    refreshToken: data.refreshToken,
+    user: data.user ? AuthMapper.toAuthUserResponse(data.user) : undefined,
+    isRegister: data.isRegister,
+  }),
 
-
-export function mapToAuthUserResponseDTO(data: TUserType) {
-  return {
+  toAuthUserResponse: (data: TUserType) => ({
     _id: data._id.toString(),
     name: data.name,
     email: data.email,
-  };
-}
+    isVerified: "isVerified" in data ? data.isVerified : undefined,
+    status:data.status as string
+  }),
+};

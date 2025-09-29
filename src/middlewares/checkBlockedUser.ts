@@ -1,8 +1,8 @@
 import { NextFunction, Response, Request } from "express";
 import { HttpStatus } from "../config/HttpStatusCodes";
 import { createResponse } from "../helper/responseHandler";
-import { TokenPayload } from "./Auth";
-import { Roles } from "../constants/roles";
+
+import { Roles } from "../constants/enums/roles";
 import { Interviewer, Company, Candidate } from "../models";
 import { ICandidate } from "../models/candidate/Candidate";
 import { ICompany } from "../models/company/Company";
@@ -46,7 +46,7 @@ export async function checkBlockedUser(
   if (user.isBlocked) {
     return createResponse(
       response,
-      HttpStatus.FORBIDDEN,
+      HttpStatus.LOCKED,
       false,
       "Access denied. Your account has been blocked."
     );

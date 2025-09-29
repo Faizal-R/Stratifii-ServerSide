@@ -4,7 +4,7 @@ import { ISlotGenerationRepository } from "../../repositories/slot/slotGeneratio
 import { ISlotService } from "./ISlotService";
 import { IInterviewSlot } from "../../models/slot/interviewSlot";
 import { inject, injectable } from "inversify";
-import { DiRepositories } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 import { generateSlotsFromRule } from "../../utils/generateSlots";
 
 import { IDelegatedCandidateRepository } from "../../repositories/candidate/candidateDelegation/IDelegatedCandidateRepository";
@@ -15,12 +15,12 @@ import { IInterview } from "../../models/interview/Interview";
 @injectable()
 export class SlotService implements ISlotService {
   constructor(
-    @inject(DiRepositories.SlotGenerationRepository)
+    @inject(DI_TOKENS.REPOSITORIES.SLOT_GENERATION_REPOSITORY)
     private readonly _slotGenerationRepository: ISlotGenerationRepository,
-    @inject(DiRepositories.InterviewRepository)
+    @inject(DI_TOKENS.REPOSITORIES.INTERVIEW_REPOSITORY)
     private readonly _interviewRepository: IInterviewRepository,
 
-    @inject(DiRepositories.DelegatedCandidateRepository)
+    @inject(DI_TOKENS.REPOSITORIES.DELEGATED_CANDIDATE_REPOSITORY)
     private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository
   ) {}
 
@@ -30,17 +30,9 @@ export class SlotService implements ISlotService {
     try {
       const rule = await this._slotGenerationRepository.create(ruleData);
       const slots = generateSlotsFromRule(rule);
-      console.log("slots", slots);
-
-      console.log(
-        `[SlotService] Created ${slots.length} slots for rule: ${rule._id}`
-      );
       return slots;
     } catch (error) {
-      console.error(
-        "[SlotService] Error creating slot generation rule:",
-        error
-      );
+   
       throw error;
     }
   }
@@ -106,11 +98,33 @@ export class SlotService implements ISlotService {
       const rule = await this._slotGenerationRepository.findOne({
         interviewerId,
       });
-      console.log("rule", rule);
+     
       return rule || null;
     } catch (error) {
+      
+      throw error;
+    }
+  }
+
+  async updateInterviewerSlotGenerationRule(
+    interviewerId: string,
+    ruleData: ISlotGenerationRule
+  ): Promise<{ rule: ISlotGenerationRule | null; slots: IInterviewSlot[] }> {
+    try {
+      const existingRule = await this._slotGenerationRepository.findOne({
+        interviewerId,
+      });
+      const updatedRule = await this._slotGenerationRepository.update(
+        existingRule?._id as string,
+        ruleData
+      );
+
+      const slots = await this.getSlotsByRule(interviewerId);
+
+      return { rule: updatedRule, slots };
+    } catch (error) {
       console.error(
-        "[SlotService] Error getting interviewer slot generation rule:",
+        "[SlotService] Error updating interviewer slot generation rule:",
         error
       );
       throw error;
@@ -123,9 +137,16 @@ export class SlotService implements ISlotService {
     candidate: string;
     job: string;
     bookedBy: string;
+    isFollowUpScheduling?: boolean;
   }): Promise<IInterview> {
-    const { interviewer, slot, candidate, job, bookedBy } =
-      payloadForSlotBooking;
+    const {
+      interviewer,
+      slot,
+      candidate,
+      job,
+      bookedBy,
+      isFollowUpScheduling,
+    } = payloadForSlotBooking;
     try {
       const meetingLink = createMeetingRoom();
       const bookedSlot = await this._interviewRepository.create({
@@ -141,13 +162,20 @@ export class SlotService implements ISlotService {
       });
       const scheduledCandidate =
         await this._delegatedCandidateRepository.findOne({
-          candidate: candidate,
+          job,
+          candidate,
         });
 
       await this._delegatedCandidateRepository.update(
         scheduledCandidate?._id as string,
         { isInterviewScheduled: true }
       );
+      console.log("isFollowUpScheduling", isFollowUpScheduling);
+      if (isFollowUpScheduling) {
+        await this._delegatedCandidateRepository.markLastRoundAsFollowUpScheduled(
+          scheduledCandidate?._id as string
+        );
+      }
       console.log("bookedSlot", bookedSlot);
       return bookedSlot;
     } catch (error) {
