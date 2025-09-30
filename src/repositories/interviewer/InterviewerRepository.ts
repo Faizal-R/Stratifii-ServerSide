@@ -10,6 +10,17 @@ export class InterviewerRepository extends BaseRepository<IInterviewer> implemen
         super(Interviewer)
     }
    async findByEmail(email: string): Promise<IInterviewer | null> {
-        return await Interviewer.findOne({email}).exec()
+        return await this.model.findOne({email}).exec()
+    }
+   async  getInterviewersWithJoinedMonth(): Promise<{ _id: number; numberOfInterviewers: number; }[]>{
+      return await this.model.aggregate([
+        {
+            $group:{
+                _id:{$month:"$createdAt"},
+                numberOfInterviewers:{$sum:1}   
+            }
+        }
+      ])
+      
     }
 }

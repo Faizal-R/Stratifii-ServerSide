@@ -1,4 +1,4 @@
-import { Roles } from "../../constants/roles";
+import { Roles } from "../../constants/enums/roles";
 import { IInterviewerRepository } from "../../repositories/interviewer/IInterviewerRepository";
 import { ICandidateRepository } from "../../repositories/candidate/ICandidateRepository";
 import { ICompanyRepository } from "../../repositories/company/ICompanyRepository";
@@ -11,74 +11,89 @@ import {
 import {
   generateAccessToken,
   generateRefreshToken,
+  generateTokenId,
 } from "../../helper/generateTokens";
-
-import { ICandidate } from "../../models/candidate/Candidate";
 import { comparePassword, hashPassword } from "../../utils/hash";
 import { IOtpRepository } from "../../repositories/auth/IOtpRepository";
 import { generateOtp } from "../../utils/otp";
 import { sendEmail } from "../../helper/EmailService";
-import { Document } from "mongoose";
+import { Document, Types } from "mongoose";
 import redis from "../../config/RedisConfig";
 import { CustomError } from "../../error/CustomError";
-import { companyRegistrationSchema } from "../../validations/CompanyValidations";
-import { string, ZodError } from "zod";
+import {
+  AuthenticateOTPRequestDTO,
+  CompanyRegistrationSchema,
+} from "../../dto/request/auth/RegisterRequestDTO";
 import { HttpStatus } from "../../config/HttpStatusCodes";
-import { interviewerSchema } from "../../validations/InterviewerValidations";
 import { IAuthService } from "./IAuthService";
 import jwt from "jsonwebtoken";
-
-import { TokenPayload } from "../../middlewares/Auth";
-import {
-  deleteRefreshToken,
-  storeRefreshToken,
-  verifyRefreshToken,
-} from "../../helper/handleRefreshToken";
+import { AccessTokenPayload, RefreshTokenPayload } from "../../types/token";
 
 import { otpVerificationHtml, wrapHtml } from "../../helper/wrapHtml";
 import { AUTH_MESSAGES } from "../../constants/messages/AuthMessages";
 import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 import { VALIDATION_MESSAGES } from "../../constants/messages/ValidationMessages";
 import { getUserByRoleAndEmail } from "../../helper/getUserByRoleAndEmail";
-import { uploadOnCloudinary } from "../../helper/cloudinary";
+
 import { ISubscriptionRecordRepository } from "../../repositories/subscription/subscription-record/ISubscriptionRecordRepository";
-import { ISubscriptionPlanService } from "../subscription/subscription-plan/ISubscriptionPlanService";
 import { ISubscriptionRecord } from "../../models/subscription/SubscriptionRecord";
 import { inject, injectable } from "inversify";
-import { DiRepositories } from "../../di/types";
-
-type UserType = ICompany | IInterviewer | ICandidate;
+import { DI_TOKENS } from "../../di/types";
+import {
+  LoginRequestDTO,
+  LoginRequestSchema,
+} from "../../dto/request/auth/LoginRequestDTO";
+import { TStatus, TUserType } from "../../types/sharedTypes";
+import { AuthMapper } from "../../mapper/auth/AuthMapper";
+import {
+  AuthResponseDTO,
+  AuthUserResponseDTO,
+  GoogleAuthResponseDTO,
+} from "../../dto/response/auth/AuthResponseDTO";
+import {
+  CompanyRegisterRequestDTO,
+  InterviewerRegisterRequestDTO,
+  InterviewerRegisterSchema,
+} from "../../dto/request/auth/RegisterRequestDTO";
+import { blacklistToken } from "../../utils/handleTokenBlacklisting";
+import { InterviewerAccountSetupRequestDTO } from "../../dto/request/auth/AccountSetupRequestDTO";
+import { GoogleAuthRequestDTO } from "../../dto/request/auth/GoogleAuthRequestDTO";
+import { IWalletRepository } from "../../repositories/wallet/IWalletRepository";
+import { uploadFileToS3 } from "../../helper/s3Helper";
 
 @injectable()
 export class AuthService implements IAuthService {
-constructor(
-  @inject(DiRepositories.InterviewerRepository)
-  private readonly _interviewerRepository: IInterviewerRepository,
+  constructor(
+    @inject(DI_TOKENS.REPOSITORIES.INTERVIEWER_REPOSITORY)
+    private readonly _interviewerRepository: IInterviewerRepository,
 
-  @inject(DiRepositories.CandidateRepository)
-  private readonly _candidateRepository: ICandidateRepository,
+    @inject(DI_TOKENS.REPOSITORIES.CANDIDATE_REPOSITORY)
+    private readonly _candidateRepository: ICandidateRepository,
 
-  @inject(DiRepositories.CompanyRepository)
-  private readonly _companyRepository: ICompanyRepository,
+    @inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)
+    private readonly _companyRepository: ICompanyRepository,
 
-  @inject(DiRepositories.AuthRepository)
-  private readonly _otpRepository: IOtpRepository,
+    @inject(DI_TOKENS.REPOSITORIES.OTP_REPOSITORY)
+    private readonly _otpRepository: IOtpRepository,
 
-  @inject(DiRepositories.SubscriptionRecordRepository)
-  private readonly _subscriptionRecord: ISubscriptionRecordRepository
-) {}
+    @inject(DI_TOKENS.REPOSITORIES.SUBSCRIPTION_RECORD_REPOSITORY)
+    private readonly _subscriptionRecord: ISubscriptionRecordRepository,
 
-  async login(
-    role: Roles,
-    email: string,
-    password: string
-  ): Promise<{
-    accessToken: string;
-    refreshToken: string;
-    user: UserType;
-    subscriptionDetails?: ISubscriptionRecord | null;
-  }> {
-    let user: UserType | null | undefined;
+    @inject(DI_TOKENS.REPOSITORIES.WALLET_REPOSITORY)
+    private readonly _walletRepository: IWalletRepository
+  ) {}
+
+  async login(authPayload: LoginRequestDTO): Promise<AuthResponseDTO> {
+    const validatedAuthPayload = LoginRequestSchema.safeParse(authPayload);
+
+    if (!validatedAuthPayload.success) {
+      const firstIssue = validatedAuthPayload.error.issues[0];
+      throw new CustomError(firstIssue.message, HttpStatus.BAD_REQUEST);
+    }
+
+    const { email, password, role } = validatedAuthPayload.data;
+
+    let user: TUserType | null | undefined;
 
     switch (role) {
       case Roles.COMPANY:
@@ -89,6 +104,12 @@ constructor(
         break;
       case Roles.CANDIDATE:
         user = await this._candidateRepository?.findByEmail(email);
+        if (!user?.password) {
+          throw new CustomError(
+            AUTH_MESSAGES.CANDIDATE_ACCOUNT_NOT_SETUP,
+            HttpStatus.NOT_FOUND
+          );
+        }
         if (user?.status === "pending") {
           user = await this._candidateRepository.update(user._id as string, {
             status: "active",
@@ -104,6 +125,7 @@ constructor(
         HttpStatus.NOT_FOUND
       );
     }
+
     if (!user || !(await comparePassword(password, user.password!))) {
       throw new CustomError(
         VALIDATION_MESSAGES.INVALID_CREDENTIALS,
@@ -120,27 +142,37 @@ constructor(
       );
     }
 
+    // if(role===Roles.INTERVIEWER){
+    //   if((user as IInterviewer).status==="rejected"){
+    //     throw new CustomError("Your account has been rejected. Please contact support.",HttpStatus.LOCKED)
+    //   }
+    // }
+
     const accessToken = await generateAccessToken({
       userId: user._id as string,
       role,
     });
+
     const refreshToken = await generateRefreshToken({
       userId: user._id as string,
       role,
+      jti: generateTokenId(),
     });
-
-    await storeRefreshToken(user._id as string, refreshToken);
 
     let subscriptionDetails: ISubscriptionRecord | null = null;
 
     if (role == Roles.COMPANY) {
-      subscriptionDetails =
-        await this._subscriptionRecord.findOne(
-          {subscriberId:user._id as string}
-        );
+      subscriptionDetails = await this._subscriptionRecord.findOne({
+        subscriberId: user._id as string,
+      });
     }
 
-    return { accessToken, refreshToken, user, subscriptionDetails };
+    return AuthMapper.toAuthResponse({
+      accessToken,
+      refreshToken,
+      user,
+      subscriptionDetails,
+    });
   }
 
   async sendVerificationCode(email: string) {
@@ -157,9 +189,19 @@ constructor(
     await sendEmail(email, html);
   }
 
-  async registerCompany(company: ICompany): Promise<ICompany> {
+  async registerCompany(
+    company: CompanyRegisterRequestDTO
+  ): Promise<AuthUserResponseDTO> {
     try {
-      const validatedData = companyRegistrationSchema.parse(company);
+      const {
+        data: validatedData,
+        success,
+        error,
+      } = CompanyRegistrationSchema.safeParse(company);
+      if (!success) {
+        const firstError = error.errors[0];
+        throw new CustomError(firstError.message, HttpStatus.BAD_REQUEST);
+      }
 
       const existingCompany = await this._companyRepository.findByEmail(
         validatedData.email
@@ -173,21 +215,17 @@ constructor(
 
       validatedData.password = await hashPassword(validatedData.password);
 
-      const newCompany: Omit<ICompany, keyof Document> = { ...validatedData };
-      const newCom = await this._companyRepository.create(newCompany);
-      await this.sendVerificationCode(newCom.email);
-      return newCom;
+      const createdCompany =
+        await this._companyRepository.create(validatedData);
+      await this._walletRepository.create({
+        userId: createdCompany._id as Types.ObjectId,
+        userType: Roles.COMPANY,
+      });
+      await this.sendVerificationCode(createdCompany.email);
+      return AuthMapper.toAuthUserResponse(createdCompany);
     } catch (error) {
-      console.log(error);
       if (error instanceof CustomError) {
         throw error;
-      }
-
-      if (error instanceof ZodError) {
-        throw new CustomError(
-          error.errors.map((e) => e.message).join(", "),
-          HttpStatus.BAD_REQUEST
-        );
       }
 
       throw new CustomError(
@@ -198,10 +236,17 @@ constructor(
   }
 
   async registerInterviewer(
-    interviewer: IInterviewer,
+    interviewer: InterviewerRegisterRequestDTO,
     resume: Express.Multer.File
-  ): Promise<IInterviewer> {
-    const validatedData = interviewerSchema.parse(interviewer);
+  ): Promise<AuthUserResponseDTO> {
+    const parsedResult = InterviewerRegisterSchema.safeParse(interviewer);
+
+    if (!parsedResult.success) {
+      const firstError = parsedResult.error.errors[0];
+      throw new CustomError(firstError.message, 400);
+    }
+
+    const validatedData = parsedResult.data;
 
     const existingUser = await this._interviewerRepository.findByEmail(
       validatedData.email
@@ -211,48 +256,42 @@ constructor(
     }
 
     const hashedPassword = await hashPassword(validatedData.password);
-    const resumeUrl = await uploadOnCloudinary(resume?.path!, "raw");
+    const resumeKey= await uploadFileToS3(resume)
 
-    const validatedInterviewer: Omit<IInterviewer, keyof Document> = {
-      name: validatedData.name,
-      email: validatedData.email,
-      position: validatedData.position,
+    const validatedInterviewer = {
+      ...validatedData,
       password: hashedPassword,
-      phone: validatedData.phone,
-      experience: validatedData.experience,
-      linkedinProfile: validatedData.linkedinProfile,
-      languages: validatedData.languages,
-      availableDays: validatedData.availableDays,
-      professionalSummary: validatedData.professionalSummary,
-      expertise: validatedData.expertise,
-      isVerified: false,
-      status: "pending",
+      resume: resumeKey,
+      status: "pending" as TStatus,
       isBlocked: false,
-      resume: resumeUrl,
     };
-    const newInterviewer = await this._interviewerRepository.create(
-      validatedInterviewer
-    );
-    await this.sendVerificationCode(newInterviewer.email);
 
-    return newInterviewer;
+    const createdInterviewer =
+      await this._interviewerRepository.create(validatedInterviewer);
+
+    await this._walletRepository.create({
+      userId: createdInterviewer._id as Types.ObjectId,
+      userType: Roles.INTERVIEWER,
+    });
+    await this.sendVerificationCode(createdInterviewer.email);
+
+    return AuthMapper.toAuthUserResponse(createdInterviewer);
   }
 
   async setupInterviewerAccount(
     interviewerId: string,
-    interviewer: IInterviewer,
+    interviewer: InterviewerAccountSetupRequestDTO,
     resume: Express.Multer.File
-  ): Promise<{
-    accessToken: string;
-    refreshToken: string;
-    setupedInterviewer: IInterviewer;
-  }> {
-    const findedInterviewer = await this._interviewerRepository.findById(
-      interviewerId
-    );
-    console.log("resumeInService", resume);
-    const hashedPassword: string = await hashPassword(interviewer.password);
-    const resumeUrl = await uploadOnCloudinary(resume.path!, "raw");
+  ): Promise<AuthResponseDTO> {
+    const findedInterviewer =
+      await this._interviewerRepository.findById(interviewerId);
+    if (!resume) {
+      throw new CustomError("Resume is required", HttpStatus.BAD_REQUEST);
+    }
+
+    const hashedPassword: string = await hashPassword(interviewer.password!);
+    const resumeKey = await uploadFileToS3(resume);
+
     const setupedInterviewer = await this._interviewerRepository.update(
       interviewerId,
       {
@@ -260,33 +299,51 @@ constructor(
         email: findedInterviewer?.email,
         name: findedInterviewer?.name,
         password: hashedPassword,
-        resume: resumeUrl,
+        resumeKey: resumeKey,
       }
     );
+
     if (!setupedInterviewer) {
       throw new CustomError(
         "Failed to setup interviewer account",
         HttpStatus.NOT_FOUND
       );
     }
+    await this._walletRepository.create({
+      userId: setupedInterviewer._id as Types.ObjectId,
+      userType: Roles.INTERVIEWER,
+    });
+
     const accessToken = await generateAccessToken({
       userId: interviewerId,
       role: Roles.INTERVIEWER,
     });
+
     const refreshToken = await generateRefreshToken({
       userId: interviewerId,
       role: Roles.INTERVIEWER,
+      jti: generateTokenId(),
     });
-    await storeRefreshToken(interviewerId, refreshToken);
-    return { accessToken, refreshToken, setupedInterviewer };
+
+    return AuthMapper.toAuthResponse({
+      accessToken,
+      refreshToken,
+      user: setupedInterviewer,
+    });
   }
 
   async authenticateOTP(
-    otp: string,
-    email: string,
-    role: string
+    authenticateOTPPayload: AuthenticateOTPRequestDTO
   ): Promise<void> {
+    const { email, role, otp } = authenticateOTPPayload;
     try {
+      if (otp.length !== 6) {
+        throw new CustomError(
+          AUTH_MESSAGES.INVALID_OTP_FORMAT,
+          HttpStatus.BAD_REQUEST
+        );
+      }
+
       let isOtpExists = await this._otpRepository.otpExists(email);
       if (!isOtpExists) {
         throw new CustomError(
@@ -330,51 +387,49 @@ constructor(
   }
 
   async googleAuthentication(
-    email: string,
-    name: string
-  ): Promise<{
-    accessToken?: string;
-    refreshToken?: string;
-    user?: IGoogleInterviewer;
-    isRegister?: boolean;
-  }> {
+    googleAuthPayload: GoogleAuthRequestDTO
+  ): Promise<GoogleAuthResponseDTO> {
+    const { email, name, avatar } = googleAuthPayload;
     try {
       let interviewer = await this._interviewerRepository.findByEmail(email);
 
       if (interviewer) {
-        if (interviewer.status === "rejected") {
-          throw new CustomError(
-            "Your account has been rejected. Please contact support.",
-            HttpStatus.FORBIDDEN
-          );
-        }
+        // if (interviewer.status === "rejected") {
+        //   throw new CustomError(
+        //     "Your account has been rejected. Please contact support.",
+        //     HttpStatus.LOCKED
+        //   );
+        // }
         const accessToken = await generateAccessToken({
           userId: interviewer._id as string,
           role: Roles.INTERVIEWER,
         });
+
         const refreshToken = await generateRefreshToken({
           userId: interviewer._id as string,
           role: Roles.INTERVIEWER,
+          jti: generateTokenId(),
         });
-        await storeRefreshToken(interviewer._id as string, refreshToken);
 
-        return {
+        return AuthMapper.toGoogleAuthResponse({
           accessToken,
           refreshToken,
           user: interviewer,
           isRegister: false,
-        };
+        });
       }
       const newInterviewer: Omit<IGoogleInterviewer, keyof Document> = {
         name,
         email,
+        avatar: avatar,
       };
-      const createdInterviewer = await this._interviewerRepository.create(
-        newInterviewer
-      );
-      // await storeRefreshToken(createdInterviewer._id as string, refreshToken);
+      const createdInterviewer =
+        await this._interviewerRepository.create(newInterviewer);
 
-      return { isRegister: true, user: createdInterviewer };
+      return AuthMapper.toGoogleAuthResponse({
+        isRegister: true,
+        user: createdInterviewer,
+      });
     } catch (error) {
       console.log(error);
       if (error instanceof CustomError) {
@@ -389,7 +444,7 @@ constructor(
   }
 
   async requestPasswordReset(email: string, role: string) {
-    let user: UserType | null;
+    let user: TUserType | null;
     try {
       switch (role) {
         case Roles.COMPANY:
@@ -438,7 +493,7 @@ constructor(
     let decoded = jwt.verify(
       token,
       process.env.ACCESS_TOKEN_SECRET as string
-    ) as TokenPayload;
+    ) as AccessTokenPayload;
 
     const userId = decoded.userId;
 
@@ -449,7 +504,7 @@ constructor(
     }
 
     const hashedPassword = await hashPassword(password);
-    let user: UserType | null;
+    let user: TUserType | null;
     let role = decoded.role;
     try {
       switch (role) {
@@ -481,28 +536,39 @@ constructor(
     }
   }
 
-  async refreshAccessToken(
-    userId: string,
-    refreshToken: string
-  ): Promise<{ accessToken: string; refreshToken: string }> {
-    const isValidRefreshToken = await verifyRefreshToken(userId, refreshToken);
+  async signout(refreshToken: string): Promise<boolean> {
+    try {
+      const decoded = jwt.verify(
+        refreshToken,
+        process.env.REFRESH_TOKEN_SECRET as string
+      ) as RefreshTokenPayload;
 
-    if (!isValidRefreshToken) {
-      throw new CustomError("Invalid refresh token", HttpStatus.UNAUTHORIZED);
+      if (decoded && typeof decoded.exp === "number") {
+        const ttl = decoded.exp - Math.floor(Date.now() / 1000);
+        if (ttl > 0) {
+          await blacklistToken(decoded.jti, ttl);
+        }
+      }
+
+      return true;
+    } catch (error) {
+      if (error instanceof jwt.TokenExpiredError) {
+        return true;
+      }
+      if (error instanceof jwt.JsonWebTokenError) {
+        throw new CustomError(
+          "Your session is not valid. Please log in again.",
+          HttpStatus.BAD_REQUEST
+        );
+      }
+
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      throw new CustomError(
+        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
-
-    const decodedToken = jwt.verify(
-      refreshToken,
-      process.env.REFRESH_TOKEN_SECRET as string
-    ) as TokenPayload;
-
-    const role = decodedToken.role;
-
-    const accessToken = await generateAccessToken({ userId, role });
-    const newRefreshToken = await generateRefreshToken({ userId, role });
-
-    await deleteRefreshToken(userId);
-    await storeRefreshToken(userId, newRefreshToken);
-    return { accessToken, refreshToken: newRefreshToken };
   }
 }

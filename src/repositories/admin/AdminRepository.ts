@@ -8,7 +8,7 @@ import { BaseRepository } from "../base/BaseRepository";
 import { ICompanyRepository } from "../company/ICompanyRepository";
 import { IInterviewerRepository } from "../interviewer/IInterviewerRepository";
 import { IAdminRepository } from "./IAdminRepository";
-import { DiRepositories } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 
 @injectable()
 export class AdminRepository
@@ -16,8 +16,8 @@ export class AdminRepository
   implements IAdminRepository
 {
   constructor(
-  @inject(DiRepositories.CompanyRepository)  private _companyRepository: ICompanyRepository,
-  @inject(DiRepositories.InterviewerRepository)  private _interviewerRepository: IInterviewerRepository
+  @inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)  private _companyRepository: ICompanyRepository,
+  @inject(DI_TOKENS.REPOSITORIES.INTERVIEWER_REPOSITORY)  private _interviewerRepository: IInterviewerRepository
   ) {
     super(Admin);
   }
@@ -30,14 +30,14 @@ export class AdminRepository
     });
   }
   async getAllCompanies(status:string): Promise<ICompany[] | []> {
-    return await this._companyRepository.findAll({status});
+    return await this._companyRepository.find({status});
   }
   async getAllInterviewers(status:string): Promise<IInterviewer[] | []> {
-    return await this._interviewerRepository.findAll({status});
+    return await this._interviewerRepository.find({status});
   }
 
   async findByEmail(email: string): Promise<IAdmin | null> {
-    return await Admin.findOne({ email }).exec();
+    return await this.model.findOne({ email }).exec();
   }
 
   async updateCompanyStatus(companyId: string) {
@@ -76,7 +76,11 @@ export class AdminRepository
       }
       const updatedInterviewer = await this._interviewerRepository.update(
         interviewerId,
-        { status: isApproved ? 'approved' : 'rejected' }
+        { status: isApproved ? 'approved' : 'rejected' ,
+        resubmissionPeriod : isApproved ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+
+        }
+        
       );
   
       return updatedInterviewer ?? null;

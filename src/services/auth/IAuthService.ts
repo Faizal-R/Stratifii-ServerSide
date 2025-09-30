@@ -1,53 +1,59 @@
 import { ICompany } from "../../models/company/Company";
-import { ICandidate } from "../../models/candidate/Candidate";
+
 import {
   IGoogleInterviewer,
   IInterviewer,
 } from "../../models/interviewer/Interviewer";
-import { ISubscriptionRecord } from "../../models/subscription/SubscriptionRecord";
-type IUser = ICompany | ICandidate | IInterviewer;
-export interface IAuthService {
-  login(
-    email: string,
-    password: string,
-    role: string
-  ): Promise<{ accessToken: string; refreshToken: string; user: IUser ,subscriptionDetails?:ISubscriptionRecord|null}>;
 
-  registerCompany(company: ICompany): Promise<ICompany>;
+import { LoginRequestDTO } from "../../dto/request/auth/LoginRequestDTO";
+import {
+  AuthResponseDTO,
+  AuthUserResponseDTO,
+  GoogleAuthResponseDTO,
+} from "../../dto/response/auth/AuthResponseDTO";
+import {
+  AuthenticateOTPRequestDTO,
+  CompanyRegisterRequestDTO,
+  InterviewerRegisterRequestDTO,
+} from "../../dto/request/auth/RegisterRequestDTO";
+import { InterviewerAccountSetupRequestDTO } from "../../dto/request/auth/AccountSetupRequestDTO";
+import { GoogleAuthRequestDTO } from "../../dto/request/auth/GoogleAuthRequestDTO";
+
+export interface IAuthService {
+  login(AuthPayload: LoginRequestDTO): Promise<AuthResponseDTO>;
+
+  registerCompany(
+    company: CompanyRegisterRequestDTO
+  ): Promise<AuthUserResponseDTO>;
 
   sendVerificationCode(email: string): Promise<void>;
 
-  registerInterviewer(interviewer: IInterviewer,resume?:Express.Multer.File): Promise<IInterviewer>;
-  setupInterviewerAccount(
-      interviewerId: string,
-      interviewer: IInterviewer,
-      resume: Express.Multer.File
-    ): Promise<{ accessToken: string; refreshToken: string; setupedInterviewer: IInterviewer }>
+  registerInterviewer(
+    interviewer: InterviewerRegisterRequestDTO,
+    resume?: Express.Multer.File
+  ): Promise<AuthUserResponseDTO>;
 
-  authenticateOTP(otp: string, email: string,role:string): Promise<void>;
+  setupInterviewerAccount(
+    interviewerId: string,
+    interviewer: InterviewerAccountSetupRequestDTO,
+    resume: Express.Multer.File
+  ): Promise<AuthResponseDTO>;
+
+  authenticateOTP(
+    authenticateOTPPayload: AuthenticateOTPRequestDTO
+  ): Promise<void>;
 
   googleAuthentication(
-    email: string,
-    name: string
-  ): Promise<{
-    accessToken?: string;
-    refreshToken?: string;
-    user?: IGoogleInterviewer;
-    isRegister?:boolean
-  }>;
+    googleAuthPayload: GoogleAuthRequestDTO
+  ): Promise<GoogleAuthResponseDTO>;
 
   requestPasswordReset(email: string, role: string): Promise<void>;
 
   resetUserPassword(
     password: string,
     confirmPassword: string,
-    token: string,
+    token: string
   ): Promise<void>;
 
-  refreshAccessToken(
-    userId: string,
-    refreshToken: string
-  ): Promise<{ accessToken: string; refreshToken: string }>;
-
-  
+  signout(refreshToken: string): Promise<boolean>;
 }

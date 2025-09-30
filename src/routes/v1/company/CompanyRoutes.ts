@@ -5,25 +5,34 @@ import { uploader } from "../../../middlewares/multer";
 import { ensureActiveSubscription } from "../../../middlewares/subscriptionExpiry";
 import { resolve } from "../../../di";
 import { ICompanyController } from "../../../controllers/company/ICompanyController";
-import { DiControllers } from "../../../di/types";
+import { DI_TOKENS } from "../../../di/types";
 import { IJobController } from "../../../controllers/job/IJobController";
 import { ISubscriptionController } from "../../../controllers/subscription/ISubscriptonController";
+import { ISlotController } from "../../../controllers/slot/ISlotController";
+import { CompanyController } from "../../../controllers/company/CompanyController";
+
 const router = Router();
 
 const companyController = resolve<ICompanyController>(
-  DiControllers.CompanyController
+  DI_TOKENS.CONTROLLERS.COMPANY_CONTROLLER
 );
 
-const jobController = resolve<IJobController>(DiControllers.JobController);
+const jobController = resolve<IJobController>(
+  DI_TOKENS.CONTROLLERS.JOB_CONTROLLER
+);
 
 const subscriptionController = resolve<ISubscriptionController>(
-  DiControllers.SubscriptionController
+  DI_TOKENS.CONTROLLERS.SUBSCRIPTION_CONTROLLER
+);
+
+const slotController = resolve<ISlotController>(
+  DI_TOKENS.CONTROLLERS.SLOT_CONTROLLER
 );
 
 //company profile
 router.get(
   "/profile",
-  companyController.getCompanyById.bind(companyController)
+  companyController.getCompanyProfile.bind(companyController)
 );
 router.put(
   "/profile",
@@ -43,33 +52,42 @@ router.get(
 
   jobController.getAllJobs.bind(jobController)
 );
+
 router.post(
   "/jobs",
   ensureActiveSubscription,
   jobController.createJob.bind(jobController)
 );
-router.put(
-  "/jobs",
 
-  jobController.updateJob.bind(jobController)
-);
-router.delete(
-  "/jobs/:jobId",
+router.put("/jobs", jobController.updateJob.bind(jobController));
 
-  jobController.deleteJob.bind(jobController)
-);
+router.delete("/jobs/:jobId", jobController.deleteJob.bind(jobController));
 
 router.post(
   "/jobs/:jobId/resumes",
-
   uploader.array("resumes"),
-  jobController.createCandidatesFromResumesAndAddToJob.bind(jobController)
+  jobController.createCandidatesFromResumes.bind(jobController)
 );
 
 router.get(
   "/jobs/:jobId/candidates",
 
-  jobController.getCandidatesByJobId.bind(jobController)
+  jobController.getCandidatesByJob.bind(jobController)
+);
+
+router.get(
+  "/jobs/in-progress",
+  jobController.getJobsInProgress.bind(jobController)
+);
+
+router.get(
+  "/jobs/:jobId/qualified-candidates",
+  jobController.getMockQualifiedCandidatesByJob.bind(jobController)
+);
+
+router.get(
+  "/jobs/:jobId/matched-interviewers",
+  jobController.getMatchedInterviewersByJobDescription.bind(jobController)
 );
 
 //creating subscription payment order
@@ -88,6 +106,20 @@ router.post(
 router.get(
   "/subscription/plan",
   subscriptionController.getSubscriptionPlanDetails.bind(subscriptionController)
+);
+
+//book slot for candidate
+
+router.post(
+  "/book-slot",
+  slotController.bookSlotForCandidate.bind(slotController)
+);
+router.get('/slots/:interviewerId',slotController.getAllSlotsByInterviewer.bind(slotController))
+
+//dashboard routes
+router.get(
+  "/dashboard",
+  companyController.getCompanyDashboard.bind(companyController)
 );
 
 export default router;

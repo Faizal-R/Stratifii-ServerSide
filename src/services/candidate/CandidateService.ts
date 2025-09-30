@@ -3,42 +3,47 @@ import { HttpStatus } from "../../config/HttpStatusCodes";
 import redis from "../../config/RedisConfig";
 import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 import { CustomError } from "../../error/CustomError";
-import { uploadOnCloudinary } from "../../helper/cloudinary";
-import { TokenPayload } from "../../middlewares/Auth";
+
+import { AccessTokenPayload } from "../../types/token";
 import { ICandidate } from "../../models/candidate/Candidate";
 import { ICandidateRepository } from "../../repositories/candidate/ICandidateRepository";
-import { comparePassword, hashPassword } from "../../utils/hash";
+import { hashPassword } from "../../utils/hash";
 import { ICandidateService } from "./ICandidateService";
 import jwt from "jsonwebtoken";
-import { DiRepositories } from "../../di/types";
-import { IDelegatedCandidate } from "../../models/candidate/DelegatedCandidate";
+import { DI_TOKENS } from "../../di/types";
 import { IDelegatedCandidateRepository } from "../../repositories/candidate/candidateDelegation/IDelegatedCandidateRepository";
 import { IJob } from "../../models/job/Job";
 import { ICompany } from "../../models/company/Company";
+import { ICompanyProfile } from "../../validations/CompanyValidations";
+
+import { JobMapper } from "../../mapper/job/JobMapper";
+import { JobBasicDTO } from "../../dto/response/job/JobResponseDTO";
+import { generateSignedUrl, uploadFileToS3 } from "../../helper/s3Helper";
+import { CandidateMapper } from "../../mapper/candidate/CandidateMapper";
+import { CandidateDTO } from "../../dto/response/candidate/CandidateResponseDTO";
 
 @injectable()
 export class CandidateService implements ICandidateService {
   constructor(
-    @inject(DiRepositories.CandidateRepository)
+    @inject(DI_TOKENS.REPOSITORIES.CANDIDATE_REPOSITORY)
     private readonly _candidateRepository: ICandidateRepository,
-    @inject(DiRepositories.DelegatedCandidateRepository)
+
+    @inject(DI_TOKENS.REPOSITORIES.DELEGATED_CANDIDATE_REPOSITORY)
     private readonly _delegatedCandidateRepository: IDelegatedCandidateRepository
   ) {}
   async setupCandiateProfile(
     avatar: Express.Multer.File,
     password: string,
     token: string
-  ): Promise<ICandidate | null> {
+  ): Promise<CandidateDTO> {
     try {
-      console.log("Line Number 21 in CandidateService.ts");
-      console.log(token === process.env.ACCESS_TOKEN_SECRET);
       const decoded = jwt.verify(
         token,
         process.env.ACCESS_TOKEN_SECRET as string
-      ) as TokenPayload;
-      console.log("decoded", decoded);
+      ) as AccessTokenPayload;
+
       const userId = decoded.userId;
-      console.log("userId", userId);
+
       const storedToken = await redis.get(`createPasswordToken:${userId}`);
 
       console.log("storedToken", storedToken);
@@ -51,16 +56,16 @@ export class CandidateService implements ICandidateService {
       }
       const hashedPassword = await hashPassword(password);
       console.log("hashedPassword", hashedPassword);
-      const avatarUrl = await uploadOnCloudinary(avatar.path);
-      console.log("avatarUrl", avatarUrl);
+      const avatarKey = await uploadFileToS3(avatar);
 
       const candidate = await this._candidateRepository.update(userId, {
         password: hashedPassword,
-        avatar: avatarUrl,
+        avatarKey: avatarKey,
       });
       console.log("candidate", candidate);
-
-      return candidate;
+      const avatarUrl = await generateSignedUrl(avatarKey);
+      const resumeAvatar = await generateSignedUrl(candidate?.resumeKey!);
+      return CandidateMapper.toResponse(candidate!, avatarUrl!, resumeAvatar!);
     } catch (error) {
       console.log(error);
       if (error instanceof CustomError) {
@@ -72,7 +77,7 @@ export class CandidateService implements ICandidateService {
       );
     }
   }
-  async getCandidateProfile(candidateId: string): Promise<ICandidate | null> {
+  async getCandidateProfile(candidateId: string): Promise<CandidateDTO> {
     try {
       const candidate = await this._candidateRepository.findById(candidateId);
       if (!candidate) {
@@ -82,7 +87,9 @@ export class CandidateService implements ICandidateService {
           HttpStatus.NOT_FOUND
         );
       }
-      return candidate;
+      const avatarUrl = await generateSignedUrl(candidate.avatarKey!);
+      const resumeUrl = await generateSignedUrl(candidate.resumeKey);
+      return CandidateMapper.toResponse(candidate, avatarUrl!, resumeUrl!);
     } catch (error) {
       console.log("error in getCandidateProfile", error);
       if (error instanceof CustomError) {
@@ -98,38 +105,37 @@ export class CandidateService implements ICandidateService {
   async getDelegatedJobs(candidateId: string): Promise<
     {
       delegatedCandidateId: string;
-      jobId: string;
-      jobTitle: string;
+      job: JobBasicDTO;
       companyName: string;
       mockStatus: string;
+      isQualifiedForFinal: boolean;
+      mockInterviewDeadline: Date | string;
     }[]
   > {
-    console.log(candidateId)
+    console.log(candidateId);
     const delegations =
       await this._delegatedCandidateRepository.getDelegatedJobsByCandidateId(
         candidateId
       );
-     console.log(delegations)
+
     if (!delegations || delegations.length === 0) {
       throw new CustomError("No Delegations Found", HttpStatus.BAD_REQUEST);
     }
-   
+
     const response = delegations.map((dc) => {
       const job = dc.job as IJob;
       const company = dc.company as ICompany;
 
       return {
         delegatedCandidateId: dc._id as string,
-        jobId: job._id as string,
-        jobTitle: job.position,
-        companyName: company.companyName,
+        job: JobMapper.toSummary(job),
+        companyName: company.name,
         mockStatus: dc.status,
-        isQualifiedForFinal:dc.isQualifiedForFinal
+        isQualifiedForFinal: dc.isQualifiedForFinal as boolean,
+        mockInterviewDeadline: dc.mockInterviewDeadline as Date | string,
       };
     });
 
     return response;
   }
-
-  
 }

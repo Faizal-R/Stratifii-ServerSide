@@ -1,100 +1,145 @@
 // File: auth.ts
 
 import { NextFunction, Request, Response } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { TokenExpiredError } from "jsonwebtoken";
 import { createResponse } from "../helper/responseHandler";
 import { HttpStatus } from "../config/HttpStatusCodes";
-import Company, { ICompany } from "../models/company/Company";
-import Interviewer, { IInterviewer } from "../models/interviewer/Interviewer";
-import { Roles } from "../constants/roles";
-import { Candidate } from "../models";
-import { VALIDATION_MESSAGES } from "../constants/messages/ValidationMessages";
 
-// Define an interface for the decoded token payload
-export interface TokenPayload {
-  userId: string;
-  role: "admin" | "candidate" | "interviewer" | "company";
-  exp?: number;
-}
+import { generateAccessToken } from "../helper/generateTokens";
 
-// Middleware to verify the token
+import { ACCESS_TOKEN_COOKIE_OPTIONS } from "../config/CookieConfig";
+
+import { Tokens } from "../constants/enums/token";
+import { AUTH_MESSAGES } from "../constants/messages/AuthMessages";
+import { AccessTokenPayload, RefreshTokenPayload } from "../types/token";
+import { isTokenBlacklisted } from "../utils/handleTokenBlacklisting";
+
 export async function verifyToken(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
-  const token = req.headers["authorization"]?.split(" ")[1];
-  //  console.log(token)
-  if (!token) {
-    return createResponse(
-      res,
-      HttpStatus.UNAUTHORIZED,
-      false,
-      "Access denied. No token provided."
-    );
-  }
-
   try {
-    // Verify the token using the secret key
-    const decoded = jwt.verify(
-      token,
-      process.env.ACCESS_TOKEN_SECRET as string
-    ) as TokenPayload;
+    const accessToken = req.cookies[Tokens.ACCESS_TOKEN];
+    const refreshToken = req.cookies[Tokens.REFRESH_TOKEN];
 
-    if (!decoded) {
-      return createResponse(
-        res,
-        HttpStatus.UNAUTHORIZED,
-        false,
-        VALIDATION_MESSAGES.SESSION_EXPIRED
-      );
+    // If no access token, try to refresh
+    if (!accessToken) {
+      return await handleRefresh(req, res, next, refreshToken);
     }
-   
+
+    // Try to verify access token
+    const decoded = jwt.verify(
+      accessToken,
+      process.env.ACCESS_TOKEN_SECRET as string
+    ) as AccessTokenPayload;
+
     req.user = decoded;
-    next();
+    return next();
   } catch (err) {
+    if (err instanceof TokenExpiredError) {
+      // Access token expired → try refresh
+      const refreshToken = req.cookies[Tokens.REFRESH_TOKEN];
+      return await handleRefresh(req, res, next, refreshToken);
+    }
+
+    console.error("JWT verification error:", err);
     return createResponse(
       res,
       HttpStatus.UNAUTHORIZED,
       false,
-      "Invalid or expired token."
+      AUTH_MESSAGES.INVALID_SESSION
     );
   }
 }
 
-const checkIsUserVerified = async (role: string, userId: string) => {
-  let user: IInterviewer | ICompany | null = null;
-  switch (role) {
-    case Roles.COMPANY:
-      user = await Company.findById(userId);
-      break;
-    case Roles.CANDIDATE:
-      user = await Candidate.findById(userId);
-      break;
-    case Roles.INTERVIEWER:
-      user = await Interviewer.findById(userId);
-      break;
-    default:
-      user = null;
+// ---------- Simple Refresh Handler ----------
+async function handleRefresh(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+  refreshToken?: string
+) {
+  if (!refreshToken) {
+    return createResponse(
+      res,
+      HttpStatus.UNAUTHORIZED,
+      false,
+      AUTH_MESSAGES.LOGIN_REQUIRED
+    );
   }
 
-  if (user && user.status !== "approved") {
-    return false;
-  } else return true;
-};
+  try {
+    // Verify refresh token JWT structure and expiry
+    const decodedRefresh = jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET as string
+    ) as RefreshTokenPayload;
 
-// Middleware to check if the user has the required role
+    //check this token is blacklisted or not
+    const isBlackListed = await isTokenBlacklisted(decodedRefresh.jti);
+    if (isBlackListed) {
+      return createResponse(
+        res,
+        HttpStatus.UNAUTHORIZED,
+        false,
+        AUTH_MESSAGES.SESSION_TERMINATED
+      );
+    }
+
+    const newAccessToken = await generateAccessToken({
+      userId: decodedRefresh.userId,
+      role: decodedRefresh.role,
+    });
+
+    // Set only the new access token cookie
+    res.cookie(
+      Tokens.ACCESS_TOKEN,
+      newAccessToken,
+      ACCESS_TOKEN_COOKIE_OPTIONS
+    );
+
+    console.log(`Access token refreshed for user: ${decodedRefresh.userId}`);
+    req.user = {
+      userId: decodedRefresh.userId,
+      role: decodedRefresh.role,
+    };
+
+    return next();
+  } catch (err) {
+    console.error("Refresh token error:", err);
+
+    return createResponse(
+      res,
+      HttpStatus.UNAUTHORIZED,
+      false,
+      AUTH_MESSAGES.SESSION_EXPIRED
+    );
+  }
+}
+
+// ---------- Middleware: Role-Based Authorization ----------
 export function checkRole(requiredRoles: string[]) {
   return (req: Request, res: Response, next: NextFunction): void => {
     const userRole = req.user?.role;
-    if (requiredRoles.includes(userRole!)) {
+
+    if (!userRole) {
+      return createResponse(
+        res,
+        HttpStatus.UNAUTHORIZED,
+        false,
+        AUTH_MESSAGES.LOGIN_TO_ACCESS
+      );
+    }
+
+    if (requiredRoles.includes(userRole)) {
       next();
     } else {
       createResponse(
         res,
         HttpStatus.FORBIDDEN,
         false,
-        `Forbidden: Your role (${userRole}) does not have permission to access this resource.`
+        AUTH_MESSAGES.ACCESS_DENIED
       );
     }
   };

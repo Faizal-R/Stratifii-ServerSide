@@ -1,11 +1,11 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
-import { TStatus } from "../interviewer/Interviewer";
-// import { TStatus } from "./IInterviewerModel"; // Ensure this module exists or remove if not needed
+import { TStatus } from "../../types/sharedTypes";
 
 export interface ICompany extends Document {
-  companyName: string;
+  _id: Types.ObjectId|string;
+  name: string;
   email: string;
-  companyLogo?: string;
+  companyLogoKey?: string;
   headquartersLocation?: string;
   companyWebsite: string;
   registrationCertificateNumber: string;
@@ -14,7 +14,7 @@ export interface ICompany extends Document {
   password: string;
   companyType: string;
   isVerified?: boolean;
-  status?: TStatus;
+  status: TStatus;
   isBlocked?: boolean;
   description?: string;
   companySize?: string;
@@ -24,11 +24,13 @@ export interface ICompany extends Document {
     candidatesAddedThisMonth: number;
     jobPostsThisMonth: number;
   };
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const CompanySchema: Schema = new Schema(
   {
-    companyName: {
+    name: {
       type: String,
       required: true,
       trim: true,
@@ -38,6 +40,7 @@ const CompanySchema: Schema = new Schema(
       required: true,
       unique: true,
       trim: true,
+      lowercase: true,
     },
     companyWebsite: {
       type: String,
@@ -80,7 +83,7 @@ const CompanySchema: Schema = new Schema(
     headquartersLocation: {
       type: String,
     },
-    companyLogo: {
+    companyLogoKey: {
       type: String,
     },
     isVerified: {

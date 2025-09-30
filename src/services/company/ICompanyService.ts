@@ -1,11 +1,18 @@
-import { ICompany } from "../../models/company/Company";
+import { CompanyBasicDTO, CompanyResponseDTO } from "../../dto/response/company/CompanyResponseDTO";
+import { IDelegatedCandidate } from "../../models/candidate/DelegatedCandidate";
+
+import { IJob } from "../../models/job/Job";
+import { IPaymentTransaction } from "../../models/payment/PaymentTransaction";
 import { ICompanyProfile } from "../../validations/CompanyValidations";
 export interface ICompanyService {
-  getCompanyById(companyId: string): Promise<ICompany | null>;
+  getCompanyProfile(companyId: string): Promise<CompanyResponseDTO | null>;
   updateCompanyProfile(
     companyId: string,
     company: ICompanyProfile,
     companyLogoFile?: Express.Multer.File
-  ): Promise<ICompany | null>;
-  changePassword(currentPassword: string, newPassword: string, companyId: string): Promise<ICompany | null>;
+  ): Promise<CompanyResponseDTO | null>;
+  changePassword(currentPassword: string, newPassword: string, companyId: string): Promise<CompanyBasicDTO | null>;
+  getCompanyDashboard(companyId: string): Promise<{jobs:IJob[],candidates:IDelegatedCandidate[],payments:IPaymentTransaction[]}>
 }
+
+

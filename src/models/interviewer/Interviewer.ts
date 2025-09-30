@@ -1,133 +1,177 @@
-import mongoose, { Document,ObjectId,Schema } from "mongoose";
-interface ITimeSlot{
-  startTime:string,
-  endTime:string
-}
-type Availability = {
-  day: string;
-  timeSlot?: ITimeSlot[];
-};
+import mongoose, { Document, Schema, Types } from "mongoose";
+import { TStatus } from "../../types/sharedTypes";
 
-export type TStatus= "pending" | "approved" | "rejected"
+export interface IGoogleInterviewer extends Document {
+  name: string;
+  email: string;
+  avatar?: string;
+}
+export interface IBankDetails {
+  accountHolderName: string;
+  accountNumber: string;
+  ifsc: string;
+  upiId?: string;
+  addedAt?: string;
+  updatedAt?: string;
+}
+
+export type TProficiencyLevel =
+  | "beginner"
+  | "intermediate"
+  | "advanced"
+  | "expert";
+export type TSkillSource =
+  | "professional"
+  | "academic"
+  | "personal"
+  | "certification";
+
+export interface ISkillExpertise {
+  skill: string;
+  proficiencyLevel: TProficiencyLevel;
+  yearsOfExperience?: number;
+  skillSource: TSkillSource[];
+}
 
 export interface IInterviewer extends Document {
-    name: string;
-    position: string;
-    email: string;
-    phone: string;
-    password:string;
-    experience: number;
-    linkedinProfile: string;
-    location?: string;
-    languages?:{
-      language:string;
-      level:string;
-    }[];
-    availableDays:string[];
-    availability?:Availability[];
-    professionalSummary: string;
-    expertise: string[];
-    scheduleInterviews?: ObjectId[];
-    avatar?: string;
-    isVerified: boolean;
-    rating?: number;
-    reviews?: ObjectId[];
-    status?:TStatus
-    isBlocked?:boolean
-    resume?:string |Express.Multer.File;
-  }
+  _id: string | Types.ObjectId;
+  name: string;
+  position?: string;
+  email: string;
+  phone?: string;
+  password?: string;
+  experience?: number;
+  linkedinProfile?: string;
+  expertise?: ISkillExpertise[];
+  avatarKey?: string;
+  isVerified: boolean;
+  status?: TStatus;
+  isBlocked?: boolean;
+  stripeAccountId?:string;
+  bankDetails?: IBankDetails;
+  resumeKey?: string 
+  resubmissionPeriod?:string|null;
+  resubmissionNotes:string;
+  resubmissionCount:number;
+  createdAt: Date;
+  updatedAt?: Date;
+}
 
-  export interface IGoogleInterviewer extends Document{
-    name:string;
-    email:string;
-  }
-  
+// Skill expertise sub-schema
+const skillExpertiseSchema = new Schema(
+  {
+    skill: {
+      type: String,
+      trim: true,
+    },
+    proficiencyLevel: {
+      type: String,
+      enum: ["beginner", "intermediate", "advanced", "expert"],
+      default: "beginner",
+    },
+    yearsOfExperience: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    skillSource: [
+      {
+        type: String,
+        enum: ["professional", "academic", "personal", "certification"],
+      },
+    ],
+  },
+  { _id: false }
+);
 
+// Main interviewer schema
 const interviewerSchema: Schema = new Schema(
   {
     name: {
       type: String,
+      required: true,
+      trim: true,
     },
     position: {
       type: String,
-    },
-    password: {
-      type: String,
+      trim: true,
     },
     email: {
       type: String,
-
+      required: true,
       unique: true,
+      lowercase: true,
+      trim: true,
     },
     phone: {
       type: String,
-    },
-    experience: {
-      type: Number,
+
+      trim: true,
     },
     linkedinProfile: {
       type: String,
+      trim: true,
     },
-    duration: {
-      type: Number,
-    },
-    location: {
+    password: {
       type: String,
-    },
-    languages: [{
-      language: { type: String },
-      level: { type: String },
-    }],
-    availableDays: [{ type: String }],
 
-    availability: [
-      {
-        type: Object,
-      },
-    ],
-    professionalSummary: {
-      type: String,
+      minlength: 6,
     },
-    expertise: [
-      {
-        type: String,
-      },
-    ],
-    scheduleInterviews: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Interview",
-      },
-    ],
-    avatar: {
+    experience: {
+      type: Number,
+      min: 0,
+    },
+    expertise: {
+      type: [skillExpertiseSchema],
+    },
+    avatarKey: {
       type: String,
+      default: null,
     },
     isVerified: {
       type: Boolean,
       default: false,
     },
-    rating: {
-      type: Number,
-
-      default: 0,
+   
+    stripeAccountId:{
+      type: String
     },
-    reviews: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Review",
+    bankDetails: {
+      type:{
+
+        accountHolderName: String,
+        accountNumber: String,
+        ifsc: String,
+        upiId: String,
+        addedAt: Date,
+        updatedAt: Date,
       },
-    ],
+      default:null
+    },
     status: {
       type: String,
       default: "pending",
       enum: ["pending", "approved", "rejected"],
     },
-    isBlocked:{
-     type:Boolean,
-     default:false
+    isBlocked: {
+      type: Boolean,
+      default: false,
     },
-    resume:{
+    resumeKey: {
+      type: String,
+      default: null,
+    },
+    resubmissionPeriod:{
+      type:Date,
+      default:null
+    },
+    resubmissionNotes:{
       type:String,
+      default:null
+    },
+    resubmissionCount:{
+      type:Number,
+      default:0
     }
   },
   {
@@ -135,11 +179,16 @@ const interviewerSchema: Schema = new Schema(
   }
 );
 
+// Indexes for better performance
+interviewerSchema.index({ email: 1 });
+interviewerSchema.index({ status: 1 });
+interviewerSchema.index({ isVerified: 1 });
+interviewerSchema.index({ "expertise.skill": 1 });
+interviewerSchema.index({ "expertise.proficiencyLevel": 1 });
+
 const Interviewer = mongoose.model<IInterviewer>(
   "Interviewer",
   interviewerSchema
 );
 
 export default Interviewer;
-
-

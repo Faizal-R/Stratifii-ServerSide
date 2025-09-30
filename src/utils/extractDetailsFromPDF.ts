@@ -17,14 +17,15 @@ interface ExtractedDetails {
  * 
  **/
 
-const extractDetailsFromPDF = async (filePath: string): Promise<ExtractedDetails> => {
-  const fileBuffer = fs.readFileSync(filePath);
+const extractDetailsFromPDF = async (fileBuffer:Buffer): Promise<ExtractedDetails> => {
+
   const data = await pdfParse(fileBuffer);
   const text = data.text;
 
   const emails = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}/g) || [];
   const names = text.match(/[A-Z][a-z]+\s[A-Z][a-z]+/g) || [];
   console.log("names", names);
+  console.log("emails", emails);
 
   return {
     name: names[0] || '',

@@ -3,13 +3,13 @@ import { Router } from "express";
 import { uploader } from "../../../middlewares/multer";
 import { resolve } from "../../../di";
 import { ICandidateController } from "../../../controllers/candidate/ICandidateController";
-import { DiControllers } from "../../../di/types";
+import { DI_TOKENS } from "../../../di/types";
 import { checkRole, verifyToken } from "../../../middlewares/Auth";
-import { Roles } from "../../../constants/roles";
+import { Roles } from "../../../constants/enums/roles";
 const router = Router();
 
 const candidateController = resolve<ICandidateController>(
-  DiControllers.CandidateController
+  DI_TOKENS.CONTROLLERS.CANDIDATE_CONTROLLER
 );
 
 router.post(
@@ -45,5 +45,6 @@ router.put(
   checkRole([Roles.CANDIDATE]),
   candidateController.finalizeAIMockInterview.bind(candidateController)
 );
+
 
 export default router;

@@ -13,7 +13,41 @@ export class SubscriptionRecordRepository
   constructor() {
     super(SubscriptionRecord);
   }
-    async getSubscriptionRecordDetailsByCompanyId(companyId: string): Promise<ISubscriptionRecord | null> {
-        return await SubscriptionRecord.findOne({subscriberId:companyId})
-    }
+  async getSubscriptionRecordDetailsByCompanyId(
+    companyId: string
+  ): Promise<ISubscriptionRecord | null> {
+    return await this.model.findOne({ subscriberId: companyId });
+  }
+  async getTotalSubscriptionRevenueWithMonth(): Promise<
+    { _id: number; totalRevenue: number }[]
+  > {
+    return await this.model.aggregate([
+      {
+        $group: {
+          _id: { $month: "$createdAt" },
+          totalRevenue: { $sum: "$planDetails.price" },
+        },
+      },
+    ]);
+  }
+
+  async getSubscriptionDistribution(): Promise<
+    { name: string; value: number }[]
+  > {
+    return await this.model.aggregate([
+      {
+        $group: {
+          _id: "$planDetails.name",
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          name: "$_id",
+          value: "$count",
+        },
+      },
+    ]);
+  }
 }
