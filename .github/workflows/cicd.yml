@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - dev
 
 jobs:
   build:
@@ -32,45 +31,37 @@ jobs:
       - name: Stop and remove existing container
         run: docker rm -f stratifii-node-app || true
       
-      - name: Create .env file
-        run: |
-          cat > /tmp/stratifii.env << EOF
-          PORT=${{ secrets.PORT }}
-          NODE_ENV=${{ secrets.NODE_ENV }}
-          SUPER_ADMIN_EMAIL=${{ secrets.SUPER_ADMIN_EMAIL }}
-          SUPER_ADMIN_PASSWORD=${{ secrets.SUPER_ADMIN_PASSWORD }}
-          MONGODB_URI=${{ secrets.MONGODB_URI }}
-          SMTP_HOST=${{ secrets.SMTP_HOST }}
-          SMTP_PORT=${{ secrets.SMTP_PORT }}
-          SMTP_USER=${{ secrets.SMTP_USER }}
-          SMTP_PASS=${{ secrets.SMTP_PASS }}
-          SMTP_FROM=${{ secrets.SMTP_FROM }}
-          FRONTEND_URL=${{ secrets.FRONTEND_URL }}
-          ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}
-          REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}
-          ACCESS_TOKEN_EXPIRY=${{ secrets.ACCESS_TOKEN_EXPIRY }}
-          REFRESH_TOKEN_EXPIRY=${{ secrets.REFRESH_TOKEN_EXPIRY }}
-          REFRESH_COOKIE_DAYS=${{ secrets.REFRESH_COOKIE_DAYS }}
-          ACCESS_COOKIE_MINUTES=${{ secrets.ACCESS_COOKIE_MINUTES }}
-          RAZORPAY_API_KEY=${{ secrets.RAZORPAY_API_KEY }}
-          RAZORPAY_SECRET_KEY=${{ secrets.RAZORPAY_SECRET_KEY }}
-          REDIS_HOST=${{ secrets.REDIS_HOST }}
-          REDIS_PORT=${{ secrets.REDIS_PORT }}
-          REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
-          GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}
-          STRIPE_SECRET_API_KEY=${{ secrets.STRIPE_SECRET_API_KEY }}
-          STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }}
-          BUCKET_NAME=${{ secrets.BUCKET_NAME }}
-          BUCKET_ACCESS_KEY=${{ secrets.BUCKET_ACCESS_KEY }}
-          BUCKET_SECRET_ACCESS_KEY=${{ secrets.BUCKET_SECRET_ACCESS_KEY }}
-          BUCKET_REGION=${{ secrets.BUCKET_REGION }}
-          EOF
-      
       - name: Run Docker Container
         run: |
           docker run -d -p 8000:8000 --name stratifii-node-app \
-            --env-file /tmp/stratifii.env \
+            -e PORT=${{ secrets.PORT }} \
+            -e NODE_ENV=${{ secrets.NODE_ENV }} \
+            -e SUPER_ADMIN_EMAIL="${{ secrets.SUPER_ADMIN_EMAIL }}" \
+            -e SUPER_ADMIN_PASSWORD="${{ secrets.SUPER_ADMIN_PASSWORD }}" \
+            -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
+            -e SMTP_HOST=${{ secrets.SMTP_HOST }} \
+            -e SMTP_PORT=${{ secrets.SMTP_PORT }} \
+            -e SMTP_USER="${{ secrets.SMTP_USER }}" \
+            -e SMTP_PASS="${{ secrets.SMTP_PASS }}" \
+            -e SMTP_FROM="${{ secrets.SMTP_FROM }}" \
+            -e FRONTEND_URL=${{ secrets.FRONTEND_URL }} \
+            -e ACCESS_TOKEN_SECRET="${{ secrets.ACCESS_TOKEN_SECRET }}" \
+            -e REFRESH_TOKEN_SECRET="${{ secrets.REFRESH_TOKEN_SECRET }}" \
+            -e ACCESS_TOKEN_EXPIRY=${{ secrets.ACCESS_TOKEN_EXPIRY }} \
+            -e REFRESH_TOKEN_EXPIRY=${{ secrets.REFRESH_TOKEN_EXPIRY }} \
+            -e REFRESH_COOKIE_DAYS=${{ secrets.REFRESH_COOKIE_DAYS }} \
+            -e ACCESS_COOKIE_MINUTES=${{ secrets.ACCESS_COOKIE_MINUTES }} \
+            -e RAZORPAY_API_KEY="${{ secrets.RAZORPAY_API_KEY }}" \
+            -e RAZORPAY_SECRET_KEY="${{ secrets.RAZORPAY_SECRET_KEY }}" \
+            -e REDIS_HOST=${{ secrets.REDIS_HOST }} \
+            -e REDIS_PORT=${{ secrets.REDIS_PORT }} \
+            -e REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}" \
+            -e GROQ_API_KEY="${{ secrets.GROQ_API_KEY }}" \
+            -e STRIPE_SECRET_API_KEY="${{ secrets.STRIPE_SECRET_API_KEY }}" \
+            -e STRIPE_WEBHOOK_SECRET="${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
+            -e BUCKET_NAME=${{ secrets.BUCKET_NAME }} \
+            -e BUCKET_ACCESS_KEY="${{ secrets.BUCKET_ACCESS_KEY }}" \
+            -e BUCKET_SECRET_ACCESS_KEY="${{ secrets.BUCKET_SECRET_ACCESS_KEY }}" \
+            -e BUCKET_REGION=${{ secrets.BUCKET_REGION }} \
+            --restart unless-stopped \
             5zziiihhh/stratifii-node-app:latest
-      
-      - name: Clean up
-        run: rm -f /tmp/stratifii.env

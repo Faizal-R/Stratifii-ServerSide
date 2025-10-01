@@ -1,37 +1,21 @@
-# -------- Build Stage --------
-FROM node:18-alpine AS builder
+FROM node:alpine3.20
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install all deps (including dev for build)
+# Install dependencies
 RUN npm install
 
 # Copy source code
 COPY . .
 
-# Build TS
-RUN npm run build
+# Clean old builds & TypeScript cache, then build
+RUN rm -rf dist .tsbuildinfo && npm run build
 
-
-# -------- Runtime Stage --------
-FROM node:18-alpine
-
-WORKDIR /app
-
-# Copy only package.json & lock file for prod deps
-COPY package*.json ./
-
-# Install only production deps
-RUN npm install --only=production
-
-# Copy dist from builder
-COPY --from=builder /app/dist ./dist
-
-# Expose backend port
+# Expose the port your app runs on
 EXPOSE 8000
 
-# Run compiled server
+# Command to run the app
 CMD ["node", "dist/server.js"]
