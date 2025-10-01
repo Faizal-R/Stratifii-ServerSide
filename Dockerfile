@@ -18,4 +18,4 @@ RUN rm -rf dist .tsbuildinfo && npm run build
 EXPOSE 8000
 
 # Command to run the app
-CMD ["node", "dist/server.js"]
+CMD ["node", "dist/server.js"] 

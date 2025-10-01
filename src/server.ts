@@ -24,7 +24,7 @@ const io = new Server(httpServer, {
     methods: ["GET", "POST"],
   },
 });
-
+ 
 initializeSocket(io);
 
 const startServer = async () => {
