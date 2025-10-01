@@ -4,19 +4,52 @@ on:
   push:
     branches:
       - main
+      - dev
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout Source
         uses: actions/checkout@v4
+      
+      - name: Create .env File (For Build)
+        run: |
+          echo "PORT=${{ secrets.PORT }}" >> .env
+          echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> .env
+          echo "SUPER_ADMIN_EMAIL=${{ secrets.SUPER_ADMIN_EMAIL }}" >> .env
+          echo "SUPER_ADMIN_PASSWORD=${{ secrets.SUPER_ADMIN_PASSWORD }}" >> .env
+          echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
+          echo "SMTP_HOST=${{ secrets.SMTP_HOST }}" >> .env
+          echo "SMTP_PORT=${{ secrets.SMTP_PORT }}" >> .env
+          echo "SMTP_USER=${{ secrets.SMTP_USER }}" >> .env
+          echo "SMTP_PASS=${{ secrets.SMTP_PASS }}" >> .env
+          echo "SMTP_FROM=${{ secrets.SMTP_FROM }}" >> .env
+          echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env
+          echo "ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}" >> .env
+          echo "REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}" >> .env
+          echo "ACCESS_TOKEN_EXPIRY=${{ secrets.ACCESS_TOKEN_EXPIRY }}" >> .env
+          echo "REFRESH_TOKEN_EXPIRY=${{ secrets.REFRESH_TOKEN_EXPIRY }}" >> .env
+          echo "REFRESH_COOKIE_DAYS=${{ secrets.REFRESH_COOKIE_DAYS }}" >> .env
+          echo "ACCESS_COOKIE_MINUTES=${{ secrets.ACCESS_COOKIE_MINUTES }}" >> .env
+          echo "RAZORPAY_API_KEY=${{ secrets.RAZORPAY_API_KEY }}" >> .env
+          echo "RAZORPAY_SECRET_KEY=${{ secrets.RAZORPAY_SECRET_KEY }}" >> .env
+          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env
+          echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
+          echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> .env
+          echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" >> .env
+          echo "STRIPE_SECRET_API_KEY=${{ secrets.STRIPE_SECRET_API_KEY }}" >> .env
+          echo "STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }}" >> .env
+          echo "BUCKET_NAME=${{ secrets.BUCKET_NAME }}" >> .env
+          echo "BUCKET_ACCESS_KEY=${{ secrets.BUCKET_ACCESS_KEY }}" >> .env
+          echo "BUCKET_SECRET_ACCESS_KEY=${{ secrets.BUCKET_SECRET_ACCESS_KEY }}" >> .env
+          echo "BUCKET_REGION=${{ secrets.BUCKET_REGION }}" >> .env
       
       - name: Login to Docker Hub
         run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
       
       - name: Build Docker Image
-        run: docker build -t 5zziiihhh/stratifii-node-app:latest .
+        run: docker build --build-arg ENV_FILE=.env -t 5zziiihhh/stratifii-node-app:latest .
       
       - name: Publish Image to Docker Hub
         run: docker push 5zziiihhh/stratifii-node-app:latest
@@ -25,43 +58,43 @@ jobs:
     needs: build
     runs-on: self-hosted
     steps:
-      - name: Pull image from Docker Hub
-        run: docker pull 5zziiihhh/stratifii-node-app:latest
+      - name: Create .env File (For Deployment)
+        run: |
+          echo "PORT=${{ secrets.PORT }}" > .env
+          echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> .env
+          echo "SUPER_ADMIN_EMAIL=${{ secrets.SUPER_ADMIN_EMAIL }}" >> .env
+          echo "SUPER_ADMIN_PASSWORD=${{ secrets.SUPER_ADMIN_PASSWORD }}" >> .env
+          echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
+          echo "SMTP_HOST=${{ secrets.SMTP_HOST }}" >> .env
+          echo "SMTP_PORT=${{ secrets.SMTP_PORT }}" >> .env
+          echo "SMTP_USER=${{ secrets.SMTP_USER }}" >> .env
+          echo "SMTP_PASS=${{ secrets.SMTP_PASS }}" >> .env
+          echo "SMTP_FROM=${{ secrets.SMTP_FROM }}" >> .env
+          echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env
+          echo "ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}" >> .env
+          echo "REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}" >> .env
+          echo "ACCESS_TOKEN_EXPIRY=${{ secrets.ACCESS_TOKEN_EXPIRY }}" >> .env
+          echo "REFRESH_TOKEN_EXPIRY=${{ secrets.REFRESH_TOKEN_EXPIRY }}" >> .env
+          echo "REFRESH_COOKIE_DAYS=${{ secrets.REFRESH_COOKIE_DAYS }}" >> .env
+          echo "ACCESS_COOKIE_MINUTES=${{ secrets.ACCESS_COOKIE_MINUTES }}" >> .env
+          echo "RAZORPAY_API_KEY=${{ secrets.RAZORPAY_API_KEY }}" >> .env
+          echo "RAZORPAY_SECRET_KEY=${{ secrets.RAZORPAY_SECRET_KEY }}" >> .env
+          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env
+          echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
+          echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> .env
+          echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" >> .env
+          echo "STRIPE_SECRET_API_KEY=${{ secrets.STRIPE_SECRET_API_KEY }}" >> .env
+          echo "STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }}" >> .env
+          echo "BUCKET_NAME=${{ secrets.BUCKET_NAME }}" >> .env
+          echo "BUCKET_ACCESS_KEY=${{ secrets.BUCKET_ACCESS_KEY }}" >> .env
+          echo "BUCKET_SECRET_ACCESS_KEY=${{ secrets.BUCKET_SECRET_ACCESS_KEY }}" >> .env
+          echo "BUCKET_REGION=${{ secrets.BUCKET_REGION }}" >> .env
       
-      - name: Stop and remove existing container
-        run: docker rm -f stratifii-node-app || true
+      - name: Pull image from Docker Hub
+        run: sudo docker pull 5zziiihhh/stratifii-node-app:latest
+      
+      - name: Delete old container
+        run: sudo docker rm -f stratifii-node-app || true
       
       - name: Run Docker Container
-        run: |
-          docker run -d -p 8000:8000 --name stratifii-node-app \
-            -e PORT=${{ secrets.PORT }} \
-            -e NODE_ENV=${{ secrets.NODE_ENV }} \
-            -e SUPER_ADMIN_EMAIL="${{ secrets.SUPER_ADMIN_EMAIL }}" \
-            -e SUPER_ADMIN_PASSWORD="${{ secrets.SUPER_ADMIN_PASSWORD }}" \
-            -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
-            -e SMTP_HOST=${{ secrets.SMTP_HOST }} \
-            -e SMTP_PORT=${{ secrets.SMTP_PORT }} \
-            -e SMTP_USER="${{ secrets.SMTP_USER }}" \
-            -e SMTP_PASS="${{ secrets.SMTP_PASS }}" \
-            -e SMTP_FROM="${{ secrets.SMTP_FROM }}" \
-            -e FRONTEND_URL=${{ secrets.FRONTEND_URL }} \
-            -e ACCESS_TOKEN_SECRET="${{ secrets.ACCESS_TOKEN_SECRET }}" \
-            -e REFRESH_TOKEN_SECRET="${{ secrets.REFRESH_TOKEN_SECRET }}" \
-            -e ACCESS_TOKEN_EXPIRY=${{ secrets.ACCESS_TOKEN_EXPIRY }} \
-            -e REFRESH_TOKEN_EXPIRY=${{ secrets.REFRESH_TOKEN_EXPIRY }} \
-            -e REFRESH_COOKIE_DAYS=${{ secrets.REFRESH_COOKIE_DAYS }} \
-            -e ACCESS_COOKIE_MINUTES=${{ secrets.ACCESS_COOKIE_MINUTES }} \
-            -e RAZORPAY_API_KEY="${{ secrets.RAZORPAY_API_KEY }}" \
-            -e RAZORPAY_SECRET_KEY="${{ secrets.RAZORPAY_SECRET_KEY }}" \
-            -e REDIS_HOST=${{ secrets.REDIS_HOST }} \
-            -e REDIS_PORT=${{ secrets.REDIS_PORT }} \
-            -e REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}" \
-            -e GROQ_API_KEY="${{ secrets.GROQ_API_KEY }}" \
-            -e STRIPE_SECRET_API_KEY="${{ secrets.STRIPE_SECRET_API_KEY }}" \
-            -e STRIPE_WEBHOOK_SECRET="${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
-            -e BUCKET_NAME=${{ secrets.BUCKET_NAME }} \
-            -e BUCKET_ACCESS_KEY="${{ secrets.BUCKET_ACCESS_KEY }}" \
-            -e BUCKET_SECRET_ACCESS_KEY="${{ secrets.BUCKET_SECRET_ACCESS_KEY }}" \
-            -e BUCKET_REGION=${{ secrets.BUCKET_REGION }} \
-            --restart unless-stopped \
-            5zziiihhh/stratifii-node-app:latest
+        run: sudo docker run -d -p 8000:8000 --name stratifii-node-app --env-file .env --restart unless-stopped 5zziiihhh/stratifii-node-app:latest
