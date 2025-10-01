@@ -1,4 +1,4 @@
-import { Extension } from "typescript";
+
 import { ISubscriptionRecord } from "../../../models/subscription/SubscriptionRecord";
 
 export interface AuthUserResponseDTO {

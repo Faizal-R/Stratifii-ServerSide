@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import { Roles } from "../../constants/enums/roles";
+
+
 import { createResponse, errorResponse } from "../../helper/responseHandler";
 import { IAuthService } from "../../services/auth/IAuthService";
 import { HttpStatus } from "../../config/HttpStatusCodes";
@@ -8,7 +9,7 @@ import {
   ACCESS_TOKEN_COOKIE_OPTIONS,
   REFRESH_TOKEN_COOKIE_OPTIONS,
 } from "../../config/CookieConfig";
-import { ICompany } from "../../models/company/Company";
+
 
 import { AUTH_MESSAGES } from "../../constants/messages/AuthMessages";
 import { ERROR_MESSAGES } from "../../constants/messages//ErrorMessages";
@@ -35,12 +36,10 @@ export class AuthController implements IAuthController {
   async login(request: Request, response: Response): Promise<void> {
     try {
       const loginData: LoginRequestDTO = request.body;
-      console.log(request.body);
-
       // Authenticate user
       const { accessToken, refreshToken, user, subscription } =
         await this._authService.login(loginData);
-      console.log(accessToken);
+
       response.cookie(
         Tokens.ACCESS_TOKEN,
         accessToken,
@@ -65,7 +64,6 @@ export class AuthController implements IAuthController {
         }
       );
     } catch (error) {
-      console.log("auth:", error);
       return errorResponse(response, error);
     }
   }
@@ -85,7 +83,6 @@ export class AuthController implements IAuthController {
         newCompany
       );
     } catch (error) {
-      console.error("Error in registerCompany:", error);
       return errorResponse(response, error);
     }
   }
@@ -95,8 +92,6 @@ export class AuthController implements IAuthController {
       const interviewer: InterviewerRegisterRequestDTO = JSON.parse(
         request.body.data
       );
-
-      console.log(interviewer);
 
       const newInterviewer = await this._authService.registerInterviewer(
         interviewer,
@@ -110,7 +105,6 @@ export class AuthController implements IAuthController {
         newInterviewer
       );
     } catch (error) {
-      console.log(error);
       if (error instanceof Error)
         createResponse(
           response,
@@ -134,7 +128,6 @@ export class AuthController implements IAuthController {
       interviewerId: string;
     } = JSON.parse(request.body.data);
     const resume = request.file as Express.Multer.File;
-    console.log("resumeRequest", request.file);
 
     try {
       const {
@@ -171,8 +164,7 @@ export class AuthController implements IAuthController {
     }
   }
   async authenticateOTP(request: Request, response: Response): Promise<void> {
-    const authenticateOTPRequestBody:AuthenticateOTPRequestDTO = request.body;
-
+    const authenticateOTPRequestBody: AuthenticateOTPRequestDTO = request.body;
 
     try {
       await this._authService.authenticateOTP(authenticateOTPRequestBody);
@@ -183,13 +175,12 @@ export class AuthController implements IAuthController {
         AUTH_MESSAGES.OTP_VERIFIED
       );
     } catch (error) {
-      console.log(error);
       return errorResponse(response, error);
     }
   }
   async googleAuthentication(request: Request, response: Response) {
     try {
-      const GoogleAuthRequesBody:GoogleAuthRequestDTO = request.body;
+      const GoogleAuthRequesBody: GoogleAuthRequestDTO = request.body;
 
       const { accessToken, refreshToken, user, isRegister } =
         await this._authService.googleAuthentication(GoogleAuthRequesBody);
@@ -263,7 +254,6 @@ export class AuthController implements IAuthController {
         AUTH_MESSAGES.PASSWORD_RESET_LINK_SENT
       );
     } catch (error) {
-      console.log(error);
       return errorResponse(response, error);
     }
   }
@@ -291,7 +281,6 @@ export class AuthController implements IAuthController {
         AUTH_MESSAGES.PASSWORD_RESET_SUCCESS
       );
     } catch (error) {
-      console.log(error);
       return errorResponse(response, error);
     }
   }
@@ -313,7 +302,6 @@ export class AuthController implements IAuthController {
 
   async signout(request: Request, response: Response): Promise<void> {
     try {
-      console.log("Cookies", request.cookies);
       const refreshToken = request.cookies[Tokens.REFRESH_TOKEN];
 
       await this._authService.signout(refreshToken);

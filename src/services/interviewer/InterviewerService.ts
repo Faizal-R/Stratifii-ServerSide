@@ -4,9 +4,9 @@ import {
   IInterviewer,
 } from "../../models/interviewer/Interviewer";
 import { IInterviewerRepository } from "../../repositories/interviewer/IInterviewerRepository";
-import type { FundAccountBank } from "razorpayx-nodejs-sdk/dist/services/FundAccount";
+
 import { IInterviewerService } from "./IInterviewerService";
-// import { IInterviewerProfile } from "../../validations/InterviewerValidations";
+
 import { CustomError } from "../../error/CustomError";
 import { HttpStatus } from "../../config/HttpStatusCodes";
 import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
@@ -15,7 +15,7 @@ import { comparePassword, hashPassword } from "../../utils/hash";
 import { USER_COMMON_MESSAGES } from "../../constants/messages/UserProfileMessages";
 import { inject, injectable } from "inversify";
 import { DI_TOKENS } from "../../di/types";
-import { uploadOnCloudinary } from "../../helper/cloudinary";
+
 import { bankDetailsSchema } from "../../validations/InterviewerValidations";
 import stripe from "../../config/Stripe";
 import { IWalletRepository } from "../../repositories/wallet/IWalletRepository";
@@ -44,8 +44,8 @@ export class InterviewerService implements IInterviewerService {
       if (interviewer?.avatarKey) {
         avatarUrl = await generateSignedUrl(interviewer.avatarKey);
       }
-
-      const resumeUrl = await generateSignedUrl(interviewer?.resumeKey!);
+     const resumeKey=interviewer?.resumeKey||null;
+      const resumeUrl = await generateSignedUrl(resumeKey);
       return InterviewerMapper.toResponse(interviewer, resumeUrl!, avatarUrl);
     } catch (error) {
       if (error instanceof CustomError) {
@@ -57,19 +57,32 @@ export class InterviewerService implements IInterviewerService {
       );
     }
   }
+async getInterviewerWallet(interviewerId: string): Promise<IWallet | null> {
+  try {
+    const interviewerWallet = await this._walletRepository.findOne({
+      userId: interviewerId,
+      userType: "interviewer",
+    });
 
-  getInterviewerWallet(interviewerId: string): Promise<IWallet | null> {
-    try {
-      const interviewerWallet = this._walletRepository.findOne({
-        userId: interviewerId,
-        userType: "interviewer",
-      });
+    if (!interviewerWallet) {
+      throw new CustomError(
+        `No wallet found for interviewer.`,
+        HttpStatus.NOT_FOUND
+      );
+    }
 
-      return interviewerWallet;
-    } catch (error) {
+    return interviewerWallet;
+  } catch (error) {
+    if (error instanceof CustomError) {
       throw error;
     }
+    throw new CustomError(
+      `Failed to fetch interviewer wallet.`,
+      HttpStatus.INTERNAL_SERVER_ERROR
+    );
   }
+}
+
 
   async updateInterviewerProfile(
     interviewerId: string,
@@ -96,8 +109,12 @@ export class InterviewerService implements IInterviewerService {
       if (updatedInterviewer?.avatarKey) {
         avatarUrl = await generateSignedUrl(updatedInterviewer.avatarKey);
       }
+      let resumeUrl = null;
+      if(updatedInterviewer?.resumeKey){
+        resumeUrl = await generateSignedUrl(updatedInterviewer.resumeKey);
+      }
 
-      const resumeUrl = await generateSignedUrl(updatedInterviewer?.resumeKey!);
+      
 
       return InterviewerMapper.toResponse(
         updatedInterviewer!,

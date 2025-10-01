@@ -5,7 +5,7 @@ import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 import { CustomError } from "../../error/CustomError";
 
 import { AccessTokenPayload } from "../../types/token";
-import { ICandidate } from "../../models/candidate/Candidate";
+
 import { ICandidateRepository } from "../../repositories/candidate/ICandidateRepository";
 import { hashPassword } from "../../utils/hash";
 import { ICandidateService } from "./ICandidateService";
@@ -14,7 +14,7 @@ import { DI_TOKENS } from "../../di/types";
 import { IDelegatedCandidateRepository } from "../../repositories/candidate/candidateDelegation/IDelegatedCandidateRepository";
 import { IJob } from "../../models/job/Job";
 import { ICompany } from "../../models/company/Company";
-import { ICompanyProfile } from "../../validations/CompanyValidations";
+
 
 import { JobMapper } from "../../mapper/job/JobMapper";
 import { JobBasicDTO } from "../../dto/response/job/JobResponseDTO";
@@ -64,7 +64,8 @@ export class CandidateService implements ICandidateService {
       });
       console.log("candidate", candidate);
       const avatarUrl = await generateSignedUrl(avatarKey);
-      const resumeAvatar = await generateSignedUrl(candidate?.resumeKey!);
+      const resumeKey=candidate?.resumeKey||null;
+      const resumeAvatar = await generateSignedUrl(resumeKey);
       return CandidateMapper.toResponse(candidate!, avatarUrl!, resumeAvatar!);
     } catch (error) {
       console.log(error);

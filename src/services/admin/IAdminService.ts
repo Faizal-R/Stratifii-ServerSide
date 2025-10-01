@@ -1,9 +1,9 @@
 import { CompanyBasicDTO, CompanyResponseDTO } from "../../dto/response/company/CompanyResponseDTO";
 import { InterviewerResponseDTO } from "../../dto/response/interviewer/InterviewerResponseDTO";
-import { IAdmin } from "../../models/admin/Admin";
+
 import { ICompany } from "../../models/company/Company";
 import { IInterviewer } from "../../models/interviewer/Interviewer";
-import { TStatus } from "../../types/sharedTypes";
+
 
 export interface IAdminService{
     login(email:string,password:string):Promise<{accessToken:string,refreshToken:string}>

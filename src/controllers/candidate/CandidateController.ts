@@ -1,12 +1,11 @@
 import { Request, Response } from "express";
 import { ICandidateController } from "./ICandidateController";
 import { ICandidateService } from "../../services/candidate/ICandidateService";
-import { comparePassword } from "../../utils/hash";
+
 import { createResponse, errorResponse } from "../../helper/responseHandler";
 import { HttpStatus } from "../../config/HttpStatusCodes";
 import { AUTH_MESSAGES } from "../../constants/messages/AuthMessages";
 import { ERROR_MESSAGES } from "../../constants/messages//ErrorMessages";
-// import {PAYMENT_MESSAGES} from "../../constants/messages/PaymentAndSubscriptionMessages"
 import { CANDIDATE_SUCCESS_MESSAGE } from "../../constants/messages/UserProfileMessages";
 import { inject, injectable } from "inversify";
 import { DI_TOKENS } from "../../di/types";

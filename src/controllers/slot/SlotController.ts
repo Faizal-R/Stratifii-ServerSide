@@ -1,6 +1,6 @@
 import { inject } from "inversify";
 import { DI_TOKENS } from "../../di/types";
-import { IInterviewSlot } from "../../models/slot/interviewSlot";
+
 import { ISlotService } from "../../services/slot/ISlotService";
 import { ISlotController } from "./ISlotController";
 import { createResponse, errorResponse } from "../../helper/responseHandler";
@@ -59,9 +59,9 @@ async createSlotGenerationRule(
         response,
         HttpStatus.OK,
         true,
-        "Slots Generation Rule Created successfully"
+        "Slots Generation Rule Created successfully",
         // INTERVIEWER__SUCCESS_MESSAGES.SLOTS_GENERATED,
-        // slots
+        slots
       );
     } catch (error) {
       console.error("Error generating slots:", error);

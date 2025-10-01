@@ -1,9 +1,4 @@
-import { ICompany } from "../../models/company/Company";
 
-import {
-  IGoogleInterviewer,
-  IInterviewer,
-} from "../../models/interviewer/Interviewer";
 
 import { LoginRequestDTO } from "../../dto/request/auth/LoginRequestDTO";
 import {

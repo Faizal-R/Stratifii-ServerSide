@@ -5,7 +5,7 @@ import { CustomError } from "../../error/CustomError";
 import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 import { HttpStatus } from "../../config/HttpStatusCodes";
 import extractDetailsFromPDF from "../../utils/extractDetailsFromPDF";
-import { uploadOnCloudinary } from "../../helper/cloudinary";
+
 import { ICandidateRepository } from "../../repositories/candidate/ICandidateRepository";
 import { Types } from "mongoose";
 import { IDelegatedCandidateRepository } from "../../repositories/candidate/candidateDelegation/IDelegatedCandidateRepository";
@@ -28,7 +28,6 @@ import { DelegatedCandidateMapper } from "../../mapper/candidate/DelegatedCandid
 import { ICandidate } from "../../models/candidate/Candidate";
 import { DelegatedCandidateForCompanyDTO } from "../../dto/response/candidate/DelegatedCandidateResponseDTO";
 import { IPaymentTransactionRepository } from "../../repositories/payment/IPaymentTransactionRepository";
-import { CandidateMapper } from "../../mapper/candidate/CandidateMapper";
 
 injectable();
 export class JobService implements IJobService {
@@ -60,9 +59,9 @@ export class JobService implements IJobService {
       const jobs = await this._jobRepository.find({ company });
 
       return jobs;
-    } catch (error) {
+    } catch  {
       throw new CustomError(
-        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        "Failed to fetch jobs",
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
@@ -74,9 +73,9 @@ export class JobService implements IJobService {
         job
       );
       return updatedJob;
-    } catch (error) {
+    } catch {
       throw new CustomError(
-        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        "Failed to update job",
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
@@ -85,9 +84,9 @@ export class JobService implements IJobService {
     try {
       await this._jobRepository.delete(jobId);
       return true;
-    } catch (error) {
+    } catch {
       throw new CustomError(
-        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        "Failed to delete job",
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
@@ -97,10 +96,9 @@ export class JobService implements IJobService {
     try {
       const createdJob = await this._jobRepository.create(job);
       return createdJob;
-    } catch (error) {
-      console.log(error);
+    } catch {
       throw new CustomError(
-        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        "Failed to create job",
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
@@ -116,7 +114,7 @@ export class JobService implements IJobService {
     const addedDelegations: Types.ObjectId[] = [];
 
     try {
-      for (let resume of resumes) {
+      for (const resume of resumes) {
         const candidateData = await extractDetailsFromPDF(resume.buffer);
 
         // Check if candidate already exists
@@ -201,7 +199,7 @@ export class JobService implements IJobService {
 
   async getCandidatesByJob(jobId: string): Promise<{
     candidates: DelegatedCandidateForCompanyDTO[];
-    jobPaymentStatus: string;
+    jobPaymentStatus: string|null;
   }> {
     try {
       const delegatedCandiates =
@@ -226,15 +224,17 @@ export class JobService implements IJobService {
           );
         })
       );
-      console.log(candidates);
 
       if (!candidates) {
         throw new CustomError(ERROR_MESSAGES.NOT_FOUND, HttpStatus.NOT_FOUND);
       }
-      return { candidates, jobPaymentStatus: paymentTransactionOfJob?.status! };
+      return { candidates, jobPaymentStatus: paymentTransactionOfJob?.status??null };
     } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
       throw new CustomError(
-        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        "Failed to fetch candidates for the job",
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
@@ -264,9 +264,9 @@ export class JobService implements IJobService {
       );
 
       return jobsWithQualifiedCandidates;
-    } catch (error) {
+    } catch {
       throw new CustomError(
-        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        "Failed to fetch jobs in progress",
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
@@ -279,11 +279,11 @@ export class JobService implements IJobService {
         await this._delegatedCandidateRepository.getCandidatesByJob(job, {
           status: "mock_completed",
         });
-      console.log(candidates);
+
       return candidates;
-    } catch (error) {
+    } catch {
       throw new CustomError(
-        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        "Failed to fetch mock qualified candidates",
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
@@ -304,7 +304,7 @@ export class JobService implements IJobService {
       );
 
       const matchedInterviewers = allInterviewers
-        .map((interviewer) => {
+        .map((interviewer: IInterviewer) => {
           const interviewerSkills = (interviewer.expertise || []).map(
             (exp: any) =>
               normalizeSkill(typeof exp === "string" ? exp : exp.skill)
@@ -318,8 +318,6 @@ export class JobService implements IJobService {
         })
         .filter(({ matchCount }) => matchCount > 0)
         .sort((a, b) => b.matchCount - a.matchCount);
-
-      console.log("Matched Interviewers", matchedInterviewers);
 
       const interviewersWithSlots = await Promise.all(
         matchedInterviewers.map(async ({ interviewer }) => {
@@ -358,12 +356,10 @@ export class JobService implements IJobService {
         })
       );
 
-      console.log("final InterviewerWithSlots", interviewersWithSlots);
       return interviewersWithSlots;
-    } catch (error) {
-      console.log("Error in getMatchedInterviewersByJobDescription", error);
+    } catch  {
       throw new CustomError(
-        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        "An error occurred while fetching matched interviewers",
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }

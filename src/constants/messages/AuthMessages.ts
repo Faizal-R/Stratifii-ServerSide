@@ -19,7 +19,7 @@ export enum AUTH_MESSAGES {
   INCORRECT_OTP = "Incorrect OTP. Please try again.",
   USER_NOT_FOUND = "We couldn't find any account associated with this email.",
   COMPANY_ALREADY_EXISTS = "This email is already associated with an existing company.",
-  INTERVIEWER_ALREADY_EXISTS = "This email is already associated with an existing company.",
+  INTERVIEWER_ALREADY_EXISTS = "This email is already associated with an existing interviewer .",
   USER_NOT_VERIFIED = " Looks like your account isn’t verified yet. Please verify your account to continue.",
   VERIFICATION_CODE_SENT = "A verification code has been sent to your email. Please use it to verify your account.",
   INVALID_SESSION = "Your session is no longer valid. Please log in again.",

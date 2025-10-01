@@ -344,7 +344,7 @@ export class AuthService implements IAuthService {
         );
       }
 
-      let isOtpExists = await this._otpRepository.otpExists(email);
+      const isOtpExists = await this._otpRepository.otpExists(email);
       if (!isOtpExists) {
         throw new CustomError(
           AUTH_MESSAGES.EXPIRED_OTP,
@@ -391,7 +391,7 @@ export class AuthService implements IAuthService {
   ): Promise<GoogleAuthResponseDTO> {
     const { email, name, avatar } = googleAuthPayload;
     try {
-      let interviewer = await this._interviewerRepository.findByEmail(email);
+      const interviewer = await this._interviewerRepository.findByEmail(email);
 
       if (interviewer) {
         // if (interviewer.status === "rejected") {
@@ -490,7 +490,7 @@ export class AuthService implements IAuthService {
         HttpStatus.BAD_REQUEST
       );
     }
-    let decoded = jwt.verify(
+    const decoded = jwt.verify(
       token,
       process.env.ACCESS_TOKEN_SECRET as string
     ) as AccessTokenPayload;
@@ -504,8 +504,8 @@ export class AuthService implements IAuthService {
     }
 
     const hashedPassword = await hashPassword(password);
-    let user: TUserType | null;
-    let role = decoded.role;
+    const role = decoded.role;
+    
     try {
       switch (role) {
         case Roles.COMPANY:
@@ -519,7 +519,7 @@ export class AuthService implements IAuthService {
           });
           break;
         case Roles.CANDIDATE:
-          user = await this._candidateRepository.update(userId, {
+           await this._candidateRepository.update(userId, {
             password: hashedPassword,
           });
           break;

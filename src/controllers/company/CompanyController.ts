@@ -10,6 +10,7 @@ import {
 import { CompanyProfileSchema } from "../../validations/CompanyValidations";
 import { inject, injectable } from "inversify";
 import {  DI_TOKENS } from "../../di/types";
+import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 
 @injectable()
 export class CompanyController implements ICompanyController {
@@ -71,12 +72,20 @@ private readonly _companyService: ICompanyService
   }
   async changePassword(request: Request, response: Response): Promise<void> {
     const passwordDetails = request.body;
-
+    const companyId = request.user?.userId;
+    if(!companyId){
+      return createResponse(
+        response,
+        HttpStatus.UNAUTHORIZED,
+        false,
+       ERROR_MESSAGES.BAD_REQUEST
+      );
+    }
     try {
       const interviewer = await this._companyService.changePassword(
         passwordDetails.currentPassword,
         passwordDetails.newPassword,
-        request.user?.userId!
+        companyId
       );
       return createResponse(
         response,

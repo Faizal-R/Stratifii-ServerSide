@@ -1,4 +1,4 @@
-import { Schema,Document, Types,model } from 'mongoose';
+
 
 export interface IInterviewSlot  {
   startTime: Date;

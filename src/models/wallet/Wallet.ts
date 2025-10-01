@@ -2,13 +2,7 @@ import { Schema, model, Types, Document } from "mongoose";
 import { Roles } from "../../constants/enums/roles";
 
 // Transaction interface
-interface ITransaction {
-  type: "credit" | "debit";
-  amount: number;
-  source?: string;
-  referenceId?: Types.ObjectId;
-  createdAt?: Date;
-}
+
 
 export interface IWallet extends Document {
   userId: Types.ObjectId;

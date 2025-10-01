@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import Groq from "groq-sdk";
-import { OpenAI } from "openai";
+
 dotenv.config({ path: "src/.env" });
 
 // Initialize the Groq client

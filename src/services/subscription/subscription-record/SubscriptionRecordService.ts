@@ -1,5 +1,5 @@
 import { Orders } from "razorpay/dist/types/orders";
-import { razorpay as RazorPay } from "../../../config/Razorpay";
+import { razorpay as RazorPay } from "../../../config/razorpay";
 import { ISubscriptionRecordRepository } from "../../../repositories/subscription/subscription-record/ISubscriptionRecordRepository";
 import { ISubscriptionRecordService } from "./ISubscriptionRecordService";
 import { CustomError } from "../../../error/CustomError";
@@ -17,13 +17,12 @@ import { DI_TOKENS } from "../../../di/types";
 injectable();
 export class SubscriptionRecordService implements ISubscriptionRecordService {
   constructor(
-  @inject(DI_TOKENS.REPOSITORIES.SUBSCRIPTION_RECORD_REPOSITORY)
-  private readonly _subscriptionRepository: ISubscriptionRecordRepository,
+    @inject(DI_TOKENS.REPOSITORIES.SUBSCRIPTION_RECORD_REPOSITORY)
+    private readonly _subscriptionRepository: ISubscriptionRecordRepository,
 
-  @inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)
-  private readonly _companyRepository: ICompanyRepository
-) {}
-  
+    @inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)
+    private readonly _companyRepository: ICompanyRepository
+  ) {}
 
   async createPaymentOrder(amount: number): Promise<Orders.RazorpayOrder> {
     try {
@@ -35,9 +34,8 @@ export class SubscriptionRecordService implements ISubscriptionRecordService {
       };
       const order = await RazorPay.orders.create(options);
       return order;
-    } catch (error) {
+    } catch {
       throw new CustomError(
-       
         SUBSCRIPTION_ERROR_MESSAGES.SUBSCRIPTION_PAYMENT_FAILED,
         HttpStatus.INTERNAL_SERVER_ERROR
       );
@@ -103,7 +101,7 @@ export class SubscriptionRecordService implements ISubscriptionRecordService {
       const subscriptionRecord = await this._subscriptionRepository.create(
         subscriptionRecordData
       );
-      
+
       this._companyRepository.update(subscriberId as string, {
         activePlan: subscriptionRecord._id as Types.ObjectId,
         usage: {
@@ -112,10 +110,9 @@ export class SubscriptionRecordService implements ISubscriptionRecordService {
         },
       });
       return subscriptionRecord;
-    } catch (error) {
-     
+    } catch  {
       throw new CustomError(
-        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+       "Failed to create subscription record",
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
@@ -127,6 +124,4 @@ export class SubscriptionRecordService implements ISubscriptionRecordService {
       companyId
     );
   }
-
-  
 }

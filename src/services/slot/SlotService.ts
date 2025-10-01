@@ -27,83 +27,66 @@ export class SlotService implements ISlotService {
   async createSlotGenerationRule(
     ruleData: ISlotGenerationRule
   ): Promise<IInterviewSlot[]> {
-    try {
-      const rule = await this._slotGenerationRepository.create(ruleData);
-      const slots = generateSlotsFromRule(rule);
-      return slots;
-    } catch (error) {
-   
-      throw error;
-    }
+    const rule = await this._slotGenerationRepository.create(ruleData);
+    const slots = generateSlotsFromRule(rule);
+    return slots;
   }
 
   async getSlotsByRule(interviewerId: string): Promise<IInterviewSlot[]> {
-    try {
-      const rule = await this._slotGenerationRepository.findOne({
-        interviewerId,
-      });
+    const rule = await this._slotGenerationRepository.findOne({
+      interviewerId,
+    });
 
-      if (!rule) return [];
+    if (!rule) return [];
 
-      // 1. Generate all potential slots from the rule
-      const slots = generateSlotsFromRule(rule);
+    // 1. Generate all potential slots from the rule
+    const slots = generateSlotsFromRule(rule);
 
-      // 2. Fetch booked slots for the same interviewer
-      const bookedSlots = await this._interviewRepository.find({
-        interviewer: interviewerId,
-        status: { $ne: "cancelled" }, // ignore cancelled bookings
-      });
+    // 2. Fetch booked slots for the same interviewer
+    const bookedSlots = await this._interviewRepository.find({
+      interviewer: interviewerId,
+      status: { $ne: "cancelled" }, // ignore cancelled bookings
+    });
 
-      // 3. Mark generated slots as booked if they match booked slots
-      const updatedSlots = slots.map((slot) => {
-        const isBooked = bookedSlots.some(
-          (booked) =>
-            new Date(booked.startTime).getTime() ===
-              new Date(slot.startTime).getTime() &&
-            new Date(booked.endTime).getTime() ===
-              new Date(slot.endTime).getTime()
-        );
+    // 3. Mark generated slots as booked if they match booked slots
+    const updatedSlots = slots.map((slot) => {
+      const isBooked = bookedSlots.some(
+        (booked) =>
+          new Date(booked.startTime).getTime() ===
+            new Date(slot.startTime).getTime() &&
+          new Date(booked.endTime).getTime() ===
+            new Date(slot.endTime).getTime()
+      );
 
-        return {
-          ...slot,
-          isAvailable: !isBooked,
-          status: (isBooked
-            ? "booked"
-            : "available") as IInterviewSlot["status"],
-          bookedBy: isBooked
-            ? bookedSlots
-                .find(
-                  (b) =>
-                    new Date(b.startTime).getTime() ===
-                      new Date(slot.startTime).getTime() &&
-                    new Date(b.endTime).getTime() ===
-                      new Date(slot.endTime).getTime()
-                )
-                ?.bookedBy.toString()
-            : null,
-        };
-      });
+      return {
+        ...slot,
+        isAvailable: !isBooked,
+        status: (isBooked ? "booked" : "available") as IInterviewSlot["status"],
+        bookedBy: isBooked
+          ? bookedSlots
+              .find(
+                (b) =>
+                  new Date(b.startTime).getTime() ===
+                    new Date(slot.startTime).getTime() &&
+                  new Date(b.endTime).getTime() ===
+                    new Date(slot.endTime).getTime()
+              )
+              ?.bookedBy.toString()
+          : null,
+      };
+    });
 
-      return updatedSlots;
-    } catch (error) {
-      console.error("[SlotService] Error getting slots by rule:", error);
-      throw error;
-    }
+    return updatedSlots;
   }
 
   async getInterviewerSlotGenerationRule(
     interviewerId: string
   ): Promise<ISlotGenerationRule | null> {
-    try {
-      const rule = await this._slotGenerationRepository.findOne({
-        interviewerId,
-      });
-     
-      return rule || null;
-    } catch (error) {
-      
-      throw error;
-    }
+    const rule = await this._slotGenerationRepository.findOne({
+      interviewerId,
+    });
+
+    return rule || null;
   }
 
   async updateInterviewerSlotGenerationRule(
@@ -147,39 +130,37 @@ export class SlotService implements ISlotService {
       bookedBy,
       isFollowUpScheduling,
     } = payloadForSlotBooking;
-    try {
-      const meetingLink = createMeetingRoom();
-      const bookedSlot = await this._interviewRepository.create({
-        interviewer,
-        candidate,
-        bookedBy,
-        job,
-        startTime: slot.startTime,
-        endTime: slot.endTime,
-        duration: slot.duration,
-        bufferDuration: 10,
-        meetingLink,
-      });
-      const scheduledCandidate =
-        await this._delegatedCandidateRepository.findOne({
-          job,
-          candidate,
-        });
 
-      await this._delegatedCandidateRepository.update(
-        scheduledCandidate?._id as string,
-        { isInterviewScheduled: true }
-      );
-      console.log("isFollowUpScheduling", isFollowUpScheduling);
-      if (isFollowUpScheduling) {
-        await this._delegatedCandidateRepository.markLastRoundAsFollowUpScheduled(
-          scheduledCandidate?._id as string
-        );
+    const meetingLink = createMeetingRoom();
+    const bookedSlot = await this._interviewRepository.create({
+      interviewer,
+      candidate,
+      bookedBy,
+      job,
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+      duration: slot.duration,
+      bufferDuration: 10,
+      meetingLink,
+    });
+    const scheduledCandidate = await this._delegatedCandidateRepository.findOne(
+      {
+        job,
+        candidate,
       }
-      console.log("bookedSlot", bookedSlot);
-      return bookedSlot;
-    } catch (error) {
-      throw error;
+    );
+
+    await this._delegatedCandidateRepository.update(
+      scheduledCandidate?._id as string,
+      { isInterviewScheduled: true }
+    );
+    console.log("isFollowUpScheduling", isFollowUpScheduling);
+    if (isFollowUpScheduling) {
+      await this._delegatedCandidateRepository.markLastRoundAsFollowUpScheduled(
+        scheduledCandidate?._id as string
+      );
     }
+
+    return bookedSlot;
   }
 }

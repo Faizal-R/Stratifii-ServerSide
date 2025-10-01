@@ -16,7 +16,7 @@ export interface ISubscriptionPlan extends Document {
   features: ISubscriptionFeatures; // Plan Features
 }
 
-const subscriptionPlanSchema = new mongoose.Schema(
+const subscriptionPlanSchema = new Schema(
   {
     name: { type: String, required: true },
     price: { type: Number, required: true },
