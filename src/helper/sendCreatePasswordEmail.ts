@@ -3,7 +3,7 @@ import { sendEmail } from "./EmailService";
 import { createPasswordHtml } from "./wrapHtml";
 import { ICandidate } from "../models/candidate/Candidate";
 import { Roles } from "../constants/enums/roles";
-import { ICompany } from "../models/company/Company";
+
 import redis from "../config/RedisConfig";
 
 import { config } from "dotenv";

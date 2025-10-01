@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { ICompany } from "../../models/company/Company";
+
 
 export interface ICompanyController{
   getCompanyProfile(request: Request, response: Response): Promise<void>;

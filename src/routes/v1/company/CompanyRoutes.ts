@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { checkRole, verifyToken } from "../../../middlewares/Auth";
+import {  verifyToken } from "../../../middlewares/Auth";
 import { uploader } from "../../../middlewares/multer";
 import { ensureActiveSubscription } from "../../../middlewares/subscriptionExpiry";
 import { resolve } from "../../../di";
@@ -9,7 +9,7 @@ import { DI_TOKENS } from "../../../di/types";
 import { IJobController } from "../../../controllers/job/IJobController";
 import { ISubscriptionController } from "../../../controllers/subscription/ISubscriptonController";
 import { ISlotController } from "../../../controllers/slot/ISlotController";
-import { CompanyController } from "../../../controllers/company/CompanyController";
+
 
 const router = Router();
 

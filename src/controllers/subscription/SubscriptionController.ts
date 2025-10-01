@@ -161,9 +161,7 @@ private readonly _subscriptionRecordService?: ISubscriptionRecordService
     }
   }
 
-  getSubscriptionRecord(request: Request, response: Response): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
+
 
  async  getSubscriptionPlanDetails(request:Request,response:Response):Promise<void>{
     // const subscriptionId = request.body.comp;

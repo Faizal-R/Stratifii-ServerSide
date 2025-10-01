@@ -28,7 +28,7 @@ export const JobMapper = {
     status: job.status,
     experienceRequired: job.experienceRequired,
     paymentTransaction: job.paymentTransaction?.toString(),
-    createdAt: (job as any).createdAt,
-    updatedAt: (job as any).updatedAt,
+    createdAt: job .createdAt,
+    updatedAt: job.updatedAt,
   }),
 };

@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import winston from 'winston';
 import morgan from 'morgan';
-import { Request, Response } from 'express';
+
 
 // 📁 Ensure logs directory exists
 const logDir = path.join(process.cwd(), 'logs');
@@ -63,27 +63,27 @@ const stream = {
 const skip = () => process.env.NODE_ENV === 'test';
 
 // 🧠 Custom Morgan format
-const customMorganFormat = (
-  tokens: morgan.TokenIndexer<Request, Response>,
-  req: Request,
-  res: Response
-): string => {
-  const method = tokens.method(req, res);
-  const url = tokens.url(req, res);
-  const status = tokens.status(req, res);
-  const responseTime = tokens['response-time'](req, res);
-  const ip = req.ip || req.socket.remoteAddress;
-  const userAgent = tokens['user-agent'](req, res);
-  const timestamp = new Date().toISOString();
+// const customMorganFormat = (
+//   tokens: morgan.TokenIndexer<Request, Response>,
+//   req: Request,
+//   res: Response
+// ): string => {
+//   const method = tokens.method(req, res);
+//   const url = tokens.url(req, res);
+//   const status = tokens.status(req, res);
+//   const responseTime = tokens['response-time'](req, res);
+//   const ip = req.ip || req.socket.remoteAddress;
+//   const userAgent = tokens['user-agent'](req, res);
+//   const timestamp = new Date().toISOString();
 
-  // Optional: log request body for POST/PUT
-  let body = '';
-  if (['POST', 'PUT', 'PATCH'].includes(method!)) {
-    body = ` | Body: ${JSON.stringify(req.body)}`;
-  }
+//   // Optional: log request body for POST/PUT
+//   let body = '';
+//   if (['POST', 'PUT', 'PATCH'].includes(method!)) {
+//     body = ` | Body: ${JSON.stringify(req.body)}`;
+//   }
 
-  return `[HTTP] ${timestamp} | ${status} | ${method} ${url} | ${responseTime} ms | IP: ${ip} | Agent: ${userAgent}${body}`;
-};
+//   return `[HTTP] ${timestamp} | ${status} | ${method} ${url} | ${responseTime} ms | IP: ${ip} | Agent: ${userAgent}${body}`;
+// };
 
 // 🧩 Morgan middleware
 const morganMiddleware = morgan("tiny", { stream, skip });

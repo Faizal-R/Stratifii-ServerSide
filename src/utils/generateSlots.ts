@@ -5,7 +5,7 @@ import { ISlotGenerationRule } from "../models/slot/slotGenerationRule";
     rule: ISlotGenerationRule|null
   ): IInterviewSlot[] {
     if (!rule) return [];
-    try {
+
       const slots: IInterviewSlot[] = [];
       const current = new Date();
       const end = new Date(current);
@@ -49,8 +49,6 @@ import { ISlotGenerationRule } from "../models/slot/slotGenerationRule";
       }
 
       return slots;
-    } catch (error) {
     
-      throw error;
-    }
+    
   }

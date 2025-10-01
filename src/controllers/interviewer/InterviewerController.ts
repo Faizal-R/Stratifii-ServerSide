@@ -8,7 +8,7 @@ import {
   USER_COMMON_MESSAGES,
 } from "../../constants/messages/UserProfileMessages";
 
-import { ISlotService } from "../../services/slot/ISlotService";
+
 
 import { inject, injectable } from "inversify";
 import { DI_TOKENS } from "../../di/types";
@@ -21,9 +21,6 @@ export class InterviewerController implements IInterviewerController {
   constructor(
     @inject(DI_TOKENS.SERVICES.INTERVIEWER_SERVICE)
     private readonly _interviewerService: IInterviewerService,
-
-    @inject(DI_TOKENS.SERVICES.SLOT_SERVICE)
-    private readonly _slotService: ISlotService,
 
     @inject(DI_TOKENS.SERVICES.INTERVIEW_SERVICE)
     private readonly _interviewService: IInterviewService,
@@ -95,12 +92,16 @@ export class InterviewerController implements IInterviewerController {
 
   async changePassword(request: Request, response: Response): Promise<void> {
     const passwordDetails = request.body;
-
+    const interviewerId = request.user?.userId;
+    if(!interviewerId){
+      errorResponse(response,"Interviewer not found");
+      return;
+    }
     try {
       const interviewer = await this._interviewerService.changePassword(
         passwordDetails.currentPassword,
         passwordDetails.newPassword,
-        request.user?.userId!
+        interviewerId
       );
       return createResponse(
         response,
@@ -117,11 +118,15 @@ export class InterviewerController implements IInterviewerController {
   async addBankDetails(request: Request, response: Response): Promise<void> {
     const bankDetails: IBankDetails = request.body;
     console.log(bankDetails);
-
+    const interviewerId = request.user?.userId;
+    if(!interviewerId){
+      errorResponse(response,"Interviewer not found");
+      return;
+    }
     try {
       await this._interviewerService.addBankDetails(
         bankDetails,
-        request.user?.userId!
+        interviewerId
       );
       return createResponse(
         response,

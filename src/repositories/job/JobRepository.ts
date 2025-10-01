@@ -1,18 +1,9 @@
-import { Types } from "mongoose";
 import Job, { IJob } from "../../models/job/Job";
 import { BaseRepository } from "../base/BaseRepository";
 import { IJobRepository } from "./IJobRepository";
-import { ICandidate } from "../../models/candidate/Candidate";
-import { CustomError } from "../../error/CustomError";
-import {
-  JOB_ERROR_MESSAGES,
-  JOB_SUCCESS_MESSAGES,
-} from "../../constants/enums/messages";
-import DelegatedCandidate from "../../models/candidate/DelegatedCandidate";
+
 import { injectable } from "inversify";
 import { IJobStats } from "../../types/ICompanyDashboardTypes";
-
-
 
 @injectable()
 export class JobRepository
@@ -24,7 +15,7 @@ export class JobRepository
   }
 
   async getJobStatsForDashboard(companyId: string): Promise<IJobStats> {
-    const result= await this.model.aggregate([
+    const result = await this.model.aggregate([
       {
         $match: { company: companyId },
       },
@@ -46,7 +37,6 @@ export class JobRepository
     ]);
 
     console.log("Job stats result:", result);
-    return result[0] || { total: 0, inProgress: 0, completed: 0, open: 0}
-}
-
+    return result[0] || { total: 0, inProgress: 0, completed: 0, open: 0 };
+  }
 }

@@ -1,6 +1,6 @@
 import { Server, Socket } from "socket.io";
 import { registerRoomHandlers } from "./registers/room/RoomRegisters";
-import { registerSignalingHandlers } from "./registers/signaling/SignalingRegisters";
+// import { registerSignalingHandlers } from "./registers/signaling/SignalingRegisters";
 
 export const initializeSocket = (io: Server) => {
   // Handle connections
@@ -10,7 +10,7 @@ export const initializeSocket = (io: Server) => {
   io.on("connection", (socket: Socket) => {
     console.log(`🔌 User connected: (${socket.id})`);
     registerRoomHandlers(io, socket);
-    registerSignalingHandlers(io, socket);
+    // registerSignalingHandlers(io, socket);
 
     // Handle connection errors
     socket.on("error", (error) => {

@@ -63,7 +63,10 @@ export class AdminRepository
   
       return updatedCompany ?? null;
     } catch (error) {
-      throw new CustomError("Error updating company verification status:", 500);
+      if(error instanceof CustomError){
+        throw error;
+      }
+      throw new CustomError("Error updating Company verification status:", 500);
       
     }
   }
@@ -85,6 +88,9 @@ export class AdminRepository
   
       return updatedInterviewer ?? null;
     } catch (error) {
+      if(error instanceof CustomError){
+        throw error;
+      }
       throw new CustomError("Error updating Interviewer verification status:", 500);
   
     }

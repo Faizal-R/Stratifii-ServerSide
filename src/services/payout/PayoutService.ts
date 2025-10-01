@@ -45,12 +45,8 @@ export class PayoutService implements IPayoutService {
   }
 
   async getAllInterviewersPayoutRequests(): Promise<IPayoutRequest[]> {
-    try {
-      const payoutRequests = await this._payoutRequestRepository.find();
-      return payoutRequests;
-    } catch (error) {
-      throw error;
-    }
+    const payoutRequests = await this._payoutRequestRepository.find();
+    return payoutRequests;
   }
 
   async updateInterviewerPayoutRequestStatus(
@@ -89,8 +85,13 @@ export class PayoutService implements IPayoutService {
       }
       return updatedPayoutRequest;
     } catch (error) {
-      throw error;
+      if(error instanceof CustomError) {
+        throw error;
     }
+      throw new CustomError(
+        "Failed to update payout request status",
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
   }
- 
+  }
 }

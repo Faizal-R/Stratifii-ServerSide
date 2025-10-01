@@ -1,11 +1,11 @@
 import { ICompanyService } from "./ICompanyService";
 import { ICompanyRepository } from "../../repositories/company/ICompanyRepository";
-import { ICompany } from "../../models/company/Company";
+
 import { CustomError } from "../../error/CustomError";
 import { HttpStatus } from "../../config/HttpStatusCodes";
 import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 import { ICompanyProfile } from "../../validations/CompanyValidations";
-import { uploadOnCloudinary } from "../../helper/cloudinary";
+
 import { comparePassword, hashPassword } from "../../utils/hash";
 import { USER_COMMON_MESSAGES } from "../../constants/messages/UserProfileMessages";
 import { inject, injectable } from "inversify";
@@ -119,7 +119,7 @@ export class CompanyService implements ICompanyService {
     candidates: IDelegatedCandidate[];
     payments: IPaymentTransaction[];
   }> {
-    try {
+
       const jobs = await this._jobRepository.find({ company: companyId });
       const candidates = await this._delegatedCandidateRepository.find({
         company: companyId,
@@ -133,8 +133,6 @@ export class CompanyService implements ICompanyService {
         candidates,
         payments,
       };
-    } catch (error) {
-      throw error;
-    }
+    
   }
 }

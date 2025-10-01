@@ -3,7 +3,7 @@ import { PaymentConfig } from "../../constants/enums/AppConfig";
 import { IPaymentTransactionRepository } from "../../repositories/payment/IPaymentTransactionRepository";
 import { ICalculatePaymentResponse } from "../../types/payment";
 import { IPaymentTransactionService } from "./IPaymentTransactionService";
-import { razorpay as RazorPay } from "../../config/Razorpay";
+import { razorpay as RazorPay } from "../../config/razorpay";
 import { CustomError } from "../../error/CustomError";
 import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 import { PAYMENT_MESSAGES } from "../../constants/messages/PaymentAndSubscriptionMessages";
@@ -121,7 +121,7 @@ export class PaymentTransactionService implements IPaymentTransactionService {
     // Create Payment Transaction Record
     const calculatedPaymentSummary = this.calculatePayment(candidatesCount);
     const paymentTransaction = await this._paymentTransactionRepository.create({
-      job:jobId,
+      job: jobId,
       company: companyId,
       ...calculatedPaymentSummary,
       status: isPaymentFailed ? "FAILED" : "PAID",
@@ -178,9 +178,11 @@ export class PaymentTransactionService implements IPaymentTransactionService {
       console.log("Company", company);
 
       //  Send onboarding emails
-      await sendCreatePasswordEmail(candidatesToOnboard, company?.name!);
+      const companyName=company?.name || "Company";
+      await sendCreatePasswordEmail(candidatesToOnboard, companyName);
+
+      //todo: send mail to candidates who are already onboarded
     }
-    //todo: send mail to candidates who are already onboarded
 
     return true;
   }
@@ -205,9 +207,14 @@ export class PaymentTransactionService implements IPaymentTransactionService {
       await this._jobRepository.update(jobId, {
         status: "in-progress",
       });
-     
     } catch (error) {
-      throw error;
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      throw new CustomError(
+        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
 }

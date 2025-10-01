@@ -30,7 +30,7 @@ export class JobController implements IJobController {
         jobs
       );
     } catch (error) {
-      console.log(error);
+     
       errorResponse(response, error);
     }
   }
@@ -141,10 +141,14 @@ export class JobController implements IJobController {
 
   async getJobsInProgress(request: Request, response: Response): Promise<void> {
     console.log(request.user?.userId);
-
+    const userId = request.user?.userId;
+    if(!userId){
+      errorResponse(response,"User not found");
+      return;
+    }
     try {
       const jobs = await this._jobService.getJobsInProgress(
-        request.user?.userId!
+        userId
       );
       console.log(jobs);
       createResponse(

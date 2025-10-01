@@ -17,21 +17,17 @@ export class WalletService implements IWalletService {
     const userWallet = await this._walletRepository.create(walletPayload);
     return userWallet;
   }
-  
+
   async getUserWalletAndTransactions(
     userId: string
   ): Promise<{ wallet: IWallet | null; transactions: ITransaction[] }> {
-    try {
-      const wallet = (await this._walletRepository.findOne({
-        userId,
-      })) as IWallet;
-      // Make sure to use the correct repository/method to fetch transactions, not wallets
-      const transactions = (await this._transactionRepository.find({
-        walletId: wallet._id,
-      })) as ITransaction[];
-      return { wallet: wallet, transactions: transactions };
-    } catch (error) {
-      throw error;
-    }
+    const wallet = (await this._walletRepository.findOne({
+      userId,
+    })) as IWallet;
+    const transactions = (await this._transactionRepository.find({
+      walletId: wallet._id,
+    })) as ITransaction[];
+
+    return { wallet, transactions };
   }
 }

@@ -18,7 +18,7 @@ export interface ISubscriptionRecord extends Document {
   subscriberId: mongoose.Types.ObjectId | string;
   planId: mongoose.Types.ObjectId|string;
   status: "active" | "expired" | "canceled" | "pending";
-  planDetails: Object |ISubscriptionPlanDetails;
+  planDetails: object |ISubscriptionPlanDetails;
   startDate: Date;
   endDate: Date;
   transactionId: string;

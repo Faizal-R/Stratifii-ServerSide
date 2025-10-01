@@ -1,7 +1,6 @@
-import { hash } from "bcryptjs";
 import { IAdminRepository } from "../../repositories/admin/IAdminRepository";
 import { IAdminService } from "./IAdminService";
-import { comparePassword } from "../../utils/hash";
+
 import { CustomError } from "../../error/CustomError";
 import { HttpStatus } from "../../config/HttpStatusCodes";
 import {
@@ -29,8 +28,11 @@ import { convertNumberToMonth } from "../../utils/convertNumberToMonth";
 import { IInterviewerRepository } from "../../repositories/interviewer/IInterviewerRepository";
 import { ICompanyRepository } from "../../repositories/company/ICompanyRepository";
 import { CompanyMapper } from "../../mapper/company/CompanyMapper";
-import { TStatus } from "../../types/sharedTypes";
-import { CompanyBasicDTO, CompanyResponseDTO } from "../../dto/response/company/CompanyResponseDTO";
+
+import {
+  CompanyBasicDTO,
+  CompanyResponseDTO,
+} from "../../dto/response/company/CompanyResponseDTO";
 import { generateSignedUrl } from "../../helper/s3Helper";
 import { InterviewerResponseDTO } from "../../dto/response/interviewer/InterviewerResponseDTO";
 import { InterviewerMapper } from "../../mapper/interviewer/InterviewerMapper";
@@ -49,34 +51,58 @@ export class AdminService implements IAdminService {
     @inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)
     private readonly _companyRepository: ICompanyRepository
   ) {}
-  async getAllCompanies(status: string): Promise<CompanyResponseDTO[] | []> {
+  async getAllCompanies(status: string): Promise<CompanyResponseDTO[]> {
     try {
       const companies = await this._adminRepository.getAllCompanies(status);
-      const mappedCompanies = companies.map((company: ICompany) =>
+
+      if (!companies || companies.length === 0) {
+        throw new CustomError(
+          `No companies found with status: ${status}`,
+          HttpStatus.NOT_FOUND
+        );
+      }
+
+      return companies.map((company: ICompany) =>
         CompanyMapper.toResponse(company)
       );
-      return mappedCompanies;
     } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
       throw new CustomError(
-        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+        "Failed to fetch companies.",
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
   }
-  async getAllInterivewers(status: string): Promise<InterviewerResponseDTO[] | []> {
+
+  async getAllInterivewers(status: string): Promise<InterviewerResponseDTO[]> {
     try {
-      console.log(status);
       const interviewers =
         await this._adminRepository.getAllInterviewers(status);
-      const mappedInterviewersWithResumeAttached=await Promise.all(interviewers.map(async(interivewer)=>{
-        const resumeUrl=await generateSignedUrl(interivewer.resumeKey!)
-        return InterviewerMapper.toResponse(interivewer,resumeUrl!)
-      })
-      )
-      return mappedInterviewersWithResumeAttached
+
+      if (!interviewers || interviewers.length === 0) {
+        throw new CustomError(
+          `No interviewers found with status: ${status}`,
+          HttpStatus.NOT_FOUND
+        );
+      }
+
+      const mappedInterviewersWithResumeAttached = await Promise.all(
+        interviewers.map(async (interviewer) => {
+          const resumeUrl = await generateSignedUrl(interviewer.resumeKey!);
+
+          return InterviewerMapper.toResponse(interviewer, resumeUrl as string);
+        })
+      );
+
+      return mappedInterviewersWithResumeAttached;
     } catch (error) {
-       throw new CustomError(
-        ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      throw new CustomError(
+        "Failed to fetch interviewers.",
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
@@ -87,8 +113,8 @@ export class AdminService implements IAdminService {
     password: string
   ): Promise<{ accessToken: string; refreshToken: string }> {
     try {
-      let admin = await this._adminRepository.findByEmail(email);
-      let isPassMatch = admin?.password === password;
+      const admin = await this._adminRepository.findByEmail(email);
+      const isPassMatch = admin?.password === password;
       console.log(admin?.password, password);
       console.log(isPassMatch);
       if (!admin || !isPassMatch) {
@@ -109,7 +135,7 @@ export class AdminService implements IAdminService {
       });
       return { accessToken, refreshToken };
     } catch (error) {
-      console.log(error);
+      
       if (error instanceof CustomError) {
         throw error;
       }
@@ -124,7 +150,7 @@ export class AdminService implements IAdminService {
     companyId: string
   ): Promise<CompanyResponseDTO | null> {
     try {
-      let updatedCompany =
+      const updatedCompany =
         await this._adminRepository.updateCompanyStatus(companyId);
       return CompanyMapper.toResponse(updatedCompany!);
     } catch (error) {
@@ -139,7 +165,7 @@ export class AdminService implements IAdminService {
     interviewerId: string
   ): Promise<IInterviewer | null> {
     try {
-      let updatedInviewer =
+      const updatedInviewer =
         await this._adminRepository.updateInterviewerStatus(interviewerId);
       return updatedInviewer;
     } catch (error) {

@@ -10,6 +10,8 @@ export interface IJob extends Document {
   status: "open" | "in-progress" | "completed";
   experienceRequired: number;
   paymentTransaction?: Types.ObjectId;
+  createdAt:Date;
+  updatedAt:Date;
 }
 
 const JobSchema: Schema = new Schema(

@@ -5,7 +5,7 @@ import { Request, Response } from "express";
 import { HttpStatus } from "../../config/HttpStatusCodes";
 
 import { ADMIN_SUCCESS_MESSAGES } from "../../constants/messages/AdminMessages";
-import { Roles } from "../../constants/enums/roles";
+
 import {
   REFRESH_TOKEN_COOKIE_OPTIONS,
   ACCESS_TOKEN_COOKIE_OPTIONS,
@@ -13,8 +13,7 @@ import {
 import { inject, injectable } from "inversify";
 import { DI_TOKENS } from "../../di/types";
 import { adminLoginSchema } from "../../validations/AdminValidation";
-import { ZodError } from "zod";
-import { IPayoutRequestRepository } from "../../repositories/payout/payoutRequest/IPayoutRequestRepository";
+
 import { IPayoutService } from "../../services/payout/IPayoutService";
 
 @injectable()
@@ -108,7 +107,7 @@ export class AdminController implements IAdminController {
   ): Promise<void> {
     try {
       const companyId = request.body.companyId;
-      let updatedCompany = await this._adminService.updateCompanyStatus(
+      const updatedCompany = await this._adminService.updateCompanyStatus(
         companyId
       );
       return createResponse(
@@ -128,7 +127,7 @@ export class AdminController implements IAdminController {
   ): Promise<void> {
     try {
       const interviewerId = request.body.interviewerId;
-      let updatedCompany = await this._adminService.updateInterviewerStatus(
+      const updatedInterviewer = await this._adminService.updateInterviewerStatus(
         interviewerId
       );
       return createResponse(
@@ -136,7 +135,7 @@ export class AdminController implements IAdminController {
         HttpStatus.OK,
         true,
         ADMIN_SUCCESS_MESSAGES.ADMIN_USER_UPDATED,
-        updatedCompany
+        updatedInterviewer
       );
     } catch (error) {
       console.log(error);
