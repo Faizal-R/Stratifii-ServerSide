@@ -5,7 +5,7 @@ import router from "./routes/route";
 import dotenv from "dotenv";
 import morganMiddleware from "./config/logger";
 
-dotenv.config({ path: "src/.env" });
+dotenv.config();
 
 
 const app = express();

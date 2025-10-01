@@ -1,6 +1,6 @@
 import { S3Client } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
-dotenv.config({ path: "src/.env" });
+dotenv.config();
 const bucketName = process.env.BUCKET_NAME!;
 const accessKey = process.env.BUCKET_ACCESS_KEY!;
 const secretAccessKey = process.env.BUCKET_SECRET_ACCESS_KEY!;

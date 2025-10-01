@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import Groq from "groq-sdk";
 
-dotenv.config({ path: "src/.env" });
+dotenv.config();
 
 // Initialize the Groq client
 export const groq = new Groq({

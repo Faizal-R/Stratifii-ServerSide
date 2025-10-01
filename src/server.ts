@@ -10,7 +10,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { initializeSocket } from "./sockets";
 
-dotenv.config({ path: "src/.env" });
+dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 

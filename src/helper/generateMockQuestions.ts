@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import { CustomError } from "../error/CustomError";
 import { HttpStatus } from "../config/HttpStatusCodes";
 
-dotenv.config({ path: "src/.env" });
+dotenv.config();
 
 // Initialize the Groq client
 const groq = new Groq({

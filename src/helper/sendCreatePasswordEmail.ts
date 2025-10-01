@@ -7,7 +7,7 @@ import { Roles } from "../constants/enums/roles";
 import redis from "../config/RedisConfig";
 
 import { config } from "dotenv";
-config({ path: "src/.env" }) // Load environment variables from .env file
+config() // Load environment variables from .env file
 export const sendCreatePasswordEmail = async (candidates: ICandidate[],companyName:string) => {
  
   const frontendBaseUrl = process.env.FRONTEND_URL; // e.g., https://yourdomain.com
