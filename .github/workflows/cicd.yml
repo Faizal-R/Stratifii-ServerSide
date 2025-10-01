@@ -62,8 +62,6 @@ jobs:
         run: |
           echo "PORT=${{ secrets.PORT }}" > .env
           echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> .env
-          echo "SUPER_ADMIN_EMAIL=${{ secrets.SUPER_ADMIN_EMAIL }}" >> .env
-          echo "SUPER_ADMIN_PASSWORD=${{ secrets.SUPER_ADMIN_PASSWORD }}" >> .env
           echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
           echo "SMTP_HOST=${{ secrets.SMTP_HOST }}" >> .env
           echo "SMTP_PORT=${{ secrets.SMTP_PORT }}" >> .env
