@@ -79,28 +79,28 @@ router.post(
   verifyToken,
   checkBlockedUser,
   checkRole([Roles.INTERVIEWER]),
-  slotController.createSlotGenerationRule.bind(interviewerController)
+  slotController.createSlotGenerationRule.bind(slotController)
 );
 router.get(
   "/slot-generation-rule/:interviewerId",
   verifyToken,
   checkBlockedUser,
   checkRole([Roles.INTERVIEWER]),
-  slotController.getInterviewerSlotGenerationRule.bind(interviewerController)
+  slotController.getInterviewerSlotGenerationRule.bind(slotController)
 );
 router.get(
   "/slots/:id",
   verifyToken,
   checkBlockedUser,
   checkRole([Roles.INTERVIEWER]),
-  slotController.getSlotsByRule.bind(interviewerController)
+  slotController.getSlotsByRule.bind(slotController)
 );
 router.put(
   "/slot-generation-rule/:interviewerId",
   verifyToken,
   checkBlockedUser,
   checkRole([Roles.INTERVIEWER]),
-  slotController.updateInterviewerSlotGenerationRule.bind(interviewerController)
+  slotController.updateInterviewerSlotGenerationRule.bind(slotController)
 );
 
 // interview routes
