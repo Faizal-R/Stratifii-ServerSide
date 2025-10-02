@@ -169,6 +169,10 @@ export class InterviewerController implements IInterviewerController {
   ): Promise<void> {
     try {
       const interviewerId = request.user?.userId;
+      if(!interviewerId){
+        errorResponse(response,"Interviewer not found");
+        return;
+      }
       const upcomingInterviews =
         await this._interviewService.getUpcomingInterviews(interviewerId!);
 

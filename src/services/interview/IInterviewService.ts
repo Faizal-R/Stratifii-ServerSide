@@ -1,3 +1,4 @@
+import { InterviewResponseDTO } from "../../dto/response/interview/InterviewResponseDTO";
 import { IQuestion } from "../../helper/generateMockQuestions";
 import {
   IInterview,
@@ -13,7 +14,7 @@ export interface IInterviewService {
     resultPayload: { percentage: number; correct: number; total: number }
   ): Promise<{ passed: boolean; message: string }>;
 
-  getUpcomingInterviews(interviewerId: string): Promise<IInterview[] | []>;
+  getUpcomingInterviews(interviewerId: string): Promise<InterviewResponseDTO[] | []>;
 
   updateAndSubmitFeedback(
     interviewId: string,

@@ -2,15 +2,26 @@ import { inject, injectable } from "inversify";
 import { IInterviewService } from "./IInterviewService";
 import { DI_TOKENS } from "../../di/types";
 import { IDelegatedCandidateRepository } from "../../repositories/candidate/candidateDelegation/IDelegatedCandidateRepository";
-import { generateMockQuestions, IQuestion } from "../../helper/generateMockQuestions";
+import {
+  generateMockQuestions,
+  IQuestion,
+} from "../../helper/generateMockQuestions";
 import { CustomError } from "../../error/CustomError";
 import { HttpStatus } from "../../config/HttpStatusCodes";
-import { IInterview, IInterviewFeedback } from "../../models/interview/Interview";
+import {
+  IInterview,
+  IInterviewFeedback,
+} from "../../models/interview/Interview";
 import { IInterviewRepository } from "../../repositories/interview/IInterviewRepository";
 import { IWalletRepository } from "../../repositories/wallet/IWalletRepository";
 import { ITransactionRepository } from "../../repositories/transaction/ITransactionRepository";
 import { Types } from "mongoose";
 import { IJob } from "../../models/job/Job";
+import { ICandidate } from "../../models/candidate/Candidate";
+import { generateSignedUrl } from "../../helper/s3Helper";
+import { CandidateMapper } from "../../mapper/candidate/CandidateMapper";
+import { InterviewResponseDTO } from "../../dto/response/interview/InterviewResponseDTO";
+import { InterviewMapper } from "../../mapper/interview/InterviewMapper";
 
 @injectable()
 export class InterviewService implements IInterviewService {
@@ -25,14 +36,23 @@ export class InterviewService implements IInterviewService {
     private readonly _transactionRepository: ITransactionRepository
   ) {}
 
-  async generateCandidateMockInterviewQuestions(delegationId: string): Promise<IQuestion[]> {
+  async generateCandidateMockInterviewQuestions(
+    delegationId: string
+  ): Promise<IQuestion[]> {
     try {
-      const delegation = await this._delegatedCandidateRepository.getDelegationDetails({ _id: delegationId });
+      const delegation =
+        await this._delegatedCandidateRepository.getDelegationDetails({
+          _id: delegationId,
+        });
       if (!delegation || !delegation.job) {
-        throw new CustomError("Delegation or associated job not found.", HttpStatus.NOT_FOUND);
+        throw new CustomError(
+          "Delegation or associated job not found.",
+          HttpStatus.NOT_FOUND
+        );
       }
 
-      const { position, experienceRequired, requiredSkills, description } = delegation.job as IJob;
+      const { position, experienceRequired, requiredSkills, description } =
+        delegation.job as IJob;
       if (!position || !experienceRequired || !requiredSkills || !description) {
         throw new CustomError(
           "Incomplete job details for mock question generation.",
@@ -40,12 +60,13 @@ export class InterviewService implements IInterviewService {
         );
       }
 
-      const generatedQuestions = (await generateMockQuestions(
-        position,
-        experienceRequired,
-        requiredSkills,
-        description
-      )) ?? [];
+      const generatedQuestions =
+        (await generateMockQuestions(
+          position,
+          experienceRequired,
+          requiredSkills,
+          description
+        )) ?? [];
 
       return generatedQuestions;
     } catch (error) {
@@ -62,22 +83,28 @@ export class InterviewService implements IInterviewService {
     resultPayload: { percentage: number; correct: number; total: number }
   ): Promise<{ passed: boolean; message: string }> {
     try {
-      const delegation = await this._delegatedCandidateRepository.getDelegationDetails({ _id: delegationId });
+      const delegation =
+        await this._delegatedCandidateRepository.getDelegationDetails({
+          _id: delegationId,
+        });
       if (!delegation) {
         throw new CustomError("Delegation not found.", HttpStatus.NOT_FOUND);
       }
 
       const isPassed = resultPayload.percentage >= 80;
 
-      await this._delegatedCandidateRepository.update(delegation._id as string, {
-        aiMockResult: {
-          correctAnswers: resultPayload.correct,
-          totalQuestions: resultPayload.total,
-          scoreInPercentage: resultPayload.percentage,
-        },
-        status: isPassed ? "mock_completed" : "mock_failed",
-        isQualifiedForFinal: isPassed,
-      });
+      await this._delegatedCandidateRepository.update(
+        delegation._id as string,
+        {
+          aiMockResult: {
+            correctAnswers: resultPayload.correct,
+            totalQuestions: resultPayload.total,
+            scoreInPercentage: resultPayload.percentage,
+          },
+          status: isPassed ? "mock_completed" : "mock_failed",
+          isQualifiedForFinal: isPassed,
+        }
+      );
 
       return {
         passed: isPassed,
@@ -94,11 +121,32 @@ export class InterviewService implements IInterviewService {
     }
   }
 
-  async getUpcomingInterviews(interviewerId: string): Promise<IInterview[]> {
+  async getUpcomingInterviews(
+    interviewerId: string
+  ): Promise<InterviewResponseDTO[]> {
     try {
-      const upcomingInterviews = await this._interviewRepository.getInterviewDetails({ interviewer: interviewerId });
-      return upcomingInterviews ?? [];
-    } catch  {
+      const upcomingInterviews =
+        await this._interviewRepository.getInterviewDetails({
+          interviewer: interviewerId,
+        });
+      const mappedCandidatesInInterviews = await Promise.all(
+        upcomingInterviews.map(async (interview: IInterview) => {
+          const candidate = interview.candidate as ICandidate;
+          const candidateAvatarUrl = await generateSignedUrl(
+            candidate.avatarKey as string
+          );
+          const candidateResumeUrl = await generateSignedUrl(
+            candidate.resumeKey
+          );
+          return InterviewMapper.toResponse(
+            interview,
+            candidateResumeUrl as string,
+            candidateAvatarUrl as string
+          );
+        })
+      );
+      return mappedCandidatesInInterviews ?? [];
+    } catch {
       throw new CustomError(
         "Failed to fetch upcoming interviews.",
         HttpStatus.INTERNAL_SERVER_ERROR
@@ -106,7 +154,10 @@ export class InterviewService implements IInterviewService {
     }
   }
 
-  async updateAndSubmitFeedback(interviewId: string, feedback: IInterviewFeedback): Promise<void> {
+  async updateAndSubmitFeedback(
+    interviewId: string,
+    feedback: IInterviewFeedback
+  ): Promise<void> {
     try {
       const interview = await this._interviewRepository.update(interviewId, {
         feedback,
@@ -117,13 +168,17 @@ export class InterviewService implements IInterviewService {
         throw new CustomError("Interview not found.", HttpStatus.NOT_FOUND);
       }
 
-      const delegatedCandidate = await this._delegatedCandidateRepository.findOne({
-        candidate: interview.candidate,
-        job: interview.job,
-      });
+      const delegatedCandidate =
+        await this._delegatedCandidateRepository.findOne({
+          candidate: interview.candidate,
+          job: interview.job,
+        });
 
       if (!delegatedCandidate) {
-        throw new CustomError("Delegated candidate not found.", HttpStatus.NOT_FOUND);
+        throw new CustomError(
+          "Delegated candidate not found.",
+          HttpStatus.NOT_FOUND
+        );
       }
 
       const interviewRound = {
@@ -135,16 +190,27 @@ export class InterviewService implements IInterviewService {
         interviewer: interview.interviewer,
       };
 
-      await this._delegatedCandidateRepository.update(delegatedCandidate._id as string, {
-        status: feedback.needsFollowUp ? "in_interview_process" : "interview_completed",
-        $push: { interviewRounds: interviewRound },
-        totalNumberOfRounds: (delegatedCandidate.totalNumberOfRounds ?? 0) + 1,
-        isInterviewScheduled: false,
-      });
+      await this._delegatedCandidateRepository.update(
+        delegatedCandidate._id as string,
+        {
+          status: feedback.needsFollowUp
+            ? "in_interview_process"
+            : "interview_completed",
+          $push: { interviewRounds: interviewRound },
+          totalNumberOfRounds:
+            (delegatedCandidate.totalNumberOfRounds ?? 0) + 1,
+          isInterviewScheduled: false,
+        }
+      );
 
-      const interviewerWallet = await this._walletRepository.findOne({ userId: interview.interviewer });
+      const interviewerWallet = await this._walletRepository.findOne({
+        userId: interview.interviewer,
+      });
       if (!interviewerWallet) {
-        throw new CustomError("Interviewer wallet not found.", HttpStatus.NOT_FOUND);
+        throw new CustomError(
+          "Interviewer wallet not found.",
+          HttpStatus.NOT_FOUND
+        );
       }
 
       await this._transactionRepository.create({
@@ -171,9 +237,11 @@ export class InterviewService implements IInterviewService {
 
   async getScheduledInterviews(candidateId: string): Promise<IInterview[]> {
     try {
-      const interviews = await this._interviewRepository.getInterviewDetails({ candidate: candidateId });
+      const interviews = await this._interviewRepository.getInterviewDetails({
+        candidate: candidateId,
+      });
       return interviews ?? [];
-    } catch  {
+    } catch {
       throw new CustomError(
         "Failed to fetch scheduled interviews.",
         HttpStatus.INTERNAL_SERVER_ERROR
@@ -181,14 +249,16 @@ export class InterviewService implements IInterviewService {
     }
   }
 
-  async getAllInterviewsByCandidateId(candidateId: string): Promise<IInterview[]> {
+  async getAllInterviewsByCandidateId(
+    candidateId: string
+  ): Promise<IInterview[]> {
     try {
       const interviews = await this._interviewRepository.getInterviewDetails({
         candidate: candidateId,
         status: { $eq: "completed" },
       });
       return interviews ?? [];
-    } catch  {
+    } catch {
       throw new CustomError(
         "Failed to fetch completed interviews for the candidate.",
         HttpStatus.INTERNAL_SERVER_ERROR
