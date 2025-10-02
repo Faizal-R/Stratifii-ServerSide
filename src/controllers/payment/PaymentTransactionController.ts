@@ -54,7 +54,7 @@ export class PaymentTransactionController
   ): Promise<void> {
     const paymentVerificationDetails = req.body;
     const companyId = req.user?.userId;
-    console.log(paymentVerificationDetails);
+    
     try {
       const isVerified =
         await this._paymentTransactionService.interviewProcessPaymentVerificationAndCreatePaymentTransaction(
@@ -78,7 +78,7 @@ export class PaymentTransactionController
     res: Response
   ): Promise<void> {
     const jobId = req.params.jobId;
-    console.log("jobId", jobId);
+    
     try {
       await this._paymentTransactionService.handleRetryInterviewProcessInitializationPayment(
         jobId

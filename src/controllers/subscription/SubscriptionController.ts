@@ -29,7 +29,7 @@ private readonly _subscriptionRecordService?: ISubscriptionRecordService
     response: Response
   ): Promise<void> {
     const { name, price, features } = request.body;
-    console.log(request.body);
+    
     const validatedSubscriptionPlan = SubscriptionPlanSchema.safeParse(
       request.body
     );
@@ -84,9 +84,9 @@ private readonly _subscriptionRecordService?: ISubscriptionRecordService
     response: Response
   ): Promise<void> {
     const subscriptionId = request.params.subscriptionId;
-    console.log(subscriptionId);
+    
     const { updatedSubscription } = request.body;
-    console.log(request.body);
+    
 
     try {
       await this._subscriptionService?.updateSubscription(
@@ -132,13 +132,13 @@ private readonly _subscriptionRecordService?: ISubscriptionRecordService
       razorpay_signature,
       subscriptionId,
     } = request.body;
-    console.log(request.body);
+    
     const companyId = new mongoose.Types.ObjectId(String(request.user?.userId));
 
     try {
       const subscriptionDetails =
         await this._subscriptionService?.getSubscriptionById(subscriptionId);
-      console.log(subscriptionDetails);
+      
       const { isVerified, subscriptionRecord } =
         (await this._subscriptionRecordService?.subscriptionPaymentVerification(
           razorpay_order_id,
@@ -166,7 +166,7 @@ private readonly _subscriptionRecordService?: ISubscriptionRecordService
  async  getSubscriptionPlanDetails(request:Request,response:Response):Promise<void>{
     // const subscriptionId = request.body.comp;
     const companyId=  request.user?.userId;
-    console.log(companyId,request.user)
+    
     try {
       const subscriptionPlanDetails =
         await this._subscriptionRecordService?.getSubscriptionRecordDetails(companyId!);

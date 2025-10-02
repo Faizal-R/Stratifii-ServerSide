@@ -46,7 +46,7 @@ export class CandidateService implements ICandidateService {
 
       const storedToken = await redis.get(`createPasswordToken:${userId}`);
 
-      console.log("storedToken", storedToken);
+      
 
       if (!storedToken || storedToken !== token) {
         throw new CustomError(
@@ -55,20 +55,20 @@ export class CandidateService implements ICandidateService {
         );
       }
       const hashedPassword = await hashPassword(password);
-      console.log("hashedPassword", hashedPassword);
+      
       const avatarKey = await uploadFileToS3(avatar);
 
       const candidate = await this._candidateRepository.update(userId, {
         password: hashedPassword,
         avatarKey: avatarKey,
       });
-      console.log("candidate", candidate);
+      
       const avatarUrl = await generateSignedUrl(avatarKey);
       const resumeKey=candidate?.resumeKey||null;
       const resumeAvatar = await generateSignedUrl(resumeKey);
       return CandidateMapper.toResponse(candidate!, avatarUrl!, resumeAvatar!);
     } catch (error) {
-      console.log(error);
+      
       if (error instanceof CustomError) {
         throw error;
       }
@@ -92,7 +92,7 @@ export class CandidateService implements ICandidateService {
       const resumeUrl = await generateSignedUrl(candidate.resumeKey);
       return CandidateMapper.toResponse(candidate, avatarUrl!, resumeUrl!);
     } catch (error) {
-      console.log("error in getCandidateProfile", error);
+      
       if (error instanceof CustomError) {
         throw error;
       }

@@ -138,7 +138,7 @@ export class AdminController implements IAdminController {
         updatedInterviewer
       );
     } catch (error) {
-      console.log(error);
+      
       return errorResponse(response, error);
     }
   }
@@ -150,7 +150,7 @@ export class AdminController implements IAdminController {
     const companyId = request.params.companyId;
     const isApproved = request.body.isApproved;
     const reasonForRejection = request.body.reasonForRejection;
-    console.log("RequstBody of CompanyVerification", request.body);
+    
 
     if (!companyId) {
       return createResponse(
@@ -183,7 +183,7 @@ export class AdminController implements IAdminController {
     response: Response
   ): Promise<void> {
     const { interviewerId } = request.params;
-    console.log("RequstBody of InterviewerVerification", request.body);
+    
     const {
       isApproved,
       interviewerName,
@@ -223,7 +223,7 @@ export class AdminController implements IAdminController {
   getAdminDashboard = async (request: Request, response: Response) => {
     try {
       const dashboard = await this._adminService.getAdminDashboard();
-      console.log("Dashboard Data:", dashboard);
+      
       return createResponse(
         response,
         HttpStatus.OK,

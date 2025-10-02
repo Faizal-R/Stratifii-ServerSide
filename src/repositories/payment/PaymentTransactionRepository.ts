@@ -30,7 +30,7 @@ async getTotalRevenueFromInterview(): Promise<number> {
       }
     }
   ]);
-  console.log(result)
+  
   return result[0]?.totalRevenue || 0;
 }
  async getTotalRevenueFromInterviewWithMonth(): Promise<[{ _id: number; totalRevenue: number; }]> {

@@ -38,9 +38,9 @@ export class JobController implements IJobController {
   async createJob(request: Request, response: Response): Promise<void> {
     try {
       const jobData: IJob = { ...request.body, company: request.user?.userId };
-      console.log(jobData);
+      
       const job = await this._jobService.createJob(jobData);
-      console.log(job);
+      
       createResponse(
         response,
         HttpStatus.CREATED,
@@ -49,17 +49,17 @@ export class JobController implements IJobController {
         job
       );
     } catch (error) {
-      console.log(error);
+      
       errorResponse(response, error);
     }
   }
 
   async updateJob(request: Request, response: Response): Promise<void> {
-    console.log(request.body);
-    // console.log(job);
+    
+    // 
     try {
       const updatedJob = await this._jobService.updateJob(request.body);
-      console.log(updatedJob);
+      
       createResponse(
         response,
         HttpStatus.OK,
@@ -67,13 +67,13 @@ export class JobController implements IJobController {
         JOB_SUCCESS_MESSAGES.JOB_UPDATED
       );
     } catch (error) {
-      console.log(error);
+      
       errorResponse(response, error);
     }
   }
   async deleteJob(request: Request, response: Response): Promise<void> {
     const { jobId } = request.params;
-    console.log(jobId);
+    
     try {
       await this._jobService.deleteJob(jobId);
       createResponse(
@@ -83,7 +83,7 @@ export class JobController implements IJobController {
         JOB_SUCCESS_MESSAGES.JOB_DELETED
       );
     } catch (error) {
-      console.log(error);
+      
       errorResponse(response, error);
     }
   }
@@ -93,18 +93,18 @@ export class JobController implements IJobController {
     response: Response
   ): Promise<void> {
     const { jobId: SJobId } = request.params;
-    console.log(SJobId, request.params);
+    
     const resumes = request.files as Express.Multer.File[];
     try {
       const companyId = new mongoose.Types.ObjectId(request.user?.userId);
       const jobId = new mongoose.Types.ObjectId(SJobId);
-      console.log(resumes);
+      
       const candidates = await this._jobService.createCandidatesFromResumes(
         jobId,
         resumes,
         companyId
       );
-      console.log(candidates);
+      
       createResponse(
         response,
         HttpStatus.CREATED,
@@ -113,7 +113,7 @@ export class JobController implements IJobController {
         candidates
       );
     } catch (error) {
-      console.log(error);
+      
       errorResponse(response, error);
     }
   }
@@ -134,13 +134,13 @@ export class JobController implements IJobController {
         candidates
       );
     } catch (error) {
-      console.log(error);
+      
       errorResponse(response, error);
     }
   }
 
   async getJobsInProgress(request: Request, response: Response): Promise<void> {
-    console.log(request.user?.userId);
+    
     const userId = request.user?.userId;
     if(!userId){
       errorResponse(response,"User not found");
@@ -150,7 +150,7 @@ export class JobController implements IJobController {
       const jobs = await this._jobService.getJobsInProgress(
         userId
       );
-      console.log(jobs);
+      
       createResponse(
         response,
         HttpStatus.OK,
@@ -159,7 +159,7 @@ export class JobController implements IJobController {
         jobs
       );
     } catch (error) {
-      console.log(error);
+      
       errorResponse(response, error);
     }
   }
@@ -170,12 +170,12 @@ export class JobController implements IJobController {
   ): Promise<void> {
     try {
       const job = request.params.jobId;
-      console.log(job);
-      console.log("entered GetMockQualified");
+      
+      
       const candidates = await this._jobService.getMockQualifiedCandidatesByJob(
         job!
       );
-      console.log(candidates);
+      
       createResponse(
         response,
         HttpStatus.OK,
@@ -184,7 +184,7 @@ export class JobController implements IJobController {
         candidates
       );
     } catch (error) {
-      console.log(error);
+      
       errorResponse(response, error);
     }
   }
@@ -194,11 +194,11 @@ export class JobController implements IJobController {
   ): Promise<void> {
     try {
       const job = request.params.jobId;
-      console.log(job);
-      console.log("entered GetMockQualified");
+      
+      
       const candidates =
         await this._jobService.getMatchedInterviewersByJobDescription(job!);
-      console.log(candidates);
+      
       createResponse(
         response,
         HttpStatus.OK,
@@ -207,7 +207,7 @@ export class JobController implements IJobController {
         candidates
       );
     } catch (error) {
-      console.log(error);
+      
       errorResponse(response, error);
     }
   }

@@ -122,7 +122,7 @@ async getInterviewerWallet(interviewerId: string): Promise<IWallet | null> {
         avatarUrl
       );
     } catch (error) {
-      console.log("updateing Interviewer", error);
+      
       if (error instanceof CustomError) {
         throw error;
       }
@@ -177,7 +177,7 @@ async getInterviewerWallet(interviewerId: string): Promise<IWallet | null> {
         data: validatedBankDetails,
         error,
       } = bankDetailsSchema.safeParse(bankDetails);
-      console.log("validatedBankDetails", validatedBankDetails);
+      
       if (!success) {
         throw new CustomError(error.issues[0].message, HttpStatus.BAD_REQUEST);
       }
@@ -197,7 +197,7 @@ async getInterviewerWallet(interviewerId: string): Promise<IWallet | null> {
         },
       });
 
-      console.log("account", account);
+      
 
       const stripeAccountId = account.id;
 
@@ -213,7 +213,7 @@ async getInterviewerWallet(interviewerId: string): Promise<IWallet | null> {
           },
         }
       );
-      console.log("externalAccount", externalAccount);
+      
       const result = await this._interviewerRepository.update(interviewerId, {
         bankDetails: {
           ...validatedBankDetails,
@@ -223,9 +223,9 @@ async getInterviewerWallet(interviewerId: string): Promise<IWallet | null> {
         },
         stripeAccountId,
       });
-      console.log(result);
+      
     } catch (error) {
-      console.log("addBankDetails", error);
+      
       if (error instanceof CustomError) {
         throw error;
       }

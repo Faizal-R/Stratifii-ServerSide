@@ -167,7 +167,7 @@ export class JobService implements IJobService {
           })
         )
       );
-      console.log(allCandidates);
+      
 
       // Filter out any null values to ensure correct type
       const candidatesWithResumeAttached = await Promise.all(

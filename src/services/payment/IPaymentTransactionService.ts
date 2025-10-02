@@ -3,7 +3,6 @@ import { ICalculatePaymentResponse } from "../../types/payment";
 import { IPaymentVerificationDetails } from "./PaymentTransactionService";
 
 export interface IPaymentTransactionService {
-  // createPaymentTransaction: (paymentTransaction: any) => Promise<any>;
   calculatePayment(candidatesCount: number): ICalculatePaymentResponse;
   createInterviewProcessPaymentOrder(
     amount: number

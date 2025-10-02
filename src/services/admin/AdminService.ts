@@ -112,8 +112,8 @@ export class AdminService implements IAdminService {
     try {
       const admin = await this._adminRepository.findByEmail(email);
       const isPassMatch = admin?.password === password;
-      console.log(admin?.password, password);
-      console.log(isPassMatch);
+      
+      
       if (!admin || !isPassMatch) {
         throw new CustomError(
           "Incorrect Email or password",
@@ -299,7 +299,7 @@ export class AdminService implements IAdminService {
       await this._subscriptionRecordRepository.getTotalSubscriptionRevenueWithMonth();
     const interviewRevenue =
       await this._paymentTransactionRepository.getTotalRevenueFromInterviewWithMonth();
-    console.log("interviewRevenueWithMonth", interviewRevenue);
+    
     const monthlyRevenue = [];
     for (let i = 1; i <= 12; i++) {
       monthlyRevenue.push({
@@ -313,7 +313,7 @@ export class AdminService implements IAdminService {
           (interviewRevenue.find((r) => r._id === i)?.totalRevenue || 0),
       });
     }
-    console.log("monthlyRevenue", monthlyRevenue);
+    
 
     const getInterviewersWithJoinedMonth =
       await this._interviewerRepository.getInterviewersWithJoinedMonth();
@@ -336,7 +336,7 @@ export class AdminService implements IAdminService {
 
     const subscriptionDistribution =
       await this._subscriptionRecordRepository.getSubscriptionDistribution();
-    console.log("subscriptionDistribution", subscriptionDistribution);
+    
 
     const recentCompanies = await this._companyRepository.find({}, 5, {
       createdAt: -1,

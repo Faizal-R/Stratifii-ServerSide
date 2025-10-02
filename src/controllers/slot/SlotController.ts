@@ -47,7 +47,7 @@ async createSlotGenerationRule(
   ): Promise<void> {
     try {
       const ruleData = request.body;
-      console.log(request.body);
+      
       const interviewerId = request.user?.userId;
       const slots = await this._slotService.createSlotGenerationRule({
         ...ruleData,
@@ -72,7 +72,7 @@ async createSlotGenerationRule(
     const interviewerId = request.params.id;
     try {
       const slots = await this._slotService.getSlotsByRule(interviewerId);
-      console.log("slots", slots);
+      
 
       return createResponse(
         response,
@@ -95,7 +95,7 @@ async createSlotGenerationRule(
     try {
       const rule =
         await this._slotService.getInterviewerSlotGenerationRule(interviewerId);
-      console.log(interviewerId, "Rule in Interviewer Controller", rule);
+      
       return createResponse(
         response,
         HttpStatus.OK,

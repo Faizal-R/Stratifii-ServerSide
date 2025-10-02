@@ -352,7 +352,7 @@ export class AuthService implements IAuthService {
         );
       }
       const existingOtp = await this._otpRepository.getOtp(email);
-      console.log(existingOtp, otp);
+      
       if (existingOtp !== otp) {
         throw new CustomError(
           AUTH_MESSAGES.INCORRECT_OTP,
@@ -431,7 +431,7 @@ export class AuthService implements IAuthService {
         user: createdInterviewer,
       });
     } catch (error) {
-      console.log(error);
+      
       if (error instanceof CustomError) {
         throw error;
       } else {

@@ -39,12 +39,12 @@ private readonly _companyService: ICompanyService
       const companyId = request.user?.userId;
       const parsedCompany = JSON.parse(request.body.company);
       const companyLogoFile = request.file;
-      console.log("companyLogoFile", companyLogoFile);
+      
 
       const validatedCompany = CompanyProfileSchema.safeParse(parsedCompany);
-      console.log("validated Company", validatedCompany);
+      
       if (!validatedCompany.success) {
-        console.log(validatedCompany.error);
+        
         return createResponse(
           response,
           HttpStatus.BAD_REQUEST,
@@ -102,9 +102,9 @@ private readonly _companyService: ICompanyService
   async getCompanyDashboard(request: Request, response: Response): Promise<void> {
     try {
       const companyId = request.user?.userId;
-      console.log("companyId", companyId);
+      
       const dashboardData = await this._companyService.getCompanyDashboard(companyId!);
-      console.log("dashboardData", dashboardData);
+      
       return createResponse(
         response,
         HttpStatus.OK,
