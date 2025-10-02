@@ -22,4 +22,5 @@ export const DelegatedCandidateMapper = {
     interviewRounds: delegatedCandidate.interviewRounds,
     totalNumberOfRounds:delegatedCandidate.totalNumberOfRounds
   }),
+  
 };

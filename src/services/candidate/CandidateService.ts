@@ -113,14 +113,14 @@ export class CandidateService implements ICandidateService {
       mockInterviewDeadline: Date | string;
     }[]
   > {
-    console.log(candidateId);
+    
     const delegations =
       await this._delegatedCandidateRepository.getDelegatedJobsByCandidateId(
         candidateId
       );
 
     if (!delegations || delegations.length === 0) {
-      throw new CustomError("No Delegations Found", HttpStatus.BAD_REQUEST);
+      return []
     }
 
     const response = delegations.map((dc) => {

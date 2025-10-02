@@ -11,10 +11,10 @@ export interface IAdminService{
     updateCompanyStatus(companyId:string):Promise<CompanyResponseDTO|null>
 
     getAllInterivewers(status: string): Promise<InterviewerResponseDTO[] | []>
-    updateInterviewerStatus(interviewerId:string):Promise<IInterviewer|null>
+    updateInterviewerStatus(interviewerId:string):Promise<InterviewerResponseDTO|null>
 
-    handleCompanyVerification(companyId:string,isApproved:boolean,reasonForRejection?:string): Promise<ICompany|null>
-    handleInterviewerVerification(interviewerId:string,isApproved:boolean,interviewerName:string,interviewerEmail:string,reasonForRejection?:string): Promise<IInterviewer|null>
+    handleCompanyVerification(companyId:string,isApproved:boolean,reasonForRejection?:string): Promise<CompanyResponseDTO|null>
+    handleInterviewerVerification(interviewerId:string,isApproved:boolean,interviewerName:string,interviewerEmail:string,reasonForRejection?:string): Promise<InterviewerResponseDTO|null>
 
     getAdminDashboard(): Promise<{
     keyMetrics: {

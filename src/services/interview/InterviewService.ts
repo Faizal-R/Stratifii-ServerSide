@@ -235,12 +235,28 @@ export class InterviewService implements IInterviewService {
     }
   }
 
-  async getScheduledInterviews(candidateId: string): Promise<IInterview[]> {
+  async getScheduledInterviews(candidateId: string): Promise<InterviewResponseDTO[]> {
     try {
       const interviews = await this._interviewRepository.getInterviewDetails({
         candidate: candidateId,
       });
-      return interviews ?? [];
+       const mappedCandidatesInInterviews = await Promise.all(
+        interviews.map(async (interview: IInterview) => {
+          const candidate = interview.candidate as ICandidate;
+          const candidateAvatarUrl = await generateSignedUrl(
+            candidate.avatarKey as string
+          );
+          const candidateResumeUrl = await generateSignedUrl(
+            candidate.resumeKey
+          );
+          return InterviewMapper.toResponse(
+            interview,
+            candidateResumeUrl as string,
+            candidateAvatarUrl as string
+          );
+        })
+      );
+      return mappedCandidatesInInterviews ?? [];
     } catch {
       throw new CustomError(
         "Failed to fetch scheduled interviews.",
@@ -251,13 +267,30 @@ export class InterviewService implements IInterviewService {
 
   async getAllInterviewsByCandidateId(
     candidateId: string
-  ): Promise<IInterview[]> {
+  ): Promise<InterviewResponseDTO []> {
     try {
       const interviews = await this._interviewRepository.getInterviewDetails({
         candidate: candidateId,
         status: { $eq: "completed" },
       });
-      return interviews ?? [];
+       const mappedCandidatesInInterviews = await Promise.all(
+        interviews.map(async (interview: IInterview) => {
+          const candidate = interview.candidate as ICandidate;
+          const candidateAvatarUrl = await generateSignedUrl(
+            candidate.avatarKey as string
+          );
+          const candidateResumeUrl = await generateSignedUrl(
+            candidate.resumeKey
+          );
+          return InterviewMapper.toResponse(
+            interview,
+            candidateResumeUrl as string,
+            candidateAvatarUrl as string
+          );
+        })
+      );
+
+      return mappedCandidatesInInterviews ?? [];
     } catch {
       throw new CustomError(
         "Failed to fetch completed interviews for the candidate.",

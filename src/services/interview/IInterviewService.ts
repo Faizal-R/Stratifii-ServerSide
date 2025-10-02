@@ -21,9 +21,9 @@ export interface IInterviewService {
     feedbackPayload: IInterviewFeedback
   ): Promise<void>;
 
-  getScheduledInterviews(candidateId: string): Promise<IInterview[] | []>;
+  getScheduledInterviews(candidateId: string): Promise<InterviewResponseDTO[] | []>;
 
   getAllInterviewsByCandidateId(
     candidateId: string
-  ): Promise<IInterview[] | []>;
+  ): Promise<InterviewResponseDTO[] | []>;
 }

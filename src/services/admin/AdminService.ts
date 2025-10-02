@@ -76,16 +76,13 @@ export class AdminService implements IAdminService {
     }
   }
 
-  async getAllInterivewers(status: string): Promise<InterviewerResponseDTO[]> {
+  async getAllInterivewers(status: string): Promise<InterviewerResponseDTO[]|[]> {
     try {
       const interviewers =
         await this._adminRepository.getAllInterviewers(status);
 
       if (!interviewers || interviewers.length === 0) {
-        throw new CustomError(
-          `No interviewers found with status: ${status}`,
-          HttpStatus.NOT_FOUND
-        );
+       return []
       }
 
       const mappedInterviewersWithResumeAttached = await Promise.all(
@@ -163,11 +160,11 @@ export class AdminService implements IAdminService {
   }
   async updateInterviewerStatus(
     interviewerId: string
-  ): Promise<IInterviewer | null> {
+  ): Promise<InterviewerResponseDTO | null> {
     try {
       const updatedInviewer =
         await this._adminRepository.updateInterviewerStatus(interviewerId);
-      return updatedInviewer;
+      return InterviewerMapper.toResponse(updatedInviewer!,'',null);
     } catch (error) {
       if (error instanceof CustomError) throw error;
       throw new CustomError(
@@ -181,7 +178,7 @@ export class AdminService implements IAdminService {
     companyId: string,
     isApproved: boolean,
     reasonForRejection?: string
-  ): Promise<ICompany | null> {
+  ): Promise<CompanyResponseDTO | null> {
     try {
       const updatedCompany =
         await this._adminRepository.updateCompanyVerificationStatus(
@@ -209,7 +206,7 @@ export class AdminService implements IAdminService {
         );
       }
 
-      return updatedCompany;
+      return CompanyMapper.toResponse(updatedCompany as ICompany,null);
     } catch (error) {
       if (error instanceof CustomError) throw error;
       throw new CustomError(
@@ -224,7 +221,7 @@ export class AdminService implements IAdminService {
     interviewerName: string,
     interviewerEmail: string,
     reasonForRejection?: string
-  ): Promise<IInterviewer | null> {
+  ): Promise<InterviewerResponseDTO | null> {
     try {
       const updatedInterviewer =
         await this._adminRepository.updateInterviewerVerificationStatus(
@@ -250,7 +247,7 @@ export class AdminService implements IAdminService {
           "Account Verification Status"
         );
       }
-      return updatedInterviewer;
+      return InterviewerMapper.toResponse(updatedInterviewer as IInterviewer,'',null);
     } catch (error) {
       if (error instanceof CustomError) throw error;
       throw new CustomError(
