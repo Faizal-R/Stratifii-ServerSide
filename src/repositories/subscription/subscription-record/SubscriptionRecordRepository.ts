@@ -5,6 +5,7 @@ import SubscriptionRecord, {
 
 import { BaseRepository } from "../../base/BaseRepository";
 import { ISubscriptionRecordRepository } from "./ISubscriptionRecordRepository";
+import { Types } from "mongoose";
 @injectable()
 export class SubscriptionRecordRepository
   extends BaseRepository<ISubscriptionRecord>
@@ -22,6 +23,21 @@ export class SubscriptionRecordRepository
     { _id: number; totalRevenue: number }[]
   > {
     return await this.model.aggregate([
+      {
+        $group: {
+          _id: { $month: "$createdAt" },
+          totalRevenue: { $sum: "$planDetails.price" },
+        },
+      },
+    ]);
+  }
+  async getTotalSubscriptionRevenueOfCompanyWithMonth(companyId:string): Promise<
+    { _id: number; totalRevenue: number }[]
+  > {
+    return await this.model.aggregate([
+      {
+        $match: { subscriberId: new Types.ObjectId(companyId) },
+      },
       {
         $group: {
           _id: { $month: "$createdAt" },

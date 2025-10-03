@@ -21,8 +21,6 @@ export class AdminController implements IAdminController {
   constructor(
     @inject(DI_TOKENS.SERVICES.ADMIN_SERVICE)
     private readonly _adminService: IAdminService,
-   @inject(DI_TOKENS.SERVICES.PAYOUT_SERVICE)
-   private readonly _payoutService: IPayoutService
   ) {}
   async signin(request: Request, response: Response): Promise<void> {
     try {
@@ -138,7 +136,7 @@ export class AdminController implements IAdminController {
         updatedInterviewer
       );
     } catch (error) {
-      console.log(error);
+      
       return errorResponse(response, error);
     }
   }
@@ -150,7 +148,7 @@ export class AdminController implements IAdminController {
     const companyId = request.params.companyId;
     const isApproved = request.body.isApproved;
     const reasonForRejection = request.body.reasonForRejection;
-    console.log("RequstBody of CompanyVerification", request.body);
+    const isPermanentBan = request.body.isPermanentBan;
 
     if (!companyId) {
       return createResponse(
@@ -165,7 +163,8 @@ export class AdminController implements IAdminController {
       const updatedCompany = await this._adminService.handleCompanyVerification(
         companyId,
         isApproved,
-        reasonForRejection
+        reasonForRejection,
+        isPermanentBan
       );
       return createResponse(
         response,
@@ -183,7 +182,7 @@ export class AdminController implements IAdminController {
     response: Response
   ): Promise<void> {
     const { interviewerId } = request.params;
-    console.log("RequstBody of InterviewerVerification", request.body);
+    
     const {
       isApproved,
       interviewerName,
@@ -223,7 +222,7 @@ export class AdminController implements IAdminController {
   getAdminDashboard = async (request: Request, response: Response) => {
     try {
       const dashboard = await this._adminService.getAdminDashboard();
-      console.log("Dashboard Data:", dashboard);
+      
       return createResponse(
         response,
         HttpStatus.OK,

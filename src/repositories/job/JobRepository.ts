@@ -36,7 +36,7 @@ export class JobRepository
       },
     ]);
 
-    console.log("Job stats result:", result);
+    
     return result[0] || { total: 0, inProgress: 0, completed: 0, open: 0 };
   }
 }

@@ -28,6 +28,8 @@ import { DelegatedCandidateMapper } from "../../mapper/candidate/DelegatedCandid
 import { ICandidate } from "../../models/candidate/Candidate";
 import { DelegatedCandidateForCompanyDTO } from "../../dto/response/candidate/DelegatedCandidateResponseDTO";
 import { IPaymentTransactionRepository } from "../../repositories/payment/IPaymentTransactionRepository";
+import { InterviewerResponseDTO } from "../../dto/response/interviewer/InterviewerResponseDTO";
+import { InterviewerMapper } from "../../mapper/interviewer/InterviewerMapper";
 
 injectable();
 export class JobService implements IJobService {
@@ -59,7 +61,7 @@ export class JobService implements IJobService {
       const jobs = await this._jobRepository.find({ company });
 
       return jobs;
-    } catch  {
+    } catch {
       throw new CustomError(
         "Failed to fetch jobs",
         HttpStatus.INTERNAL_SERVER_ERROR
@@ -165,7 +167,7 @@ export class JobService implements IJobService {
           })
         )
       );
-      console.log(allCandidates);
+      
 
       // Filter out any null values to ensure correct type
       const candidatesWithResumeAttached = await Promise.all(
@@ -199,7 +201,7 @@ export class JobService implements IJobService {
 
   async getCandidatesByJob(jobId: string): Promise<{
     candidates: DelegatedCandidateForCompanyDTO[];
-    jobPaymentStatus: string|null;
+    jobPaymentStatus: string | null;
   }> {
     try {
       const delegatedCandiates =
@@ -228,7 +230,10 @@ export class JobService implements IJobService {
       if (!candidates) {
         throw new CustomError(ERROR_MESSAGES.NOT_FOUND, HttpStatus.NOT_FOUND);
       }
-      return { candidates, jobPaymentStatus: paymentTransactionOfJob?.status??null };
+      return {
+        candidates,
+        jobPaymentStatus: paymentTransactionOfJob?.status ?? null,
+      };
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
@@ -273,14 +278,30 @@ export class JobService implements IJobService {
   }
   async getMockQualifiedCandidatesByJob(
     job: string
-  ): Promise<IDelegatedCandidate[] | []> {
+  ): Promise<DelegatedCandidateForCompanyDTO[] | []> {
     try {
       const candidates =
         await this._delegatedCandidateRepository.getCandidatesByJob(job, {
           status: "mock_completed",
         });
 
-      return candidates;
+        const mappedDelegatedCandidates=Promise.all(
+          candidates.map(async (dc) => {
+            const candidateAvatarUrl = await generateSignedUrl(
+              (dc.candidate as ICandidate).avatarKey as string
+            );
+            const candidateResumeUrl = await generateSignedUrl(
+              (dc.candidate as ICandidate).resumeKey
+            );
+            return DelegatedCandidateMapper.toShowCompany(
+              dc,
+              candidateAvatarUrl as string,
+              candidateResumeUrl as string
+            );
+          })
+        );
+
+      return mappedDelegatedCandidates;
     } catch {
       throw new CustomError(
         "Failed to fetch mock qualified candidates",
@@ -291,7 +312,9 @@ export class JobService implements IJobService {
 
   async getMatchedInterviewersByJobDescription(
     jobId: string
-  ): Promise<{ interviewer: IInterviewer; slots: IInterviewSlot[] }[] | []> {
+  ): Promise<
+    { interviewer: InterviewerResponseDTO; slots: IInterviewSlot[] }[] | []
+  > {
     try {
       const jobDetails = await this._jobRepository.findById(jobId);
       if (!jobDetails) return [];
@@ -303,8 +326,8 @@ export class JobService implements IJobService {
         normalizeSkill
       );
 
-      const matchedInterviewers = allInterviewers
-        .map((interviewer: IInterviewer) => {
+      const mappedInterviewers = await Promise.all(
+        allInterviewers.map(async (interviewer: IInterviewer) => {
           const interviewerSkills = (interviewer.expertise || []).map(
             (exp: any) =>
               normalizeSkill(typeof exp === "string" ? exp : exp.skill)
@@ -314,8 +337,26 @@ export class JobService implements IJobService {
             requiredSkills.includes(s)
           ).length;
 
-          return { interviewer, matchCount };
+          const interivewerAvatarUrl = interviewer.avatarKey
+            ? await generateSignedUrl(interviewer.avatarKey)
+            : null;
+
+          const interviewerResumeUrl = await generateSignedUrl(
+            interviewer.resumeKey as string
+          );
+
+          return {
+            interviewer: InterviewerMapper.toResponse(
+              interviewer as IInterviewer,
+              interviewerResumeUrl as string,
+              interivewerAvatarUrl
+            ),
+            matchCount,
+          };
         })
+      );
+
+      const matchedInterviewers = mappedInterviewers
         .filter(({ matchCount }) => matchCount > 0)
         .sort((a, b) => b.matchCount - a.matchCount);
 
@@ -357,7 +398,7 @@ export class JobService implements IJobService {
       );
 
       return interviewersWithSlots;
-    } catch  {
+    } catch {
       throw new CustomError(
         "An error occurred while fetching matched interviewers",
         HttpStatus.INTERNAL_SERVER_ERROR

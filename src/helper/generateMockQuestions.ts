@@ -82,7 +82,7 @@ Each object must have the following structure:
       messages: [{ role: "user", content: prompt }],
     });
   
-     console.log("completion",completion);
+     
 
     const result = completion.choices[0].message.content;
   
@@ -105,7 +105,7 @@ Each object must have the following structure:
 
     try {
       const parsed = JSON.parse(match[0]);
-      console.log("parsed questions",parsed);
+      
       if (!Array.isArray(parsed)) {
         throw new Error();
       }
@@ -117,7 +117,7 @@ Each object must have the following structure:
       );
     }
   } catch (err) {
-    console.log("Error while generating mock questions",err)
+    
     if (err instanceof CustomError) {
       console.error("❌ API Error or Invalid JSON:", err.message);
       throw err;

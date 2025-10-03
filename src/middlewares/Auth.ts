@@ -99,7 +99,7 @@ async function handleRefresh(
       ACCESS_TOKEN_COOKIE_OPTIONS
     );
 
-    console.log(`Access token refreshed for user: ${decodedRefresh.userId}`);
+    
     req.user = {
       userId: decodedRefresh.userId,
       role: decodedRefresh.role,

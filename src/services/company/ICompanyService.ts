@@ -1,4 +1,7 @@
-import { CompanyBasicDTO, CompanyResponseDTO } from "../../dto/response/company/CompanyResponseDTO";
+import {
+  CompanyBasicDTO,
+  CompanyResponseDTO,
+} from "../../dto/response/company/CompanyResponseDTO";
 import { IDelegatedCandidate } from "../../models/candidate/DelegatedCandidate";
 
 import { IJob } from "../../models/job/Job";
@@ -11,8 +14,19 @@ export interface ICompanyService {
     company: ICompanyProfile,
     companyLogoFile?: Express.Multer.File
   ): Promise<CompanyResponseDTO | null>;
-  changePassword(currentPassword: string, newPassword: string, companyId: string): Promise<CompanyBasicDTO | null>;
-  getCompanyDashboard(companyId: string): Promise<{jobs:IJob[],candidates:IDelegatedCandidate[],payments:IPaymentTransaction[]}>
+  changePassword(
+    currentPassword: string,
+    newPassword: string,
+    companyId: string
+  ): Promise<CompanyBasicDTO | null>;
+  getCompanyDashboard(companyId: string): Promise<{
+    jobs: IJob[];
+    candidates: IDelegatedCandidate[];
+    payments: IPaymentTransaction[];
+    monthlySpend: {
+      month: string;
+      subscription: number;
+      interviews: number;
+    }[];
+  }>;
 }
-
-

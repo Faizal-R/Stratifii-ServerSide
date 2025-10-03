@@ -3,7 +3,7 @@ import { DI_TOKENS } from "./types";
 import redis from "../config/RedisConfig";
 
 import { CandidateService } from "../services/candidate/CandidateService";
-import { CompanyService } from "../services/company/CompanySerive";
+import { CompanyService } from "../services/company/CompanyService";
 import { JobService } from "../services/job/JobService";
 import { SubscriptionPlanService } from "../services/subscription/subscription-plan/SubscriptionPlanService";
 import { SubscriptionRecordService } from "../services/subscription/subscription-record/SubscriptionRecordService";

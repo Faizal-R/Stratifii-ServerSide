@@ -20,6 +20,7 @@ export interface IInterviewFeedback {
 }
 
 export interface IInterview extends Document {
+  _id: string|Types.ObjectId;
   candidate: string | ICandidate;
   interviewer: string | IInterviewer;
   bookedBy: string | ICompany;
@@ -34,7 +35,7 @@ export interface IInterview extends Document {
   status: "booked" | "completed" | "cancelled" | "rescheduled" | "no_show";
 
   meetingLink?: string;
-  rescheduledFrom?: Types.ObjectId;
+  rescheduledFrom?: Types.ObjectId|null;
   cancellationReason?: string;
 
   isRecorded: boolean;

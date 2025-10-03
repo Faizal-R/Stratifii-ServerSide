@@ -77,7 +77,7 @@ export class PaymentTransactionService implements IPaymentTransactionService {
       const order = await RazorPay.orders.create(options);
       return order;
     } catch (error) {
-      console.log(error);
+      
       throw new CustomError(
         ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
         HttpStatus.INTERNAL_SERVER_ERROR
@@ -153,11 +153,11 @@ export class PaymentTransactionService implements IPaymentTransactionService {
         })
       );
 
-      console.log("Delegated Candidates", delegatedCandidates);
+      
 
       //  Extract Candidate IDs who need onboarding
       const candidateIds = delegatedCandidates.map((dc) => dc.candidate);
-      console.log("Candidate IDs to onboard", candidateIds);
+      
 
       const candidates = await this._candidateRepository.find({
         _id: { $in: candidateIds },
@@ -172,10 +172,10 @@ export class PaymentTransactionService implements IPaymentTransactionService {
         (c) => c.status === "active"
       );
 
-      console.log("Candidates to onboard", candidatesToOnboard);
+      
 
       const company = await this._companyRepository.findById(String(companyId));
-      console.log("Company", company);
+      
 
       //  Send onboarding emails
       const companyName=company?.name || "Company";

@@ -32,10 +32,10 @@ export class CandidateController implements ICandidateController {
         candidateConfirmPassword: confirmPassword,
         token,
       } = request.body;
-      console.log(request.body);
+      
 
       const avatar = request.file;
-      console.log(avatar);
+      
 
       if (!password || !confirmPassword || !token) {
         return createResponse(
@@ -54,14 +54,14 @@ export class CandidateController implements ICandidateController {
           ERROR_MESSAGES.PASSWORD_MISMATCH
         );
       }
-      console.log("all Cleared in setupCandidateProfile");
+      
 
       const candidate = await this._candidateService.setupCandiateProfile(
         avatar!,
         password,
         token
       );
-      console.log(candidate);
+      
       return createResponse(
         response,
         HttpStatus.OK,
@@ -70,7 +70,7 @@ export class CandidateController implements ICandidateController {
         candidate
       );
     } catch (error) {
-      console.log("candidate error", error);
+      
       errorResponse(response, error);
     }
   }
@@ -108,14 +108,14 @@ export class CandidateController implements ICandidateController {
         candidate
       );
     } catch (error) {
-      console.log("Error in getCandidateProfile", error);
+      
       errorResponse(response, error);
     }
   }
 
   async getDelegatedJobs(request: Request, response: Response): Promise<void> {
     try {
-      console.log(request.user);
+      
       const candidateId = request.user?.userId;
       const delegations = await this._candidateService.getDelegatedJobs(
         candidateId!
@@ -137,12 +137,12 @@ export class CandidateController implements ICandidateController {
   ): Promise<void> {
     try {
       const delegationId = request.params.id;
-      console.log("entered in this Controller GeneratedMockInterviewQuestions",delegationId)
+      
       const questions =
         await this._interviewService.generateCandidateMockInterviewQuestions(
           delegationId
         );
-        console.log("quest:",questions)
+        
       return createResponse(
         response,
         HttpStatus.OK,
@@ -183,7 +183,7 @@ export class CandidateController implements ICandidateController {
       isPassed
     );
   } catch (error) {
-    console.log("Error in finalizeAIMockInterview:", error);
+    
     errorResponse(response, error);
   }
 }

@@ -154,7 +154,7 @@ export class SlotService implements ISlotService {
       scheduledCandidate?._id as string,
       { isInterviewScheduled: true }
     );
-    console.log("isFollowUpScheduling", isFollowUpScheduling);
+    
     if (isFollowUpScheduling) {
       await this._delegatedCandidateRepository.markLastRoundAsFollowUpScheduled(
         scheduledCandidate?._id as string

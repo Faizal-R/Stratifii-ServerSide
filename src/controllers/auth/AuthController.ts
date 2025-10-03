@@ -212,7 +212,7 @@ export class AuthController implements IAuthController {
         user
       );
     } catch (error) {
-      console.log(error);
+      
       return errorResponse(response, error);
     }
   }

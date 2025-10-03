@@ -39,7 +39,7 @@ export class PayoutController implements IPayoutController {
     try {
       const interviewerId = request.user.userId;
       const { amount, interviewerName } = request.body;
-      console.log(interviewerId, amount);
+      
       const payoutRequest = await this._payoutService.createPayoutRequest({
         interviewerId,
         amount,
@@ -63,16 +63,16 @@ export class PayoutController implements IPayoutController {
   ): Promise<void> {
     try {
       const payoutRequestId = request.params.payoutRequestId;
-      console.log(payoutRequestId);
+      
       const { status } = request.body;
-      console.log(status);
+      
 
       const updatedPayoutRequest =
         await this._payoutService.updateInterviewerPayoutRequestStatus(
           payoutRequestId,
           status
         );
-      console.log(updatedPayoutRequest);
+      
       return createResponse(
         response,
         HttpStatus.OK,

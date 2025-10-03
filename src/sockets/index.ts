@@ -23,27 +23,27 @@ export const initializeSocket = (io: Server) => {
     });
 
     socket.on("user:loggedIn", (userId: string) => {
-      console.log("userSocketID", userId);
+      
       // Map userId → socketId
       if (!userToSockets.has(userId)) {
         userToSockets.set(userId, new Set());
       }
       userToSockets.get(userId)!.add(socket.id);
-      // console.log(userToSockets)
+      // 
 
       // Map socketId → userId
       socketToUser.set(socket.id, userId);
 
-      console.log(`User ${userId} registered with socket ${socket.id}`);
+      
     });
 
     socket.on("user:status", (data: { userId: string; status: string }) => {
-      console.log("SocketData:", data);
+      
       const userSockets = userToSockets.get(data.userId);
-      console.log("userSockets:", userSockets);
+      
       if (userSockets) {
         userSockets.forEach((socketId) => {
-          console.log("socketIDs:", socketId);
+          
           io.to(socketId).emit("user:status:updated", { status: data.status });
         });
       }
@@ -52,7 +52,7 @@ export const initializeSocket = (io: Server) => {
     socket.on(
       "code:changes",
       ({ roomId, code }: { roomId: string; code: string }) => {
-        console.log("code:", code);
+        
         io.to(roomId).emit("receive:code:update", code);
       }
     );

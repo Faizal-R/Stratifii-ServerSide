@@ -9,14 +9,14 @@ import {
 } from "../../constants/messages/UserProfileMessages";
 import { CompanyProfileSchema } from "../../validations/CompanyValidations";
 import { inject, injectable } from "inversify";
-import {  DI_TOKENS } from "../../di/types";
+import { DI_TOKENS } from "../../di/types";
 import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 
 @injectable()
 export class CompanyController implements ICompanyController {
   constructor(
-@inject(DI_TOKENS.SERVICES.COMPANY_SERVICE)
-private readonly _companyService: ICompanyService
+    @inject(DI_TOKENS.SERVICES.COMPANY_SERVICE)
+    private readonly _companyService: ICompanyService
   ) {}
 
   async getCompanyProfile(request: Request, response: Response) {
@@ -37,14 +37,19 @@ private readonly _companyService: ICompanyService
   async updateCompanyProfile(request: Request, response: Response) {
     try {
       const companyId = request.user?.userId;
-      const parsedCompany = JSON.parse(request.body.company);
-      const companyLogoFile = request.file;
-      console.log("companyLogoFile", companyLogoFile);
+      let company;
 
-      const validatedCompany = CompanyProfileSchema.safeParse(parsedCompany);
-      console.log("validated Company", validatedCompany);
+      if (request.body) {
+        //resubmission companydata
+        company = request.body;
+      } else {
+        //company profile data
+        company = JSON.parse(request.body.company);
+      }
+      const validatedCompany = CompanyProfileSchema.safeParse(company);
+      const companyLogoFile = request.file;
+
       if (!validatedCompany.success) {
-        console.log(validatedCompany.error);
         return createResponse(
           response,
           HttpStatus.BAD_REQUEST,
@@ -73,12 +78,12 @@ private readonly _companyService: ICompanyService
   async changePassword(request: Request, response: Response): Promise<void> {
     const passwordDetails = request.body;
     const companyId = request.user?.userId;
-    if(!companyId){
+    if (!companyId) {
       return createResponse(
         response,
         HttpStatus.UNAUTHORIZED,
         false,
-       ERROR_MESSAGES.BAD_REQUEST
+        ERROR_MESSAGES.BAD_REQUEST
       );
     }
     try {
@@ -99,12 +104,18 @@ private readonly _companyService: ICompanyService
     }
   }
 
-  async getCompanyDashboard(request: Request, response: Response): Promise<void> {
+  async getCompanyDashboard(
+    request: Request,
+    response: Response
+  ): Promise<void> {
     try {
       const companyId = request.user?.userId;
-      console.log("companyId", companyId);
-      const dashboardData = await this._companyService.getCompanyDashboard(companyId!);
-      console.log("dashboardData", dashboardData);
+
+      const dashboardData = await this._companyService.getCompanyDashboard(
+        companyId!
+      );
+      console.log("dashboardData", dashboardData.monthlySpend);
+
       return createResponse(
         response,
         HttpStatus.OK,
@@ -114,6 +125,6 @@ private readonly _companyService: ICompanyService
       );
     } catch (error) {
       errorResponse(response, error);
-    } 
+    }
   }
 }

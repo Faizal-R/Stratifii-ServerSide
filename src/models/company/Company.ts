@@ -2,7 +2,7 @@ import mongoose, { Schema, Document, Types } from "mongoose";
 import { TStatus } from "../../types/sharedTypes";
 
 export interface ICompany extends Document {
-  _id: Types.ObjectId|string;
+  _id: Types.ObjectId | string;
   name: string;
   email: string;
   companyLogoKey?: string;
@@ -24,6 +24,11 @@ export interface ICompany extends Document {
     candidatesAddedThisMonth: number;
     jobPostsThisMonth: number;
   };
+
+  resubmissionPeriod?: string | null;
+  resubmissionNotes: string;
+  resubmissionCount: number;
+ isBannedPermanently: boolean
   createdAt: Date;
   updatedAt: Date;
 }
@@ -99,6 +104,19 @@ const CompanySchema: Schema = new Schema(
       type: Boolean,
       default: false,
     },
+    resubmissionPeriod: {
+      type: Date,
+      default: null,
+    },
+    resubmissionNotes: {
+      type: String,
+      default: null,
+    },
+    resubmissionCount: {
+      type: Number,
+      default: 0,
+    },
+    isBannedPermanently: { type: Boolean, default: false },
     activePlan: {
       type: Schema.Types.ObjectId,
       ref: "SubscriptionRecord",
@@ -112,7 +130,7 @@ const CompanySchema: Schema = new Schema(
       candidatesAddedThisMonth: {
         type: Number,
         default: 0,
-      },                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+      },
     },
   },
   {

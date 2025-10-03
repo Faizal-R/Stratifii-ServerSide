@@ -42,13 +42,13 @@ export class InterviewerController implements IInterviewerController {
         interviewer
       );
     } catch (error) {
-      console.log("error while fetching", error);
+      
       return errorResponse(response, error);
     }
   }
   async updateInterviewerProfile(request: Request, response: Response) {
     try {
-      console.log(request.files, "files in update profile");
+      
 
       const interviewerId = request.user?.userId ?? request.body.interviewerId;
       const interviewer = JSON.parse(request.body.interviewer); //request.body
@@ -60,8 +60,8 @@ export class InterviewerController implements IInterviewerController {
         resume =
           (request.files["resume"]?.[0] as Express.Multer.File) ?? undefined;
       }
-      console.log("avatar", avatar);
-      console.log("resume", resume);
+      
+      
       // if (!interviewer.success) {
       //   return createResponse(
       //     response,
@@ -117,7 +117,7 @@ export class InterviewerController implements IInterviewerController {
 
   async addBankDetails(request: Request, response: Response): Promise<void> {
     const bankDetails: IBankDetails = request.body;
-    console.log(bankDetails);
+    
     const interviewerId = request.user?.userId;
     if(!interviewerId){
       errorResponse(response,"Interviewer not found");
@@ -135,7 +135,7 @@ export class InterviewerController implements IInterviewerController {
         INTERVIEWER__SUCCESS_MESSAGES.INTERVIEWER_BANK_DETAILS_ADDED
       );
     } catch (error) {
-      console.log(error);
+      
       errorResponse(response, error);
     }
   }
@@ -145,12 +145,12 @@ export class InterviewerController implements IInterviewerController {
     response: Response
   ): Promise<void> {
     try {
-      console.log("entered getInterviewerWalletAndTransactions");
+      
       const interviewerId = request.user?.userId;
-      console.log(interviewerId);
+      
       const { wallet, transactions } =
         await this._walletService.getUserWalletAndTransactions(interviewerId!);
-      console.log(wallet);
+      
       createResponse(
         response,
         HttpStatus.OK,
@@ -169,6 +169,10 @@ export class InterviewerController implements IInterviewerController {
   ): Promise<void> {
     try {
       const interviewerId = request.user?.userId;
+      if(!interviewerId){
+        errorResponse(response,"Interviewer not found");
+        return;
+      }
       const upcomingInterviews =
         await this._interviewService.getUpcomingInterviews(interviewerId!);
 
