@@ -15,7 +15,6 @@ import { IDelegatedCandidateRepository } from "../../repositories/candidate/cand
 import { IJob } from "../../models/job/Job";
 import { ICompany } from "../../models/company/Company";
 
-
 import { JobMapper } from "../../mapper/job/JobMapper";
 import { JobBasicDTO } from "../../dto/response/job/JobResponseDTO";
 import { generateSignedUrl, uploadFileToS3 } from "../../helper/s3Helper";
@@ -46,8 +45,6 @@ export class CandidateService implements ICandidateService {
 
       const storedToken = await redis.get(`createPasswordToken:${userId}`);
 
-      
-
       if (!storedToken || storedToken !== token) {
         throw new CustomError(
           "Invalid or expired token",
@@ -55,20 +52,19 @@ export class CandidateService implements ICandidateService {
         );
       }
       const hashedPassword = await hashPassword(password);
-      
+
       const avatarKey = await uploadFileToS3(avatar);
 
       const candidate = await this._candidateRepository.update(userId, {
         password: hashedPassword,
         avatarKey: avatarKey,
       });
-      
+
       const avatarUrl = await generateSignedUrl(avatarKey);
-      const resumeKey=candidate?.resumeKey||null;
+      const resumeKey = candidate?.resumeKey || null;
       const resumeAvatar = await generateSignedUrl(resumeKey);
       return CandidateMapper.toResponse(candidate!, avatarUrl!, resumeAvatar!);
     } catch (error) {
-      
       if (error instanceof CustomError) {
         throw error;
       }
@@ -92,7 +88,6 @@ export class CandidateService implements ICandidateService {
       const resumeUrl = await generateSignedUrl(candidate.resumeKey);
       return CandidateMapper.toResponse(candidate, avatarUrl!, resumeUrl!);
     } catch (error) {
-      
       if (error instanceof CustomError) {
         throw error;
       }
@@ -113,25 +108,29 @@ export class CandidateService implements ICandidateService {
       mockInterviewDeadline: Date | string;
     }[]
   > {
-    
     const delegations =
       await this._delegatedCandidateRepository.getDelegatedJobsByCandidateId(
         candidateId
       );
 
     if (!delegations || delegations.length === 0) {
-      return []
+      return [];
     }
 
     const response = delegations.map((dc) => {
       const job = dc.job as IJob;
       const company = dc.company as ICompany;
-
+      const mockStatus =
+        dc.status === "in_interview_process"
+          ? "mock_completed"
+          : dc.status === "shortlisted"
+            ? "mock_completed"
+            : dc.status;
       return {
         delegatedCandidateId: dc._id as string,
         job: JobMapper.toSummary(job),
         companyName: company.name,
-        mockStatus: dc.status,
+        mockStatus,
         isQualifiedForFinal: dc.isQualifiedForFinal as boolean,
         mockInterviewDeadline: dc.mockInterviewDeadline as Date | string,
       };

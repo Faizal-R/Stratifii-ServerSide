@@ -20,6 +20,27 @@ export class InterviewRepository
       .populate("candidate")
       .populate("job")
       .populate("interviewer")
-      .populate("bookedBy")
+      .populate("bookedBy");
+  }
+  async getCompletedInterviewsPerMonth(): Promise<
+    {
+      _id: number;
+      numberOfInterviews: number;
+    }[]
+  > {
+    return await this.model.aggregate([
+      {
+        $match: { status: "completed" },
+      },
+      {
+        $group: {
+          _id: { $month: "$createdAt" },
+          numberOfInterviews: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+    ]);
   }
 }

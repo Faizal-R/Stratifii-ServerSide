@@ -13,7 +13,7 @@ export interface IAdminService{
     getAllInterivewers(status: string): Promise<InterviewerResponseDTO[] | []>
     updateInterviewerStatus(interviewerId:string):Promise<InterviewerResponseDTO|null>
 
-    handleCompanyVerification(companyId:string,isApproved:boolean,reasonForRejection?:string): Promise<CompanyResponseDTO|null>
+    handleCompanyVerification(companyId:string,isApproved:boolean,reasonForRejection?:string,isPermanentBan?:boolean): Promise<CompanyResponseDTO|null>
     handleInterviewerVerification(interviewerId:string,isApproved:boolean,interviewerName:string,interviewerEmail:string,reasonForRejection?:string): Promise<InterviewerResponseDTO|null>
 
     getAdminDashboard(): Promise<{
@@ -38,6 +38,10 @@ export interface IAdminService{
       name: string;
       value: number;
     }[];
+    interviewTrends:{
+      month:string;
+      interviews: number;
+    }[]
      recentCompanies:CompanyBasicDTO[]
   }>
 }

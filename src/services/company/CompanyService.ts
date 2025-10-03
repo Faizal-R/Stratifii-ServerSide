@@ -22,6 +22,8 @@ import { IDelegatedCandidate } from "../../models/candidate/DelegatedCandidate";
 import { IPaymentTransactionRepository } from "../../repositories/payment/IPaymentTransactionRepository";
 import { IPaymentTransaction } from "../../models/payment/PaymentTransaction";
 import { generateSignedUrl, uploadFileToS3 } from "../../helper/s3Helper";
+import { ISubscriptionRecordRepository } from "../../repositories/subscription/subscription-record/ISubscriptionRecordRepository";
+import { convertNumberToMonth } from "../../utils/convertNumberToMonth";
 
 @injectable()
 export class CompanyService implements ICompanyService {
@@ -35,7 +37,9 @@ export class CompanyService implements ICompanyService {
     @inject(DI_TOKENS.REPOSITORIES.JOB_REPOSITORY)
     private readonly _jobRepository: IJobRepository,
     @inject(DI_TOKENS.REPOSITORIES.PAYMENT_TRANSACTION_REPOSITORY)
-    private readonly _paymentTransactionRepository: IPaymentTransactionRepository
+    private readonly _paymentTransactionRepository: IPaymentTransactionRepository,
+    @inject(DI_TOKENS.REPOSITORIES.SUBSCRIPTION_RECORD_REPOSITORY)
+    private readonly _subscriptionRecordRepository: ISubscriptionRecordRepository
   ) {}
 
   async getCompanyProfile(
@@ -118,6 +122,11 @@ export class CompanyService implements ICompanyService {
     jobs: IJob[];
     candidates: IDelegatedCandidate[];
     payments: IPaymentTransaction[];
+    monthlySpend:{
+      month:string;
+      subscription:number;
+      interviews:number
+    }[]
   }> {
 
       const jobs = await this._jobRepository.find({ company: companyId });
@@ -127,11 +136,25 @@ export class CompanyService implements ICompanyService {
       const payments = await this._paymentTransactionRepository.find({
         company: companyId,
       });
-
+      const spendsOnSubscription=await this._subscriptionRecordRepository.getTotalSubscriptionRevenueOfCompanyWithMonth(companyId);
+      console.log("spendsOnSubscripion",spendsOnSubscription)
+      const amountSpendOnInterviews= await this._paymentTransactionRepository.getCompaniesTotalAmountSpendOnInterviewsPerMonth(companyId)
+      console.log("amountSpendOnInterviews",amountSpendOnInterviews)
+      const monthlySpendOnSubscriptionAndInterviews=[]
+      for(let i=1;i<=12;i++){
+        monthlySpendOnSubscriptionAndInterviews.push({
+          month:convertNumberToMonth(i),
+          subscription:spendsOnSubscription.find((item)=>item._id===i)?.totalRevenue||0,
+           interviews:amountSpendOnInterviews.find((item)=>item._id===i)?.totalRevenue||0
+        })
+      }
+     console.log("monthlySpendOnSubscriptionAndInterviews",monthlySpendOnSubscriptionAndInterviews)
+     
       return {
         jobs,
         candidates,
         payments,
+        monthlySpend:monthlySpendOnSubscriptionAndInterviews
       };
     
   }

@@ -16,24 +16,27 @@ export class AdminRepository
   implements IAdminRepository
 {
   constructor(
-  @inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)  private _companyRepository: ICompanyRepository,
-  @inject(DI_TOKENS.REPOSITORIES.INTERVIEWER_REPOSITORY)  private _interviewerRepository: IInterviewerRepository
+    @inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)
+    private _companyRepository: ICompanyRepository,
+    @inject(DI_TOKENS.REPOSITORIES.INTERVIEWER_REPOSITORY)
+    private _interviewerRepository: IInterviewerRepository
   ) {
     super(Admin);
   }
   async updateInterviewerStatus(interviewerId: string) {
-    const interviewer = await this._interviewerRepository.findById(interviewerId);
+    const interviewer =
+      await this._interviewerRepository.findById(interviewerId);
     if (!interviewer) throw new Error("interviewer not found");
 
     return this._interviewerRepository.update(interviewerId, {
       isBlocked: !interviewer.isBlocked,
     });
   }
-  async getAllCompanies(status:string): Promise<ICompany[] | []> {
-    return await this._companyRepository.find({status});
+  async getAllCompanies(status: string): Promise<ICompany[] | []> {
+    return await this._companyRepository.find({ status });
   }
-  async getAllInterviewers(status:string): Promise<IInterviewer[] | []> {
-    return await this._interviewerRepository.find({status});
+  async getAllInterviewers(status: string): Promise<IInterviewer[] | []> {
+    return await this._interviewerRepository.find({ status });
   }
 
   async findByEmail(email: string): Promise<IAdmin | null> {
@@ -49,52 +52,59 @@ export class AdminRepository
     });
   }
 
-  async updateCompanyVerificationStatus(companyId: string, isApproved: boolean): Promise<ICompany | null> {
+  async updateCompanyVerificationStatus(
+    companyId: string,
+    isApproved: boolean,
+    isPermanentBan?: boolean
+  ): Promise<ICompany | null> {
     try {
-      const existingCompany = await this._companyRepository.findById(companyId);
-      if (!existingCompany) {
-         throw new CustomError("Company not found", 404);
-        
-      }
-      const updatedCompany = await this._companyRepository.update(
-        companyId,
-        { status: isApproved ? 'approved' : 'rejected' }
-      );
-  
+      const updatedCompany = await this._companyRepository.update(companyId, {
+        status: isApproved ? "approved" : "rejected",
+        resubmissionPeriod: isApproved
+          ? null
+          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        isBannedPermanently: isPermanentBan,
+      });
+
       return updatedCompany ?? null;
     } catch (error) {
-      if(error instanceof CustomError){
+      if (error instanceof CustomError) {
         throw error;
       }
-      throw new CustomError("Error updating Company verification status:", 500);
-      
+      throw new CustomError("Error updating Company verification status:", HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-  async updateInterviewerVerificationStatus(interviewerId: string, isApproved: boolean): Promise<IInterviewer | null> {
+  async updateInterviewerVerificationStatus(
+    interviewerId: string,
+    isApproved: boolean,
+    isPermanentBan?: boolean
+  ): Promise<IInterviewer | null> {
     try {
-      const existingInterviewer = await this._interviewerRepository.findById(interviewerId);
+      const existingInterviewer =
+        await this._interviewerRepository.findById(interviewerId);
       if (!existingInterviewer) {
-         throw new CustomError("Interviewer not found", HttpStatus.NOT_FOUND);
-       
+        throw new CustomError("Interviewer not found", HttpStatus.NOT_FOUND);
       }
       const updatedInterviewer = await this._interviewerRepository.update(
         interviewerId,
-        { status: isApproved ? 'approved' : 'rejected' ,
-        resubmissionPeriod : isApproved ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-
+        {
+          status: isApproved ? "approved" : "rejected",
+          resubmissionPeriod: isApproved
+            ? null
+            : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          isBannedPermanently: isPermanentBan,
         }
-        
       );
-  
+
       return updatedInterviewer ?? null;
     } catch (error) {
-      if(error instanceof CustomError){
+      if (error instanceof CustomError) {
         throw error;
       }
-      throw new CustomError("Error updating Interviewer verification status:", 500);
-  
+      throw new CustomError(
+        "Error updating Interviewer verification status:",
+       HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
-  
-  
 }

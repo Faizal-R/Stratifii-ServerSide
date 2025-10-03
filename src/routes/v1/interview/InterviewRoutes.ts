@@ -31,4 +31,11 @@ router.get('/candidate/:candidateId',verifyToken,
   checkRole([Roles.INTERVIEWER]),
   interviewController.getAllInterviewsByCandidateId.bind(interviewController))
 
+  router.patch("/complete-process/:delegatedCandidateId",
+  verifyToken,
+  checkBlockedUser,
+  checkRole([Roles.COMPANY]),
+  interviewController.completeCandidateInterviewProcess.bind(interviewController)
+)
+
 export default router;

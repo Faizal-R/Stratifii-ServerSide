@@ -36,6 +36,7 @@ import {
 import { generateSignedUrl } from "../../helper/s3Helper";
 import { InterviewerResponseDTO } from "../../dto/response/interviewer/InterviewerResponseDTO";
 import { InterviewerMapper } from "../../mapper/interviewer/InterviewerMapper";
+import { IInterviewRepository } from "../../repositories/interview/IInterviewRepository";
 
 @injectable()
 export class AdminService implements IAdminService {
@@ -49,8 +50,10 @@ export class AdminService implements IAdminService {
     @inject(DI_TOKENS.REPOSITORIES.INTERVIEWER_REPOSITORY)
     private readonly _interviewerRepository: IInterviewerRepository,
     @inject(DI_TOKENS.REPOSITORIES.COMPANY_REPOSITORY)
-    private readonly _companyRepository: ICompanyRepository
-  ) {}
+    private readonly _companyRepository: ICompanyRepository,
+    @inject(DI_TOKENS.REPOSITORIES.INTERVIEW_REPOSITORY)
+    private readonly _interviewRepository: IInterviewRepository
+  ) { }
   async getAllCompanies(status: string): Promise<CompanyResponseDTO[]> {
     try {
       const companies = await this._adminRepository.getAllCompanies(status);
@@ -76,13 +79,13 @@ export class AdminService implements IAdminService {
     }
   }
 
-  async getAllInterivewers(status: string): Promise<InterviewerResponseDTO[]|[]> {
+  async getAllInterivewers(status: string): Promise<InterviewerResponseDTO[] | []> {
     try {
       const interviewers =
         await this._adminRepository.getAllInterviewers(status);
 
       if (!interviewers || interviewers.length === 0) {
-       return []
+        return []
       }
 
       const mappedInterviewersWithResumeAttached = await Promise.all(
@@ -112,8 +115,8 @@ export class AdminService implements IAdminService {
     try {
       const admin = await this._adminRepository.findByEmail(email);
       const isPassMatch = admin?.password === password;
-      
-      
+
+
       if (!admin || !isPassMatch) {
         throw new CustomError(
           "Incorrect Email or password",
@@ -132,7 +135,7 @@ export class AdminService implements IAdminService {
       });
       return { accessToken, refreshToken };
     } catch (error) {
-      
+
       if (error instanceof CustomError) {
         throw error;
       }
@@ -164,7 +167,7 @@ export class AdminService implements IAdminService {
     try {
       const updatedInviewer =
         await this._adminRepository.updateInterviewerStatus(interviewerId);
-      return InterviewerMapper.toResponse(updatedInviewer!,'',null);
+      return InterviewerMapper.toResponse(updatedInviewer!, '', null);
     } catch (error) {
       if (error instanceof CustomError) throw error;
       throw new CustomError(
@@ -177,13 +180,15 @@ export class AdminService implements IAdminService {
   async handleCompanyVerification(
     companyId: string,
     isApproved: boolean,
-    reasonForRejection?: string
+    reasonForRejection?: string,
+    isPermanentBan?: boolean
   ): Promise<CompanyResponseDTO | null> {
     try {
       const updatedCompany =
         await this._adminRepository.updateCompanyVerificationStatus(
           companyId,
-          isApproved
+          isApproved,
+          isPermanentBan as boolean
         );
       if (!isApproved) {
         const htmlContent = companyAccountRejectionHtml(
@@ -206,7 +211,7 @@ export class AdminService implements IAdminService {
         );
       }
 
-      return CompanyMapper.toResponse(updatedCompany as ICompany,null);
+      return CompanyMapper.toResponse(updatedCompany as ICompany, null);
     } catch (error) {
       if (error instanceof CustomError) throw error;
       throw new CustomError(
@@ -220,13 +225,15 @@ export class AdminService implements IAdminService {
     isApproved: boolean,
     interviewerName: string,
     interviewerEmail: string,
-    reasonForRejection?: string
+    reasonForRejection?: string,
+    isPermanentBan?: boolean
   ): Promise<InterviewerResponseDTO | null> {
     try {
       const updatedInterviewer =
         await this._adminRepository.updateInterviewerVerificationStatus(
           interviewerId,
-          isApproved
+          isApproved,
+          isPermanentBan as boolean
         );
       if (!isApproved) {
         const htmlContent = interviewerAccountRejectionHtml(
@@ -247,7 +254,7 @@ export class AdminService implements IAdminService {
           "Account Verification Status"
         );
       }
-      return InterviewerMapper.toResponse(updatedInterviewer as IInterviewer,'',null);
+      return InterviewerMapper.toResponse(updatedInterviewer as IInterviewer, '', null);
     } catch (error) {
       if (error instanceof CustomError) throw error;
       throw new CustomError(
@@ -278,6 +285,11 @@ export class AdminService implements IAdminService {
       name: string;
       value: number;
     }[];
+    interviewTrends: {
+      month: string;
+      interviews: number;
+    }[]
+
     recentCompanies: CompanyBasicDTO[];
   }> {
     const activeCompanies = (
@@ -299,7 +311,7 @@ export class AdminService implements IAdminService {
       await this._subscriptionRecordRepository.getTotalSubscriptionRevenueWithMonth();
     const interviewRevenue =
       await this._paymentTransactionRepository.getTotalRevenueFromInterviewWithMonth();
-    
+
     const monthlyRevenue = [];
     for (let i = 1; i <= 12; i++) {
       monthlyRevenue.push({
@@ -313,7 +325,7 @@ export class AdminService implements IAdminService {
           (interviewRevenue.find((r) => r._id === i)?.totalRevenue || 0),
       });
     }
-    
+
 
     const getInterviewersWithJoinedMonth =
       await this._interviewerRepository.getInterviewersWithJoinedMonth();
@@ -336,11 +348,21 @@ export class AdminService implements IAdminService {
 
     const subscriptionDistribution =
       await this._subscriptionRecordRepository.getSubscriptionDistribution();
-    
+
 
     const recentCompanies = await this._companyRepository.find({}, 5, {
       createdAt: -1,
     });
+    const completedInterviesPerMonth = await this._interviewRepository.getCompletedInterviewsPerMonth();
+    const monthlyCompletedInterviews = []
+    for (let i = 1; i <= 12; i++) {
+      monthlyCompletedInterviews.push({
+        month: convertNumberToMonth(i),
+        interviews:
+          completedInterviesPerMonth.find((r) => r._id === i)
+            ?.numberOfInterviews || 0,
+      });
+    }
 
     const recentCompanyWithLogoAttached = await Promise.all(
       recentCompanies.map(async (company) => {
@@ -359,6 +381,7 @@ export class AdminService implements IAdminService {
       monthlyUserGrowth,
       subscriptionDistribution,
       recentCompanies: recentCompanyWithLogoAttached,
+      interviewTrends: monthlyCompletedInterviews
     };
   }
 }

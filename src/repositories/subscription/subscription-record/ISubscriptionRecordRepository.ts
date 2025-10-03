@@ -6,4 +6,7 @@ export interface ISubscriptionRecordRepository
       getSubscriptionRecordDetailsByCompanyId(companyId: string): Promise<ISubscriptionRecord | null>
        getTotalSubscriptionRevenueWithMonth():Promise<{_id: number; totalRevenue: number}[]>
        getSubscriptionDistribution():Promise<{name: string; value: number}[]>
+       getTotalSubscriptionRevenueOfCompanyWithMonth(companyId:string): Promise<
+    { _id: number; totalRevenue: number }[]
+  >
   }

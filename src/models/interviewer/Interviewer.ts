@@ -53,6 +53,7 @@ export interface IInterviewer extends Document {
   resubmissionPeriod?:string|null;
   resubmissionNotes:string;
   resubmissionCount:number;
+   isBannedPermanently:boolean ;
   createdAt: Date;
   updatedAt?: Date;
 }
@@ -161,6 +162,7 @@ const interviewerSchema: Schema = new Schema(
       type: String,
       default: null,
     },
+     isBannedPermanently: { type: Boolean, default: false },
     resubmissionPeriod:{
       type:Date,
       default:null

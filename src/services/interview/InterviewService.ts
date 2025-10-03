@@ -19,9 +19,10 @@ import { Types } from "mongoose";
 import { IJob } from "../../models/job/Job";
 import { ICandidate } from "../../models/candidate/Candidate";
 import { generateSignedUrl } from "../../helper/s3Helper";
-import { CandidateMapper } from "../../mapper/candidate/CandidateMapper";
 import { InterviewResponseDTO } from "../../dto/response/interview/InterviewResponseDTO";
 import { InterviewMapper } from "../../mapper/interview/InterviewMapper";
+import { DelegatedCandidateMapper } from "../../mapper/candidate/DelegatedCandidateMapper";
+import { DelegatedCandidateForCompanyDTO } from "../../dto/response/candidate/DelegatedCandidateResponseDTO";
 
 @injectable()
 export class InterviewService implements IInterviewService {
@@ -130,20 +131,26 @@ export class InterviewService implements IInterviewService {
           interviewer: interviewerId,
         });
       const mappedCandidatesInInterviews = await Promise.all(
-        upcomingInterviews.map(async (interview: IInterview) => {
-          const candidate = interview.candidate as ICandidate;
-          const candidateAvatarUrl = await generateSignedUrl(
-            candidate.avatarKey as string
-          );
-          const candidateResumeUrl = await generateSignedUrl(
-            candidate.resumeKey
-          );
-          return InterviewMapper.toResponse(
-            interview,
-            candidateResumeUrl as string,
-            candidateAvatarUrl as string
-          );
-        })
+        upcomingInterviews
+          .filter((interview) => {
+            const currentDate = new Date();
+            const interviewDate = new Date(interview.startTime);
+            return interviewDate > currentDate;
+          })
+          .map(async (interview: IInterview) => {
+            const candidate = interview.candidate as ICandidate;
+            const candidateAvatarUrl = await generateSignedUrl(
+              candidate.avatarKey as string
+            );
+            const candidateResumeUrl = await generateSignedUrl(
+              candidate.resumeKey
+            );
+            return InterviewMapper.toResponse(
+              interview,
+              candidateResumeUrl as string,
+              candidateAvatarUrl as string
+            );
+          })
       );
       return mappedCandidatesInInterviews ?? [];
     } catch {
@@ -235,12 +242,14 @@ export class InterviewService implements IInterviewService {
     }
   }
 
-  async getScheduledInterviews(candidateId: string): Promise<InterviewResponseDTO[]> {
+  async getScheduledInterviews(
+    candidateId: string
+  ): Promise<InterviewResponseDTO[]> {
     try {
       const interviews = await this._interviewRepository.getInterviewDetails({
         candidate: candidateId,
       });
-       const mappedCandidatesInInterviews = await Promise.all(
+      const mappedCandidatesInInterviews = await Promise.all(
         interviews.map(async (interview: IInterview) => {
           const candidate = interview.candidate as ICandidate;
           const candidateAvatarUrl = await generateSignedUrl(
@@ -267,13 +276,13 @@ export class InterviewService implements IInterviewService {
 
   async getAllInterviewsByCandidateId(
     candidateId: string
-  ): Promise<InterviewResponseDTO []> {
+  ): Promise<InterviewResponseDTO[]> {
     try {
       const interviews = await this._interviewRepository.getInterviewDetails({
         candidate: candidateId,
         status: { $eq: "completed" },
       });
-       const mappedCandidatesInInterviews = await Promise.all(
+      const mappedCandidatesInInterviews = await Promise.all(
         interviews.map(async (interview: IInterview) => {
           const candidate = interview.candidate as ICandidate;
           const candidateAvatarUrl = await generateSignedUrl(
@@ -294,6 +303,33 @@ export class InterviewService implements IInterviewService {
     } catch {
       throw new CustomError(
         "Failed to fetch completed interviews for the candidate.",
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+  async completeCandidateInterviewProcess(
+    delegatedCandidateId: string
+  ): Promise<void> {
+    try {
+      const updatedDelegatedCandidate =
+        await this._delegatedCandidateRepository.update(delegatedCandidateId, {
+          status: "shortlisted",
+        });
+      if (!updatedDelegatedCandidate) {
+        throw new CustomError(
+          "Delegated candidate not found.",
+          HttpStatus.NOT_FOUND
+        );
+      }
+      // return DelegatedCandidateMapper.toShowCompany(
+      //   updatedDelegatedCandidate,
+      //   "",
+      //   ""
+      // );
+    } catch (error) {
+      if (error instanceof CustomError) throw error;
+      throw new CustomError(
+        "Failed to complete candidate interview process.",
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }

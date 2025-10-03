@@ -21,8 +21,6 @@ export class AdminController implements IAdminController {
   constructor(
     @inject(DI_TOKENS.SERVICES.ADMIN_SERVICE)
     private readonly _adminService: IAdminService,
-   @inject(DI_TOKENS.SERVICES.PAYOUT_SERVICE)
-   private readonly _payoutService: IPayoutService
   ) {}
   async signin(request: Request, response: Response): Promise<void> {
     try {
@@ -150,7 +148,7 @@ export class AdminController implements IAdminController {
     const companyId = request.params.companyId;
     const isApproved = request.body.isApproved;
     const reasonForRejection = request.body.reasonForRejection;
-    
+    const isPermanentBan = request.body.isPermanentBan;
 
     if (!companyId) {
       return createResponse(
@@ -165,7 +163,8 @@ export class AdminController implements IAdminController {
       const updatedCompany = await this._adminService.handleCompanyVerification(
         companyId,
         isApproved,
-        reasonForRejection
+        reasonForRejection,
+        isPermanentBan
       );
       return createResponse(
         response,

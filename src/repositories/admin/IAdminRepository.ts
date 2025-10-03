@@ -12,7 +12,7 @@ export interface IAdminRepository extends IBaseRepository<IAdmin> {
   getAllInterviewers(status:string): Promise<IInterviewer[] | []>;
   updateInterviewerStatus(interviewerId: string): Promise<IInterviewer | null>;
 
-  updateCompanyVerificationStatus(companyId:string,isApproved:boolean): Promise<ICompany | null>;
-  updateInterviewerVerificationStatus(interviewerId:string,isApproved:boolean): Promise<IInterviewer | null>;
+  updateCompanyVerificationStatus(companyId:string,isApproved:boolean,isPermanentBan:boolean): Promise<ICompany | null>;
+  updateInterviewerVerificationStatus(interviewerId:string,isApproved:boolean,isPermanentBan?:boolean): Promise<IInterviewer | null>;
   
 }
