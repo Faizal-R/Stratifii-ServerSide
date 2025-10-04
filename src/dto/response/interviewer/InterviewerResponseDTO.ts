@@ -39,7 +39,6 @@ export interface InterviewerResponseDTO {
   resubmissionCount: number;
   createdAt: string;
   updatedAt?: string;
-
 }
 
 

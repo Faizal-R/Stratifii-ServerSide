@@ -51,10 +51,12 @@ export class InterviewService implements IInterviewService {
           HttpStatus.NOT_FOUND
         );
       }
+      console.log("here", delegation);
+
 
       const { position, experienceRequired, requiredSkills, description } =
         delegation.job as IJob;
-      if (!position || !experienceRequired || !requiredSkills || !description) {
+      if (!position  || !requiredSkills || !description) {
         throw new CustomError(
           "Incomplete job details for mock question generation.",
           HttpStatus.BAD_REQUEST
@@ -132,11 +134,6 @@ export class InterviewService implements IInterviewService {
         });
       const mappedCandidatesInInterviews = await Promise.all(
         upcomingInterviews
-          .filter((interview) => {
-            const currentDate = new Date();
-            const interviewDate = new Date(interview.startTime);
-            return interviewDate > currentDate;
-          })
           .map(async (interview: IInterview) => {
             const candidate = interview.candidate as ICandidate;
             const candidateAvatarUrl = await generateSignedUrl(
