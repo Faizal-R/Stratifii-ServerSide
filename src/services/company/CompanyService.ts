@@ -67,6 +67,7 @@ export class CompanyService implements ICompanyService {
     companyLogoFile?: Express.Multer.File
   ): Promise<CompanyResponseDTO | null> {
     try {
+      console.log("company",company)
       if (companyLogoFile) {
         const companyLogoKey = await uploadFileToS3(companyLogoFile);
         company.companyLogoKey = companyLogoKey;

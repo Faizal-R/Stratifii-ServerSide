@@ -38,18 +38,12 @@ export class CompanyController implements ICompanyController {
     try {
       const companyId = request.user?.userId;
       let company;
-
-      if (request.body) {
-        //resubmission companydata
-        company = request.body;
-      } else {
-        //company profile data
-        company = JSON.parse(request.body.company);
-      }
+      company = JSON.parse(request.body.company);
       const validatedCompany = CompanyProfileSchema.safeParse(company);
       const companyLogoFile = request.file;
 
       if (!validatedCompany.success) {
+        console.log(validatedCompany.error);
         return createResponse(
           response,
           HttpStatus.BAD_REQUEST,

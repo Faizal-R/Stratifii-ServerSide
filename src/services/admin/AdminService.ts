@@ -54,15 +54,12 @@ export class AdminService implements IAdminService {
     @inject(DI_TOKENS.REPOSITORIES.INTERVIEW_REPOSITORY)
     private readonly _interviewRepository: IInterviewRepository
   ) { }
-  async getAllCompanies(status: string): Promise<CompanyResponseDTO[]> {
+  async getAllCompanies(status: string): Promise<CompanyResponseDTO[]|[]> {
     try {
       const companies = await this._adminRepository.getAllCompanies(status);
 
       if (!companies || companies.length === 0) {
-        throw new CustomError(
-          `No companies found with status: ${status}`,
-          HttpStatus.NOT_FOUND
-        );
+     return []
       }
 
       return companies.map((company: ICompany) =>

@@ -26,9 +26,9 @@ export interface ICompany extends Document {
   };
 
   resubmissionPeriod?: string | null;
-  resubmissionNotes: string;
+  resubmissionNote: string | null;
   resubmissionCount: number;
- isBannedPermanently: boolean
+  isBannedPermanently: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -108,7 +108,7 @@ const CompanySchema: Schema = new Schema(
       type: Date,
       default: null,
     },
-    resubmissionNotes: {
+    resubmissionNote: {
       type: String,
       default: null,
     },
