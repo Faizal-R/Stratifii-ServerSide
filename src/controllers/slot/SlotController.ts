@@ -52,7 +52,6 @@ async createSlotGenerationRule(
       const slots = await this._slotService.createSlotGenerationRule({
         ...ruleData,
         interviewerId,
-        duration: ruleData.slotDuration,
       });
       return createResponse(
         response,
