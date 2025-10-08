@@ -53,7 +53,6 @@ async createSlotGenerationRule(
         ...ruleData,
         interviewerId,
         duration: ruleData.slotDuration,
-        buffer: ruleData.bufferRate,
       });
       return createResponse(
         response,

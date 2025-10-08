@@ -93,6 +93,7 @@ export class SlotService implements ISlotService {
     interviewerId: string,
     ruleData: ISlotGenerationRule
   ): Promise<{ rule: ISlotGenerationRule | null; slots: IInterviewSlot[] }> {
+    console.log("ruleData",ruleData)
     try {
       const existingRule = await this._slotGenerationRepository.findOne({
         interviewerId,
