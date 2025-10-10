@@ -3,6 +3,7 @@ import { ICandidate } from "../candidate/Candidate";
 import { ICompany } from "../company/Company";
 import { IJob } from "../job/Job";
 import { IInterviewer } from "../interviewer/Interviewer";
+import { Roles } from "../../constants/enums/roles";
 
 export interface IInterviewFeedback {
   technicalScore?: number;
@@ -20,7 +21,7 @@ export interface IInterviewFeedback {
 }
 
 export interface IInterview extends Document {
-  _id: string|Types.ObjectId;
+  _id: string | Types.ObjectId;
   candidate: string | ICandidate;
   interviewer: string | IInterviewer;
   bookedBy: string | ICompany;
@@ -28,14 +29,14 @@ export interface IInterview extends Document {
 
   startTime: Date;
   endTime: Date;
-  duration: number; // planned duration (minutes)
+  duration: number;
   actualDuration?: number;
   bufferDuration?: number;
 
   status: "booked" | "completed" | "cancelled" | "rescheduled" | "no_show";
 
   meetingLink?: string;
-  rescheduledFrom?: Types.ObjectId|null;
+  rescheduledFrom?: Types.ObjectId | null;
   cancellationReason?: string;
 
   isRecorded: boolean;
@@ -45,6 +46,9 @@ export interface IInterview extends Document {
 
   payoutStatus: "pending" | "paid";
 
+  noShowBy?: Roles.CANDIDATE | Roles.INTERVIEWER | null;
+  noShowAt?: Date;
+  
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -92,6 +96,12 @@ const InterviewSchema = new Schema<IInterview>(
       needsFollowUp: { type: Boolean, default: false },
       suggestedFocusAreas: [{ type: String }],
     },
+    noShowBy: {
+      type: String,
+      enum: [Roles.CANDIDATE, Roles.INTERVIEWER, null],
+      default: null,
+    },
+    noShowAt: { type: Date },
 
     payoutStatus: {
       type: String,

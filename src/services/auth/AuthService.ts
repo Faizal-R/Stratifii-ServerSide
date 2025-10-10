@@ -29,7 +29,7 @@ import { IAuthService } from "./IAuthService";
 import jwt from "jsonwebtoken";
 import { AccessTokenPayload, RefreshTokenPayload } from "../../types/token";
 
-import { otpVerificationHtml, wrapHtml } from "../../helper/wrapHtml";
+import { otpVerificationHtml, wrapHtml } from "../../helper/htmlWrapper";
 import { AUTH_MESSAGES } from "../../constants/messages/AuthMessages";
 import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 import { VALIDATION_MESSAGES } from "../../constants/messages/ValidationMessages";

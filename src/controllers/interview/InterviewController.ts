@@ -5,6 +5,7 @@ import { IInterviewService } from "../../services/interview/IInterviewService";
 import { Request, Response } from "express";
 import { createResponse, errorResponse } from "../../helper/responseHandler";
 import { HttpStatus } from "../../config/HttpStatusCodes";
+import { Roles } from "../../constants/enums/roles";
 @injectable()
 export class InterviewController implements IInterviewController {
   constructor(
@@ -94,4 +95,23 @@ export class InterviewController implements IInterviewController {
       errorResponse(response, error);
     }
   }
+
+   async handleNoShowInterview(request: Request, response: Response): Promise<void> {
+     const interviewId = request.params.interviewId;
+     const noShowBy = request.body.noShowBy;
+     try {
+       const delegatedCandidate =
+         await this._interviewService.handleNoShowInterview(interviewId,noShowBy);
+       return createResponse(
+         response,
+         HttpStatus.OK,
+         true,
+         noShowBy===Roles.CANDIDATE?"This Interview Marked as No Show And Your Interview Will Be Reschedule Soon ":"Interview Marked as No Show Successfully",
+         delegatedCandidate
+       );
+     } catch (error) {
+       errorResponse(response, error);
+     }
+   }
+
 }

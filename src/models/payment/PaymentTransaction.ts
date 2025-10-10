@@ -1,8 +1,9 @@
 import { Schema, model, Types, Document } from "mongoose";
+import { IJob } from "../job/Job";
 
 export interface IPaymentTransaction extends Document {
   company: Types.ObjectId;
-  job: Types.ObjectId;
+  job: Types.ObjectId|IJob;
   candidatesCount: number;
   pricePerInterview: number;
   totalAmount: number;

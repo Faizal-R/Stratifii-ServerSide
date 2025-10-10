@@ -34,4 +34,6 @@ export interface IInterviewService {
   completeCandidateInterviewProcess(
     delegatedCandidateId: string
   ): Promise<void>;
+
+  handleNoShowInterview(interviewId:string,noShowBy:string):Promise<IInterview>
 }

@@ -43,7 +43,7 @@ export class CompanyController implements ICompanyController {
       const companyLogoFile = request.file;
 
       if (!validatedCompany.success) {
-        console.log(validatedCompany.error);
+
         return createResponse(
           response,
           HttpStatus.BAD_REQUEST,
@@ -108,7 +108,7 @@ export class CompanyController implements ICompanyController {
       const dashboardData = await this._companyService.getCompanyDashboard(
         companyId!
       );
-      console.log("dashboardData", dashboardData.monthlySpend);
+
 
       return createResponse(
         response,
@@ -119,6 +119,29 @@ export class CompanyController implements ICompanyController {
       );
     } catch (error) {
       errorResponse(response, error);
+    }
+  }
+
+  async getCompanyPaymentHistory(
+    request: Request,
+    response: Response
+  ): Promise<void> {
+    try {
+      const companyId = request.params.companyId;
+
+
+      const paymentHistory =
+       await this._companyService.getCompanyPaymentHistory(companyId);
+ 
+      return createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        "Company payment history fetched successfully",
+        paymentHistory
+      );
+    } catch (error) {
+      return errorResponse(response, error);
     }
   }
 }

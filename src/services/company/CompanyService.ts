@@ -24,6 +24,10 @@ import { IPaymentTransaction } from "../../models/payment/PaymentTransaction";
 import { generateSignedUrl, uploadFileToS3 } from "../../helper/s3Helper";
 import { ISubscriptionRecordRepository } from "../../repositories/subscription/subscription-record/ISubscriptionRecordRepository";
 import { convertNumberToMonth } from "../../utils/convertNumberToMonth";
+import { ISubscriptionRecord } from "../../models/subscription/SubscriptionRecord";
+import { JobMapper } from "../../mapper/job/JobMapper";
+import { PaymentTransactionBasicDTO } from "../../dto/response/payment/PaymentTransactionDTO";
+import { PaymentMapper } from "../../mapper/payment/PaymentMapper";
 
 @injectable()
 export class CompanyService implements ICompanyService {
@@ -67,7 +71,7 @@ export class CompanyService implements ICompanyService {
     companyLogoFile?: Express.Multer.File
   ): Promise<CompanyResponseDTO | null> {
     try {
-      console.log("company",company)
+   
       if (companyLogoFile) {
         const companyLogoKey = await uploadFileToS3(companyLogoFile);
         company.companyLogoKey = companyLogoKey;
@@ -123,40 +127,98 @@ export class CompanyService implements ICompanyService {
     jobs: IJob[];
     candidates: IDelegatedCandidate[];
     payments: IPaymentTransaction[];
-    monthlySpend:{
-      month:string;
-      subscription:number;
-      interviews:number
-    }[]
+    monthlySpend: {
+      month: string;
+      subscription: number;
+      interviews: number;
+    }[];
   }> {
+    const jobs = await this._jobRepository.find({ company: companyId });
+    const candidates = await this._delegatedCandidateRepository.find({
+      company: companyId,
+    });
+    const payments = await this._paymentTransactionRepository.find({
+      company: companyId,
+    });
+    const spendsOnSubscription =
+      await this._subscriptionRecordRepository.getTotalSubscriptionRevenueOfCompanyWithMonth(
+        companyId
+      );
+  
+    const amountSpendOnInterviews =
+      await this._paymentTransactionRepository.getCompaniesTotalAmountSpendOnInterviewsPerMonth(
+        companyId
+      );
+   
+    const monthlySpendOnSubscriptionAndInterviews = [];
+    for (let i = 1; i <= 12; i++) {
+      monthlySpendOnSubscriptionAndInterviews.push({
+        month: convertNumberToMonth(i),
+        subscription:
+          spendsOnSubscription.find((item) => item._id === i)?.totalRevenue ||
+          0,
+        interviews:
+          amountSpendOnInterviews.find((item) => item._id === i)
+            ?.totalRevenue || 0,
+      });
+    }
+  
+ 
 
-      const jobs = await this._jobRepository.find({ company: companyId });
-      const candidates = await this._delegatedCandidateRepository.find({
-        company: companyId,
-      });
-      const payments = await this._paymentTransactionRepository.find({
-        company: companyId,
-      });
-      const spendsOnSubscription=await this._subscriptionRecordRepository.getTotalSubscriptionRevenueOfCompanyWithMonth(companyId);
-      console.log("spendsOnSubscripion",spendsOnSubscription)
-      const amountSpendOnInterviews= await this._paymentTransactionRepository.getCompaniesTotalAmountSpendOnInterviewsPerMonth(companyId)
-      console.log("amountSpendOnInterviews",amountSpendOnInterviews)
-      const monthlySpendOnSubscriptionAndInterviews=[]
-      for(let i=1;i<=12;i++){
-        monthlySpendOnSubscriptionAndInterviews.push({
-          month:convertNumberToMonth(i),
-          subscription:spendsOnSubscription.find((item)=>item._id===i)?.totalRevenue||0,
-           interviews:amountSpendOnInterviews.find((item)=>item._id===i)?.totalRevenue||0
-        })
-      }
-     console.log("monthlySpendOnSubscriptionAndInterviews",monthlySpendOnSubscriptionAndInterviews)
+    return {
+      jobs,
+      candidates,
+      payments,
+      monthlySpend: monthlySpendOnSubscriptionAndInterviews,
+    };
+  }
+
+  async getCompanyPaymentHistory(companyId: string): Promise<{
+    subscriptionPayments: ISubscriptionRecord[];
+    interviewProcessPayments: PaymentTransactionBasicDTO[];
+    totalSpendOnInterview: number;
+    totalSpendOnSubscription?: number;
+  }> {
+    try {
+      const subscriptionPayments =
+        await this._subscriptionRecordRepository.find({
+          subscriberId: companyId,
+        });
+   
+      const interviewProcessPayments =
+        await this._paymentTransactionRepository.getPaymentTransactionsDetailsByCompanyId(
+          companyId
+        );
+
+      const mappedInterviewProcessPayments = interviewProcessPayments.map(
+        (payment: IPaymentTransaction) => {
+          return PaymentMapper.toSummary(payment);
+        }
+      );
+      const totalAmountSpendOnInterview =
+        await this._paymentTransactionRepository.getTotalAmountSpendOnInterviewsByCompany(
+          companyId
+        );
+      const totalAmountSpendOnSubscription =
+        await this._subscriptionRecordRepository.getTotalAmountSpendOnSubscriptionByCompany(
+          companyId
+        );
      
+
       return {
-        jobs,
-        candidates,
-        payments,
-        monthlySpend:monthlySpendOnSubscriptionAndInterviews
+        subscriptionPayments,
+        interviewProcessPayments: mappedInterviewProcessPayments,
+        totalSpendOnInterview: totalAmountSpendOnInterview,
+        totalSpendOnSubscription: totalAmountSpendOnSubscription,
       };
-    
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      throw new CustomError(
+        "An error occurred while fetching payment history",
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
   }
 }

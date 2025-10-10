@@ -38,4 +38,11 @@ router.get('/candidate/:candidateId',verifyToken,
   interviewController.completeCandidateInterviewProcess.bind(interviewController)
 )
 
+router.post("/no-show/:interviewId",
+  verifyToken,
+  checkBlockedUser,
+  checkRole([Roles.CANDIDATE, Roles.INTERVIEWER]),
+  interviewController.handleNoShowInterview.bind(interviewController)
+)
+
 export default router;

@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { sendEmail } from "./EmailService";
-import { createPasswordHtml } from "./wrapHtml";
+import { createPasswordHtml } from "./htmlWrapper";
 import { ICandidate } from "../models/candidate/Candidate";
 import { Roles } from "../constants/enums/roles";
 

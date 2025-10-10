@@ -9,4 +9,5 @@ export interface ISubscriptionRecordRepository
        getTotalSubscriptionRevenueOfCompanyWithMonth(companyId:string): Promise<
     { _id: number; totalRevenue: number }[]
   >
+   getTotalAmountSpendOnSubscriptionByCompany(companyId: string): Promise<number>
   }
