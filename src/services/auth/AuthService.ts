@@ -84,14 +84,7 @@ export class AuthService implements IAuthService {
   ) {}
 
   async login(authPayload: LoginRequestDTO): Promise<AuthResponseDTO> {
-    const validatedAuthPayload = LoginRequestSchema.safeParse(authPayload);
-
-    if (!validatedAuthPayload.success) {
-      const firstIssue = validatedAuthPayload.error.issues[0];
-      throw new CustomError(firstIssue.message, HttpStatus.BAD_REQUEST);
-    }
-
-    const { email, password, role } = validatedAuthPayload.data;
+    const { email, password, role } = authPayload;
 
     let user: TUserType | null | undefined;
 
@@ -193,18 +186,8 @@ export class AuthService implements IAuthService {
     company: CompanyRegisterRequestDTO
   ): Promise<AuthUserResponseDTO> {
     try {
-      const {
-        data: validatedData,
-        success,
-        error,
-      } = CompanyRegistrationSchema.safeParse(company);
-      if (!success) {
-        const firstError = error.errors[0];
-        throw new CustomError(firstError.message, HttpStatus.BAD_REQUEST);
-      }
-
       const existingCompany = await this._companyRepository.findByEmail(
-        validatedData.email
+        company.email
       );
       if (existingCompany) {
         throw new CustomError(
@@ -213,10 +196,9 @@ export class AuthService implements IAuthService {
         );
       }
 
-      validatedData.password = await hashPassword(validatedData.password);
+      company.password = await hashPassword(company.password);
 
-      const createdCompany =
-        await this._companyRepository.create(validatedData);
+      const createdCompany = await this._companyRepository.create(company);
       await this._walletRepository.create({
         userId: createdCompany._id as Types.ObjectId,
         userType: Roles.COMPANY,
@@ -239,27 +221,18 @@ export class AuthService implements IAuthService {
     interviewer: InterviewerRegisterRequestDTO,
     resume: Express.Multer.File
   ): Promise<AuthUserResponseDTO> {
-    const parsedResult = InterviewerRegisterSchema.safeParse(interviewer);
-
-    if (!parsedResult.success) {
-      const firstError = parsedResult.error.errors[0];
-      throw new CustomError(firstError.message, 400);
-    }
-
-    const validatedData = parsedResult.data;
-
     const existingUser = await this._interviewerRepository.findByEmail(
-      validatedData.email
+      interviewer.email
     );
     if (existingUser) {
       throw new CustomError(AUTH_MESSAGES.INTERVIEWER_ALREADY_EXISTS, 400);
     }
 
-    const hashedPassword = await hashPassword(validatedData.password);
-    const resumeKey= await uploadFileToS3(resume)
+    const hashedPassword = await hashPassword(interviewer.password);
+    const resumeKey = await uploadFileToS3(resume);
 
     const validatedInterviewer = {
-      ...validatedData,
+      ...interviewer,
       password: hashedPassword,
       resume: resumeKey,
       status: "pending" as TStatus,
@@ -337,12 +310,6 @@ export class AuthService implements IAuthService {
   ): Promise<void> {
     const { email, role, otp } = authenticateOTPPayload;
     try {
-      if (otp.length !== 6) {
-        throw new CustomError(
-          AUTH_MESSAGES.INVALID_OTP_FORMAT,
-          HttpStatus.BAD_REQUEST
-        );
-      }
 
       const isOtpExists = await this._otpRepository.otpExists(email);
       if (!isOtpExists) {
@@ -352,7 +319,7 @@ export class AuthService implements IAuthService {
         );
       }
       const existingOtp = await this._otpRepository.getOtp(email);
-      
+
       if (existingOtp !== otp) {
         throw new CustomError(
           AUTH_MESSAGES.INCORRECT_OTP,
@@ -431,7 +398,6 @@ export class AuthService implements IAuthService {
         user: createdInterviewer,
       });
     } catch (error) {
-      
       if (error instanceof CustomError) {
         throw error;
       } else {
@@ -505,7 +471,7 @@ export class AuthService implements IAuthService {
 
     const hashedPassword = await hashPassword(password);
     const role = decoded.role;
-    
+
     try {
       switch (role) {
         case Roles.COMPANY:
@@ -519,7 +485,7 @@ export class AuthService implements IAuthService {
           });
           break;
         case Roles.CANDIDATE:
-           await this._candidateRepository.update(userId, {
+          await this._candidateRepository.update(userId, {
             password: hashedPassword,
           });
           break;

@@ -8,7 +8,7 @@ export interface IJobService {
   createJob(job: IJob): Promise<IJob>;
 
   getJobs(company: string): Promise<IJob[] | []>;
-  updateJob(job: IJob): Promise<IJob | null>;
+  updateJob(job: Partial<IJob>): Promise<IJob | null>;
   deleteJob(jobId: string): Promise<boolean>;
   createCandidatesFromResumes(
     jobId: Types.ObjectId,

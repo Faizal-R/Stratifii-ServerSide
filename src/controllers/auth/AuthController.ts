@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 
-
 import { createResponse, errorResponse } from "../../helper/responseHandler";
 import { IAuthService } from "../../services/auth/IAuthService";
 import { HttpStatus } from "../../config/HttpStatusCodes";
@@ -10,17 +9,21 @@ import {
   REFRESH_TOKEN_COOKIE_OPTIONS,
 } from "../../config/CookieConfig";
 
-
 import { AUTH_MESSAGES } from "../../constants/messages/AuthMessages";
 import { ERROR_MESSAGES } from "../../constants/messages//ErrorMessages";
 import { INTERVIEWER__SUCCESS_MESSAGES } from "../../constants/messages/UserProfileMessages";
 import { inject, injectable } from "inversify";
 import { DI_TOKENS } from "../../di/types";
-import { LoginRequestDTO } from "../../dto/request/auth/LoginRequestDTO";
+import {
+  LoginRequestDTO,
+  LoginRequestSchema,
+} from "../../dto/request/auth/LoginRequestDTO";
 import {
   AuthenticateOTPRequestDTO,
   CompanyRegisterRequestDTO,
+  CompanyRegistrationSchema,
   InterviewerRegisterRequestDTO,
+  InterviewerRegisterSchema,
 } from "../../dto/request/auth/RegisterRequestDTO";
 import { Tokens } from "../../constants/enums/token";
 import { InterviewerAccountSetupRequestDTO } from "../../dto/request/auth/AccountSetupRequestDTO";
@@ -36,6 +39,19 @@ export class AuthController implements IAuthController {
   async login(request: Request, response: Response): Promise<void> {
     try {
       const loginData: LoginRequestDTO = request.body;
+
+      const validatedAuthPayload = LoginRequestSchema.safeParse(loginData);
+
+      if (!validatedAuthPayload.success) {
+        const firstIssue = validatedAuthPayload.error.issues[0];
+        createResponse(
+          response,
+          HttpStatus.BAD_REQUEST,
+          false,
+          firstIssue.message
+        );
+      }
+
       // Authenticate user
       const { accessToken, refreshToken, user, subscription } =
         await this._authService.login(loginData);
@@ -72,8 +88,22 @@ export class AuthController implements IAuthController {
     try {
       // Extract request body
       const companyData: CompanyRegisterRequestDTO = request.body;
+      const {
+        data: validatedData,
+        success,
+        error,
+      } = CompanyRegistrationSchema.safeParse(companyData);
+      if (!success) {
+        const firstError = error.errors[0];
+        return createResponse(
+          response,
+          HttpStatus.BAD_REQUEST,
+          false,
+          firstError.message
+        );
+      }
 
-      const newCompany = await this._authService.registerCompany(companyData);
+      const newCompany = await this._authService.registerCompany(validatedData);
 
       return createResponse(
         response,
@@ -93,8 +123,20 @@ export class AuthController implements IAuthController {
         request.body.data
       );
 
+      const parsedResult = InterviewerRegisterSchema.safeParse(interviewer);
+
+      if (!parsedResult.success) {
+        const firstError = parsedResult.error.errors[0];
+        return createResponse(
+          response,
+          HttpStatus.BAD_REQUEST,
+          false,
+          firstError.message
+        );
+      }
+
       const newInterviewer = await this._authService.registerInterviewer(
-        interviewer,
+        parsedResult.data,
         request.file
       );
       return createResponse(
@@ -164,10 +206,19 @@ export class AuthController implements IAuthController {
     }
   }
   async authenticateOTP(request: Request, response: Response): Promise<void> {
-    const authenticateOTPRequestBody: AuthenticateOTPRequestDTO = request.body;
+    const { email, otp, role }: AuthenticateOTPRequestDTO = request.body;
 
     try {
-      await this._authService.authenticateOTP(authenticateOTPRequestBody);
+      if (otp.length !== 6) {
+        createResponse(
+          response,
+          HttpStatus.BAD_REQUEST,
+          false,
+          AUTH_MESSAGES.INVALID_OTP_FORMAT
+        );
+      }
+
+      await this._authService.authenticateOTP({ email, otp, role });
       return createResponse(
         response,
         HttpStatus.OK,
@@ -212,7 +263,6 @@ export class AuthController implements IAuthController {
         user
       );
     } catch (error) {
-      
       return errorResponse(response, error);
     }
   }

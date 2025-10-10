@@ -43,7 +43,6 @@ export class CompanyController implements ICompanyController {
       const companyLogoFile = request.file;
 
       if (!validatedCompany.success) {
-
         return createResponse(
           response,
           HttpStatus.BAD_REQUEST,
@@ -109,7 +108,6 @@ export class CompanyController implements ICompanyController {
         companyId!
       );
 
-
       return createResponse(
         response,
         HttpStatus.OK,
@@ -129,10 +127,9 @@ export class CompanyController implements ICompanyController {
     try {
       const companyId = request.params.companyId;
 
-
       const paymentHistory =
-       await this._companyService.getCompanyPaymentHistory(companyId);
- 
+        await this._companyService.getCompanyPaymentHistory(companyId);
+
       return createResponse(
         response,
         HttpStatus.OK,
