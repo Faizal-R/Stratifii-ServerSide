@@ -206,6 +206,7 @@ export class AuthService implements IAuthService {
       await this.sendVerificationCode(createdCompany.email);
       return AuthMapper.toAuthUserResponse(createdCompany);
     } catch (error) {
+      console.log(error);
       if (error instanceof CustomError) {
         throw error;
       }
