@@ -81,7 +81,7 @@ export class PaymentTransactionController
     
     try {
       await this._paymentTransactionService.handleRetryInterviewProcessInitializationPayment(
-        jobId
+        jobId as string
       );
       createResponse(
         res,

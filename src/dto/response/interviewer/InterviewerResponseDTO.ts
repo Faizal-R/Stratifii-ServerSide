@@ -14,7 +14,7 @@ export interface InterviewerSummaryDTO {
   avatar?: string | null;
   isVerified: boolean;
   status?: "pending" | "approved" | "rejected";
-  resume: string;
+  resume: string | null;
 }
 
 // Details DTO - full profile (excluding password)
@@ -33,7 +33,7 @@ export interface InterviewerResponseDTO {
   isBlocked?: boolean;
   stripeAccountId?: string;
   bankDetails?: IBankDetails|null;
-  resume: string;
+  resume: string | null;
   resubmissionPeriod?: string | null;
   resubmissionNotes?: string | null;
   resubmissionCount: number;

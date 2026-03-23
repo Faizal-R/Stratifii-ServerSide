@@ -67,7 +67,7 @@ async createSlotGenerationRule(
     }
   }
   async getSlotsByRule(request: Request, response: Response): Promise<void> {
-    const interviewerId = request.params.id;
+    const interviewerId = request.params.id as string;
     try {
       const slots = await this._slotService.getSlotsByRule(interviewerId);
       
@@ -89,7 +89,7 @@ async createSlotGenerationRule(
     request: Request,
     response: Response
   ): Promise<void> {
-    const interviewerId = request.params.interviewerId;
+    const interviewerId = request.params.interviewerId as string;
     try {
       const rule =
         await this._slotService.getInterviewerSlotGenerationRule(interviewerId);
@@ -112,7 +112,7 @@ async createSlotGenerationRule(
     request: Request,
     response: Response
   ): Promise<void> {
-    const interviewerId = request.params.interviewerId;
+    const interviewerId = request.params.interviewerId as string;
     const ruleData = request.body;
     try {
       const updatedRule =
@@ -134,7 +134,7 @@ async createSlotGenerationRule(
   }
 
    async getAllSlotsByInterviewer(request: Request, response: Response): Promise<void> {
-    const interviewerId = request.params.interviewerId;
+    const interviewerId = request.params.interviewerId as string;
     try {
       const slots = await this._slotService.getSlotsByRule(interviewerId);
       return createResponse(

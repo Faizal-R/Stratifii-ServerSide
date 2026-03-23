@@ -121,12 +121,12 @@ export class AdminService implements IAdminService {
         );
       }
       const accessToken = await generateAccessToken({
-        userId: admin._id as string,
+        userId: admin._id.toString(),
         role: Roles.ADMIN,
       });
 
       const refreshToken = generateRefreshToken({
-        userId: admin._id as string,
+        userId: admin._id.toString(),
         role: Roles.ADMIN,
         jti: generateTokenId(),
       });

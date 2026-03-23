@@ -7,7 +7,7 @@ export const CandidateMapper = {
     avatarUrl: string|null,
     resumeUrl: string
   ): CandidateDTO => ({
-    _id: candidate._id as string,
+    _id: candidate._id.toString(),
     name: candidate.name,
     email: candidate.email,
     avatar: avatarUrl||null,

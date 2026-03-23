@@ -92,7 +92,7 @@ export class JobController implements IJobController {
     const { jobId } = request.params;
 
     try {
-      await this._jobService.deleteJob(jobId);
+      await this._jobService.deleteJob(jobId as string);
       createResponse(
         response,
         HttpStatus.OK,
@@ -113,7 +113,7 @@ export class JobController implements IJobController {
     const resumes = request.files as Express.Multer.File[];
     try {
       const companyId = new mongoose.Types.ObjectId(request.user?.userId);
-      const jobId = new mongoose.Types.ObjectId(SJobId);
+      const jobId = new mongoose.Types.ObjectId(SJobId as string);
 
       const candidates = await this._jobService.createCandidatesFromResumes(
         jobId,
@@ -139,7 +139,7 @@ export class JobController implements IJobController {
   ): Promise<void> {
     const { jobId } = request.params;
     try {
-      const candidates = await this._jobService.getCandidatesByJob(jobId);
+      const candidates = await this._jobService.getCandidatesByJob(jobId as string);
 
       createResponse(
         response,
@@ -182,7 +182,7 @@ export class JobController implements IJobController {
       const job = request.params.jobId;
 
       const candidates = await this._jobService.getMockQualifiedCandidatesByJob(
-        job!
+        job as string
       );
 
       createResponse(
@@ -204,7 +204,7 @@ export class JobController implements IJobController {
       const job = request.params.jobId;
 
       const candidates =
-        await this._jobService.getMatchedInterviewersByJobDescription(job!);
+        await this._jobService.getMatchedInterviewersByJobDescription(job as string);
 
       createResponse(
         response,

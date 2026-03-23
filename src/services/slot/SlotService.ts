@@ -98,7 +98,7 @@ export class SlotService implements ISlotService {
         interviewerId,
       });
       const updatedRule = await this._slotGenerationRepository.update(
-        existingRule?._id as string,
+        existingRule?._id.toString() as string,
         ruleData
       );
 
@@ -151,13 +151,13 @@ export class SlotService implements ISlotService {
     );
 
     await this._delegatedCandidateRepository.update(
-      scheduledCandidate?._id as string,
+      scheduledCandidate?._id.toString() as string,
       { isInterviewScheduled: true }
     );
     
     if (isFollowUpScheduling) {
       await this._delegatedCandidateRepository.markLastRoundAsFollowUpScheduled(
-        scheduledCandidate?._id as string
+        scheduledCandidate?._id.toString() as string
       );
     }
 

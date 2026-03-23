@@ -127,7 +127,7 @@ export class CandidateService implements ICandidateService {
             ? "mock_completed"
             : dc.status;
       return {
-        delegatedCandidateId: dc._id as string,
+        delegatedCandidateId: dc._id.toString(),
         job: JobMapper.toSummary(job),
         companyName: company.name,
         mockStatus,

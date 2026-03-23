@@ -128,7 +128,7 @@ export class CompanyController implements ICompanyController {
       const companyId = request.params.companyId;
 
       const paymentHistory =
-        await this._companyService.getCompanyPaymentHistory(companyId);
+        await this._companyService.getCompanyPaymentHistory(companyId as string);
 
       return createResponse(
         response,

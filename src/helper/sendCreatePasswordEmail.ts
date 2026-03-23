@@ -15,7 +15,7 @@ export const sendCreatePasswordEmail = async (candidates: ICandidate[],companyNa
   for (const candidate of candidates) {
     const token = await jwt.sign(
       {
-        userId: candidate._id as string,
+        userId: candidate._id.toString(),
         role: Roles.CANDIDATE,
         email: candidate.email,
       },

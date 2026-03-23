@@ -17,7 +17,7 @@ export class InterviewController implements IInterviewController {
     response: Response
   ): Promise<void> {
     try {
-      const interviewId = request.params.id;
+      const interviewId = request.params.id as string;
       const { feedback } = request.body;
 
       await this._interviewService.updateAndSubmitFeedback(
@@ -38,7 +38,7 @@ export class InterviewController implements IInterviewController {
     request: Request,
     response: Response
   ): Promise<void> {
-    const candidateId = request.params.id;
+    const candidateId = request.params.id as string;
     try {
       const interviews =
         await this._interviewService.getScheduledInterviews(candidateId);
@@ -58,7 +58,7 @@ export class InterviewController implements IInterviewController {
     request: Request,
     response: Response
   ): Promise<void> {
-    const candidateId = request.params.candidateId;
+    const candidateId = request.params.candidateId as string;
     try {
       const interviews =
         await this._interviewService.getAllInterviewsByCandidateId(candidateId);
@@ -78,7 +78,7 @@ export class InterviewController implements IInterviewController {
     request: Request,
     response: Response
   ): Promise<void> {
-    const delegatedCandidateId = request.params.delegatedCandidateId;
+    const delegatedCandidateId = request.params.delegatedCandidateId as string;
     try {
       const delegatedCandidate =
         await this._interviewService.completeCandidateInterviewProcess(
@@ -97,7 +97,7 @@ export class InterviewController implements IInterviewController {
   }
 
    async handleNoShowInterview(request: Request, response: Response): Promise<void> {
-     const interviewId = request.params.interviewId;
+     const interviewId = request.params.interviewId as string;
      const noShowBy = request.body.noShowBy;
      try {
        const delegatedCandidate =

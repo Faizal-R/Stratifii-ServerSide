@@ -21,7 +21,7 @@ export interface IInterviewFeedback {
 }
 
 export interface IInterview extends Document {
-  _id: string | Types.ObjectId;
+  _id: Types.ObjectId;
   candidate: string | ICandidate;
   interviewer: string | IInterviewer;
   bookedBy: string | ICompany;

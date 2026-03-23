@@ -71,7 +71,7 @@ export class JobService implements IJobService {
   async updateJob(job: Partial<IJob>): Promise<IJob | null> {
     try {
       const updatedJob = await this._jobRepository.update(
-        job._id as string,
+        job._id!.toString(),
         job
       );
       return updatedJob;
@@ -400,7 +400,7 @@ export class JobService implements IJobService {
               duration: slot.duration,
               isAvailable: !exactBooked,
               status: exactBooked ? "booked" : "available",
-              ruleId: rule?._id as string,
+              ruleId: rule?._id.toString() as string,
             };
           });
 

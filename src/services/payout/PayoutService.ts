@@ -61,11 +61,12 @@ export class PayoutService implements IPayoutService {
           approvedAt: status === "approved" ? Date.now() : null,
         }
       );
+      if (!updatedPayoutRequest) return null;
       if (status === "completed") {
         await this._payoutHistoryRepository.create({
           interviewerId: updatedPayoutRequest?.interviewerId,
           amount: updatedPayoutRequest?.amount,
-          payoutId: updatedPayoutRequest?._id as string,
+          payoutId: updatedPayoutRequest._id.toString(),
           status: "succeeded",
           transferId: `trans_${Math.random() * 10000}`,
         });
@@ -79,7 +80,7 @@ export class PayoutService implements IPayoutService {
             HttpStatus.BAD_REQUEST
           );
         }
-        await this._walletRepository.update(userWallet?._id as string, {
+        await this._walletRepository.update(userWallet?._id.toString() as string, {
           balance: (userWallet?.balance || 0) - updatedPayoutRequest.amount,
         });
       }

@@ -102,7 +102,7 @@ export class InterviewService implements IInterviewService {
 
       const updatedDelegatedCandidate =
         await this._delegatedCandidateRepository.update(
-          delegation._id as string,
+          delegation._id.toString(),
           {
             aiMockResult: {
               correctAnswers: resultPayload.correct,
@@ -215,7 +215,7 @@ export class InterviewService implements IInterviewService {
       };
 
       await this._delegatedCandidateRepository.update(
-        delegatedCandidate._id as string,
+        delegatedCandidate._id.toString(),
         {
           status: feedback.needsFollowUp
             ? "in_interview_process"
@@ -246,7 +246,7 @@ export class InterviewService implements IInterviewService {
         description: "Interview Fee",
       });
 
-      await this._walletRepository.update(interviewerWallet._id as string, {
+      await this._walletRepository.update(interviewerWallet._id.toString(), {
         balance: (interviewerWallet.balance ?? 0) + 1000,
         totalEarned: (interviewerWallet.totalEarned ?? 0) + 1000,
       });
@@ -397,7 +397,7 @@ export class InterviewService implements IInterviewService {
 
       if (noShowBy === Roles.CANDIDATE) {
         await this._delegatedCandidateRepository.update(
-          delegatedCandidate._id as string,
+          delegatedCandidate._id.toString(),
           {
             isInterviewScheduled: false,
             totalNumberOfRounds: delegatedCandidate.totalNumberOfRounds + 1,
@@ -406,7 +406,7 @@ export class InterviewService implements IInterviewService {
         );
       } else {
         await this._delegatedCandidateRepository.update(
-          delegatedCandidate._id as string,
+          delegatedCandidate._id.toString(),
           {
             status: "disqualified",
             isInterviewScheduled: false,
@@ -433,7 +433,7 @@ export class InterviewService implements IInterviewService {
           description: "Interview Fee",
         });
 
-        await this._walletRepository.update(interviewerWallet._id as string, {
+        await this._walletRepository.update(interviewerWallet._id.toString(), {
           balance: (interviewerWallet.balance ?? 0) + 1000,
           totalEarned: (interviewerWallet.totalEarned ?? 0) + 1000,
         });

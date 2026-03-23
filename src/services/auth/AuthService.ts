@@ -104,7 +104,7 @@ export class AuthService implements IAuthService {
           );
         }
         if (user?.status === "pending") {
-          user = await this._candidateRepository.update(user._id as string, {
+          user = await this._candidateRepository.update(user._id.toString(), {
             status: "active",
           });
         }
@@ -142,12 +142,12 @@ export class AuthService implements IAuthService {
     // }
 
     const accessToken = await generateAccessToken({
-      userId: user._id as string,
+      userId: user._id.toString(),
       role,
     });
 
     const refreshToken = await generateRefreshToken({
-      userId: user._id as string,
+      userId: user._id.toString(),
       role,
       jti: generateTokenId(),
     });
@@ -156,7 +156,7 @@ export class AuthService implements IAuthService {
 
     if (role == Roles.COMPANY) {
       subscriptionDetails = await this._subscriptionRecord.findOne({
-        subscriberId: user._id as string,
+        subscriberId: user._id.toString(),
       });
     }
 
@@ -335,11 +335,11 @@ export class AuthService implements IAuthService {
           HttpStatus.NOT_FOUND
         );
       if (role === Roles.COMPANY) {
-        await this._companyRepository.update(user._id as string, {
+        await this._companyRepository.update(user._id.toString(), {
           isVerified: true,
         });
       } else if (role === Roles.INTERVIEWER) {
-        await this._interviewerRepository.update(user._id as string, {
+        await this._interviewerRepository.update(user._id.toString(), {
           isVerified: true,
         });
       }
@@ -369,12 +369,12 @@ export class AuthService implements IAuthService {
         //   );
         // }
         const accessToken = await generateAccessToken({
-          userId: interviewer._id as string,
+          userId: interviewer._id.toString(),
           role: Roles.INTERVIEWER,
         });
 
         const refreshToken = await generateRefreshToken({
-          userId: interviewer._id as string,
+          userId: interviewer._id.toString(),
           role: Roles.INTERVIEWER,
           jti: generateTokenId(),
         });
@@ -433,7 +433,7 @@ export class AuthService implements IAuthService {
         );
       }
       const resetToken = await generateAccessToken({
-        userId: user._id as string,
+        userId: user._id.toString(),
         role,
       });
       await redis.setex(`resetToken:${user._id}`, 900, resetToken);

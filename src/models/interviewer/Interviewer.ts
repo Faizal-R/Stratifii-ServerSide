@@ -34,7 +34,7 @@ export interface ISkillExpertise {
 }
 
 export interface IInterviewer extends Document {
-  _id: string | Types.ObjectId;
+  _id: Types.ObjectId;
   name: string;
   position?: string;
   email: string;

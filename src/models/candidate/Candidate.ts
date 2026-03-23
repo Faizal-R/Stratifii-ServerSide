@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
 
 export interface ICandidate extends Document {
-  _id:Types.ObjectId | string;
+  _id: Types.ObjectId
   email: string;
   password?: string;
   name: string;

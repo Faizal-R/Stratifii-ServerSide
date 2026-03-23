@@ -24,6 +24,7 @@ export async function uploadFileToS3(file: Express.Multer.File) {
     await s3.send(command);
     return Key;
   } catch (error) {
+    console.log(error)
     if (error instanceof Error) {
       throw new CustomError(error.message, HttpStatus.BAD_REQUEST);
     } else {

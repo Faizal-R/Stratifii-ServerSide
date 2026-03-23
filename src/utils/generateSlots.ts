@@ -30,13 +30,13 @@ export function generateSlotsFromRule(rule: ISlotGenerationRule | null): IInterv
 
         if (slotEnd <= dayEnd) {
           slots.push({
-            interviewerId: rule.interviewerId,
+            interviewerId: rule.interviewerId.toString(),
             startTime: new Date(slotStart),
             endTime: new Date(slotEnd),
             duration: rule.duration,
             status: "available",
             isAvailable: true,
-            ruleId: rule._id,
+            ruleId: rule._id.toString(),
           } as IInterviewSlot);
         }
 

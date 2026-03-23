@@ -1,4 +1,4 @@
-
+import { Types } from "mongoose";
 
 export interface IInterviewSlot  {
   startTime: Date;
@@ -8,7 +8,7 @@ export interface IInterviewSlot  {
   status: 'available' | 'booked' | 'completed' | 'cancelled' | 'expired';
   bookedBy?: string | null ;
   ruleId?: string;
-
+  interviewerId?: string;
 }
 
 

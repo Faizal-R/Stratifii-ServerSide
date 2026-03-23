@@ -31,7 +31,7 @@ export const PaymentMapper = {
     payment: IPaymentTransaction,
     isPopulated: boolean = false
   ): PaymentTransactionDTO => ({
-    _id: payment._id as string,
+    _id: payment._id.toString(),
     company: payment.company.toString(),
     job: isPopulated ? JobMapper.toResponse(payment.job as IJob) : payment.job.toString(),
     candidatesCount: payment.candidatesCount,
