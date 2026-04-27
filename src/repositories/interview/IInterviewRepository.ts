@@ -9,5 +9,5 @@ export interface IInterviewRepository extends IBaseRepository<IInterview> {
       _id: number;
       numberOfInterviews: number;
     }[]
-  >
+  >;
 }

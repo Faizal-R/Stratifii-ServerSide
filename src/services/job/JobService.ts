@@ -71,7 +71,7 @@ export class JobService implements IJobService {
   async updateJob(job: Partial<IJob>): Promise<IJob | null> {
     try {
       const updatedJob = await this._jobRepository.update(
-        job._id as string,
+        job._id!.toString(),
         job
       );
       return updatedJob;
@@ -167,7 +167,6 @@ export class JobService implements IJobService {
           })
         )
       );
-      
 
       // Filter out any null values to ensure correct type
       const candidatesWithResumeAttached = await Promise.all(
@@ -204,40 +203,52 @@ export class JobService implements IJobService {
     jobPaymentStatus: string | null;
   }> {
     try {
-      const delegatedCandiates =
+      const delegatedCandidates =
         await this._delegatedCandidateRepository.getCandidatesByJob(jobId);
+
       const companyJob = await this._jobRepository.findById(jobId);
       const paymentTransactionOfJob =
         await this._paymentTransactionRepository.findOne({
           _id: companyJob?.paymentTransaction,
         });
+
+      if (!delegatedCandidates || delegatedCandidates.length === 0) {
+        return {
+          candidates: [],
+          jobPaymentStatus: paymentTransactionOfJob?.status ?? null,
+        };
+      }
+
       const candidates = await Promise.all(
-        delegatedCandiates.map(async (dc) => {
-          const candidateAvatarUrl = await generateSignedUrl(
-            (dc.candidate as ICandidate).avatarKey!
-          );
+        delegatedCandidates.map(async (dc) => {
+          const candidate = dc.candidate as ICandidate;
+
+          let candidateAvatarUrl: string | null = null;
+
+          if (candidate.avatarKey) {
+            candidateAvatarUrl = await generateSignedUrl(candidate.avatarKey);
+          }
+
           const candidateResumeUrl = await generateSignedUrl(
-            (dc.candidate as ICandidate).resumeKey
+            candidate.resumeKey
           );
+
           return DelegatedCandidateMapper.toShowCompany(
             dc,
-            candidateAvatarUrl!,
+            candidateAvatarUrl,
             candidateResumeUrl!
           );
         })
       );
 
-      if (!candidates) {
-        throw new CustomError(ERROR_MESSAGES.NOT_FOUND, HttpStatus.NOT_FOUND);
-      }
       return {
         candidates,
         jobPaymentStatus: paymentTransactionOfJob?.status ?? null,
       };
     } catch (error) {
-      if (error instanceof CustomError) {
-        throw error;
-      }
+      if (error instanceof CustomError) throw error;
+
+      console.error(error);
       throw new CustomError(
         "Failed to fetch candidates for the job",
         HttpStatus.INTERNAL_SERVER_ERROR
@@ -285,21 +296,21 @@ export class JobService implements IJobService {
           status: "mock_completed",
         });
 
-        const mappedDelegatedCandidates=Promise.all(
-          candidates.map(async (dc) => {
-            const candidateAvatarUrl = await generateSignedUrl(
-              (dc.candidate as ICandidate).avatarKey as string
-            );
-            const candidateResumeUrl = await generateSignedUrl(
-              (dc.candidate as ICandidate).resumeKey
-            );
-            return DelegatedCandidateMapper.toShowCompany(
-              dc,
-              candidateAvatarUrl as string,
-              candidateResumeUrl as string
-            );
-          })
-        );
+      const mappedDelegatedCandidates = Promise.all(
+        candidates.map(async (dc) => {
+          const candidateAvatarUrl = await generateSignedUrl(
+            (dc.candidate as ICandidate).avatarKey as string
+          );
+          const candidateResumeUrl = await generateSignedUrl(
+            (dc.candidate as ICandidate).resumeKey
+          );
+          return DelegatedCandidateMapper.toShowCompany(
+            dc,
+            candidateAvatarUrl as string,
+            candidateResumeUrl as string
+          );
+        })
+      );
 
       return mappedDelegatedCandidates;
     } catch {
@@ -389,7 +400,7 @@ export class JobService implements IJobService {
               duration: slot.duration,
               isAvailable: !exactBooked,
               status: exactBooked ? "booked" : "available",
-              ruleId: rule?._id as string,
+              ruleId: rule?._id.toString() as string,
             };
           });
 

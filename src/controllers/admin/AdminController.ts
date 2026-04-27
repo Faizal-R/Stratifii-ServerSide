@@ -161,7 +161,7 @@ export class AdminController implements IAdminController {
 
     try {
       const updatedCompany = await this._adminService.handleCompanyVerification(
-        companyId,
+        companyId as string,
         isApproved,
         reasonForRejection,
         isPermanentBan
@@ -201,7 +201,7 @@ export class AdminController implements IAdminController {
     try {
       const updatedInterviewer =
         await this._adminService.handleInterviewerVerification(
-          interviewerId,
+          interviewerId as string,
           isApproved,
           interviewerName,
           interviewerEmail,

@@ -14,6 +14,22 @@ export class PaymentTransactionRepository
     super(PaymentTransaction);
   }
 
+  getPaymentTransactionsDetailsByCompanyId(companyId: string): Promise<IPaymentTransaction[] | []> {
+    return this.model.find({ company:companyId }).populate("job")
+  }
+async  getTotalAmountSpendOnInterviewsByCompany(companyId: string): Promise<number> {
+    const result = await this.model.aggregate([
+      { $match: { company: new Types.ObjectId(companyId) } },
+      {
+        $group: {
+          _id: null,
+          totalSpendOnInterviews: { $sum: "$finalPayableAmount" },
+        },
+      }
+    ])
+    return result[0]?.totalSpendOnInterviews || 0
+  }
+
   async getTotalRevenueFromInterview(): Promise<number> {
     const result = await this.model.aggregate([
       { $match: { status: "PAID" } },

@@ -89,7 +89,7 @@ export class CandidateController implements ICandidateController {
         );
       }
       const candidate = await this._candidateService.getCandidateProfile(
-        candidateId
+        candidateId as string
       );
       if (!candidate) {
         return createResponse(
@@ -140,7 +140,7 @@ export class CandidateController implements ICandidateController {
       
       const questions =
         await this._interviewService.generateCandidateMockInterviewQuestions(
-          delegationId
+          delegationId as string
         );
         
       return createResponse(

@@ -31,6 +31,10 @@ export const CompanyProfileSchema = z.object({
   headquartersLocation: z.string().optional(),
   companySize: z.string().optional(),
   companyLogoKey: z.string().optional(),
+   resubmissionPeriod:z.string().nullable().optional(),
+   resubmissionNote:z.string().nullable().optional(),
+   resubmissionCount:z.number().optional().optional()
+
 });
 
 export type ICompanyProfile = z.infer<typeof CompanyProfileSchema>;

@@ -8,6 +8,7 @@ import { IJobController } from "./IJobController";
 import mongoose from "mongoose";
 import { inject, injectable } from "inversify";
 import { DI_TOKENS } from "../../di/types";
+import { JobSchema } from "../../validations/JobValidations";
 
 @injectable()
 export class JobController implements IJobController {
@@ -30,7 +31,6 @@ export class JobController implements IJobController {
         jobs
       );
     } catch (error) {
-     
       errorResponse(response, error);
     }
   }
@@ -38,9 +38,19 @@ export class JobController implements IJobController {
   async createJob(request: Request, response: Response): Promise<void> {
     try {
       const jobData: IJob = { ...request.body, company: request.user?.userId };
-      
+      const validatedJob = await JobSchema.safeParse(jobData);
+      if (!validatedJob.success) {
+        const firstError = validatedJob.error.issues[0].message;
+        return createResponse(
+          response,
+          HttpStatus.BAD_REQUEST,
+          false,
+          firstError
+        );
+      }
+
       const job = await this._jobService.createJob(jobData);
-      
+
       createResponse(
         response,
         HttpStatus.CREATED,
@@ -49,17 +59,25 @@ export class JobController implements IJobController {
         job
       );
     } catch (error) {
-      
       errorResponse(response, error);
     }
   }
 
   async updateJob(request: Request, response: Response): Promise<void> {
-    
-    // 
+    //
     try {
+        const validatedJob = await JobSchema.safeParse(request.body);
+      if (!validatedJob.success) {
+        const firstError = validatedJob.error.issues[0].message;
+        return createResponse(
+          response,
+          HttpStatus.BAD_REQUEST,
+          false,
+          firstError
+        );
+      }
       const updatedJob = await this._jobService.updateJob(request.body);
-      
+
       createResponse(
         response,
         HttpStatus.OK,
@@ -67,15 +85,14 @@ export class JobController implements IJobController {
         JOB_SUCCESS_MESSAGES.JOB_UPDATED
       );
     } catch (error) {
-      
       errorResponse(response, error);
     }
   }
   async deleteJob(request: Request, response: Response): Promise<void> {
     const { jobId } = request.params;
-    
+
     try {
-      await this._jobService.deleteJob(jobId);
+      await this._jobService.deleteJob(jobId as string);
       createResponse(
         response,
         HttpStatus.OK,
@@ -83,7 +100,6 @@ export class JobController implements IJobController {
         JOB_SUCCESS_MESSAGES.JOB_DELETED
       );
     } catch (error) {
-      
       errorResponse(response, error);
     }
   }
@@ -93,18 +109,18 @@ export class JobController implements IJobController {
     response: Response
   ): Promise<void> {
     const { jobId: SJobId } = request.params;
-    
+
     const resumes = request.files as Express.Multer.File[];
     try {
       const companyId = new mongoose.Types.ObjectId(request.user?.userId);
-      const jobId = new mongoose.Types.ObjectId(SJobId);
-      
+      const jobId = new mongoose.Types.ObjectId(SJobId as string);
+
       const candidates = await this._jobService.createCandidatesFromResumes(
         jobId,
         resumes,
         companyId
       );
-      
+
       createResponse(
         response,
         HttpStatus.CREATED,
@@ -113,7 +129,6 @@ export class JobController implements IJobController {
         candidates
       );
     } catch (error) {
-      
       errorResponse(response, error);
     }
   }
@@ -124,7 +139,7 @@ export class JobController implements IJobController {
   ): Promise<void> {
     const { jobId } = request.params;
     try {
-      const candidates = await this._jobService.getCandidatesByJob(jobId);
+      const candidates = await this._jobService.getCandidatesByJob(jobId as string);
 
       createResponse(
         response,
@@ -134,23 +149,19 @@ export class JobController implements IJobController {
         candidates
       );
     } catch (error) {
-      
       errorResponse(response, error);
     }
   }
 
   async getJobsInProgress(request: Request, response: Response): Promise<void> {
-    
     const userId = request.user?.userId;
-    if(!userId){
-      errorResponse(response,"User not found");
+    if (!userId) {
+      errorResponse(response, "User not found");
       return;
     }
     try {
-      const jobs = await this._jobService.getJobsInProgress(
-        userId
-      );
-      
+      const jobs = await this._jobService.getJobsInProgress(userId);
+
       createResponse(
         response,
         HttpStatus.OK,
@@ -159,7 +170,6 @@ export class JobController implements IJobController {
         jobs
       );
     } catch (error) {
-      
       errorResponse(response, error);
     }
   }
@@ -170,12 +180,11 @@ export class JobController implements IJobController {
   ): Promise<void> {
     try {
       const job = request.params.jobId;
-      
-      
+
       const candidates = await this._jobService.getMockQualifiedCandidatesByJob(
-        job!
+        job as string
       );
-      
+
       createResponse(
         response,
         HttpStatus.OK,
@@ -184,7 +193,6 @@ export class JobController implements IJobController {
         candidates
       );
     } catch (error) {
-      
       errorResponse(response, error);
     }
   }
@@ -194,11 +202,10 @@ export class JobController implements IJobController {
   ): Promise<void> {
     try {
       const job = request.params.jobId;
-      
-      
+
       const candidates =
-        await this._jobService.getMatchedInterviewersByJobDescription(job!);
-      
+        await this._jobService.getMatchedInterviewersByJobDescription(job as string);
+
       createResponse(
         response,
         HttpStatus.OK,
@@ -207,7 +214,6 @@ export class JobController implements IJobController {
         candidates
       );
     } catch (error) {
-      
       errorResponse(response, error);
     }
   }

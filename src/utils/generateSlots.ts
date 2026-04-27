@@ -1,54 +1,54 @@
 import { IInterviewSlot } from "../models/slot/interviewSlot";
 import { ISlotGenerationRule } from "../models/slot/slotGenerationRule";
 
-  export function  generateSlotsFromRule(
-    rule: ISlotGenerationRule|null
-  ): IInterviewSlot[] {
-    if (!rule) return [];
+export function generateSlotsFromRule(rule: ISlotGenerationRule | null): IInterviewSlot[] {
+  if (!rule) return [];
 
-      const slots: IInterviewSlot[] = [];
-      const current = new Date();
-      const end = new Date(current);
-      end.setDate(end.getDate() + 10); // Generate for 30 days
+  const slots: IInterviewSlot[] = [];
 
-      while (current <= end) {
-        const day = current.getDay();
-        if (rule.availableDays.includes(day)) {
-          const dayStart = new Date(current);
-          dayStart.setHours(rule.startHour, 0, 0, 0);
+  const current = new Date();
+  const end = new Date(current);
+  end.setDate(end.getDate() + 10);
 
-          const dayEnd = new Date(current);
-          dayEnd.setHours(rule.endHour, 0, 0, 0);
+  while (current <= end) {
+    const day = current.getDay();
 
-          let slotStart = new Date(dayStart);
+    // Generate only for allowed days
+    if (rule.availableDays.includes(day)) {
+      const dayStart = new Date(current);
+      dayStart.setHours(rule.startHour, rule.startMinute ?? 0, 0, 0);
 
-          while (slotStart < dayEnd) {
-            const slotEnd = new Date(
-              slotStart.getTime() + rule.duration * 60 * 1000
-            );
+      const dayEnd = new Date(current);
+      dayEnd.setHours(rule.endHour, rule.endMinute ?? 0, 0, 0);
 
-            if (slotEnd <= dayEnd) {
-              slots.push({
-                interviewerId: rule.interviewerId,
-                startTime: new Date(slotStart),
-                endTime: new Date(slotEnd),
-                duration: rule.duration,
-                status: "available",
-                isAvailable: true,
-                ruleId: rule._id,
-              } as IInterviewSlot);
-            }
+      let slotStart = new Date(dayStart);
 
-            slotStart = new Date(
-              slotStart.getTime() + (rule.duration + rule.buffer) * 60 * 1000
-            );
-          }
+      while (slotStart < dayEnd) {
+        const slotEnd = new Date(
+          slotStart.getTime() + rule.duration * 60 * 1000
+        );
+
+        if (slotEnd <= dayEnd) {
+          slots.push({
+            interviewerId: rule.interviewerId.toString(),
+            startTime: new Date(slotStart),
+            endTime: new Date(slotEnd),
+            duration: rule.duration,
+            status: "available",
+            isAvailable: true,
+            ruleId: rule._id.toString(),
+          } as IInterviewSlot);
         }
 
-        current.setDate(current.getDate() + 1);
+        // move to next slot (duration + buffer)
+        slotStart = new Date(
+          slotStart.getTime() + (rule.duration + rule.buffer) * 60 * 1000
+        );
       }
+    }
 
-      return slots;
-    
-    
+    current.setDate(current.getDate() + 1);
   }
+
+  return slots;
+}

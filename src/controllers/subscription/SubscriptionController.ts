@@ -90,7 +90,7 @@ private readonly _subscriptionRecordService?: ISubscriptionRecordService
 
     try {
       await this._subscriptionService?.updateSubscription(
-        subscriptionId,
+        subscriptionId as string,
         updatedSubscription
       );
       createResponse(

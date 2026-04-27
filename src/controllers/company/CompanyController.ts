@@ -38,14 +38,7 @@ export class CompanyController implements ICompanyController {
     try {
       const companyId = request.user?.userId;
       let company;
-
-      if (request.body) {
-        //resubmission companydata
-        company = request.body;
-      } else {
-        //company profile data
-        company = JSON.parse(request.body.company);
-      }
+      company = JSON.parse(request.body.company);
       const validatedCompany = CompanyProfileSchema.safeParse(company);
       const companyLogoFile = request.file;
 
@@ -114,7 +107,6 @@ export class CompanyController implements ICompanyController {
       const dashboardData = await this._companyService.getCompanyDashboard(
         companyId!
       );
-      console.log("dashboardData", dashboardData.monthlySpend);
 
       return createResponse(
         response,
@@ -125,6 +117,28 @@ export class CompanyController implements ICompanyController {
       );
     } catch (error) {
       errorResponse(response, error);
+    }
+  }
+
+  async getCompanyPaymentHistory(
+    request: Request,
+    response: Response
+  ): Promise<void> {
+    try {
+      const companyId = request.params.companyId;
+
+      const paymentHistory =
+        await this._companyService.getCompanyPaymentHistory(companyId as string);
+
+      return createResponse(
+        response,
+        HttpStatus.OK,
+        true,
+        "Company payment history fetched successfully",
+        paymentHistory
+      );
+    } catch (error) {
+      return errorResponse(response, error);
     }
   }
 }

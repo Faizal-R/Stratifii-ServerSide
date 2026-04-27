@@ -2,7 +2,7 @@ import mongoose, { Schema, Document, Types } from "mongoose";
 import { ICompany } from "../company/Company";
 
 export interface IJob extends Document {
-  _id:string;
+  _id: Types.ObjectId;
   company: Types.ObjectId | ICompany;
   position: string;
   description?: string;

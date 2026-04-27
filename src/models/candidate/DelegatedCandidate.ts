@@ -13,7 +13,7 @@ export interface IInterviewFeedback {
   strengths?: string;
   areasForImprovement?: string;
   comments?: string;
-  recommendation?: "hire" | "no-hire" | "maybe"|"next-round";
+  recommendation?: "hire" | "no-hire" | "maybe" | "next-round";
   needsFollowUp?: boolean;
   suggestedFocusAreas?: string[];
   internalNotes?: string;
@@ -23,11 +23,7 @@ export interface IInterviewRound {
   roundNumber: number;
   type: "mock" | "final" | "followup";
   timeZone?: string;
-  status:
-    | "pending"
-    | "followup"
-    | "completed"
-    | "cancelled";
+  status: "pending" | "followup" | "completed" | "no_show";
   feedback?: IInterviewFeedback;
   interviewer: string | IInterviewer;
   isFollowUpScheduled: boolean;
@@ -45,7 +41,8 @@ export interface IDelegatedCandidate extends Document {
     | "shortlisted"
     | "in_interview_process"
     | "hired"
-    | "rejected";
+    | "rejected"
+    | "disqualified";
   interviewRounds: IInterviewRound[];
   totalNumberOfRounds: number;
   isQualifiedForFinal?: boolean;
@@ -86,7 +83,7 @@ const InterviewRoundSchema = new Schema<IInterviewRound>(
     timeZone: String,
     status: {
       type: String,
-      enum: [ "followup", "completed", "cancelled"],
+      enum: ["followup", "completed", "cancelled"],
       default: "pending",
     },
     feedback: { type: InterviewFeedbackSchema },

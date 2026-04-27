@@ -66,4 +66,19 @@ export class SubscriptionRecordRepository
       },
     ]);
   }
+
+  async getTotalAmountSpendOnSubscriptionByCompany(companyId: string): Promise<number> {
+    const result = await this.model.aggregate([
+      { $match: { subscriberId: new Types.ObjectId(companyId) } },
+      {
+        $group: {
+          _id: null,
+          totalSpendOnSubscription: { $sum: "$planDetails.price" },
+        },
+      }
+    ])
+    
+   
+    return result[0]?.totalSpendOnSubscription||0
+  }
 }

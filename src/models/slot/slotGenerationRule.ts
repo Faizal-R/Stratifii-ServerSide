@@ -3,23 +3,21 @@ import { Schema, model, Types, Document } from "mongoose";
 export interface ISlotGenerationRule extends Document {
   interviewerId: Types.ObjectId;
   availableDays: number[]; // 0 = Sunday, ..., 6 = Saturday
-  startHour: number; // 0 to 23
-  endHour: number; // 1 to 24
-  duration: number; // 15 to 180
-  buffer: number; // in minutes
-  timezone?: string; // default: 'UTC'
-  generatedSlotCount?: number; // default: 0
+  startHour: number;
+  startMinute: number;
+  endHour: number;
+  endMinute: number;
+  duration: number;
+  buffer: number;
+  timezone?: string;
+  isActive?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 const slotGenerationRuleSchema = new Schema(
   {
-    interviewerId: {
-      type: Types.ObjectId,
-      ref: "Interviewer",
-      required: true,
-    },
+    interviewerId: { type: Types.ObjectId, ref: "Interviewer", required: true },
     availableDays: {
       type: [Number],
       required: true,
@@ -29,47 +27,19 @@ const slotGenerationRuleSchema = new Schema(
         message: "Available days must be between 0 (Sunday) and 6 (Saturday).",
       },
     },
-
-    startHour: {
-      type: Number,
-      required: true,
-      min: 0,
-      max: 23,
-    },
-
-    endHour: {
-      type: Number,
-      required: true,
-      min: 1,
-      max: 24,
-    },
-
-    duration: {
-      type: Number,
-      required: true,
-      min: 15,
-      max: 180,
-    },
-
-    buffer: {
-      type: Number,
-      required: true,
-      min: 0,
-      max: 60,
-    },
-
-    timezone: {
-      type: String,
-      default: "UTC",
-    },
-
-    generatedSlotCount: {
-      type: Number,
-      default: 0,
-    },
+    startHour: { type: Number, required: true, min: 0, max: 23 },
+    startMinute: { type: Number, required: true, min: 0, max: 59, default: 0 },
+    endHour: { type: Number, required: true, min: 1, max: 24 },
+    endMinute: { type: Number, required: true, min: 0, max: 59, default: 0 },
+    duration: { type: Number, required: true, min: 15, max: 180 },
+    buffer: { type: Number, required: true, min: 0, max: 60 },
+    timezone: { type: String, default: "UTC" },
+    isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
+
+slotGenerationRuleSchema.index({ interviewerId: 1 }, { unique: true });
 
 const SlotGenerationRule = model<ISlotGenerationRule>(
   "SlotGenerationRule",

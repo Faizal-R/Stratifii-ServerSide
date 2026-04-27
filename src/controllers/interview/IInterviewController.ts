@@ -5,4 +5,5 @@ export interface IInterviewController{
     getScheduledInterviews(request:Request,response:Response): Promise<void>
     getAllInterviewsByCandidateId(request:Request,response:Response): Promise<void>
     completeCandidateInterviewProcess(request:Request,response:Response): Promise<void>
+    handleNoShowInterview(request:Request,response:Response): Promise<void>
 }

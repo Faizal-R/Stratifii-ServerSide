@@ -5,4 +5,6 @@ export interface IPaymentTransactionRepository extends IBaseRepository<IPaymentT
   getTotalRevenueFromInterview():Promise<number>
   getTotalRevenueFromInterviewWithMonth():Promise<[{_id: number; totalRevenue: number}]>
   getCompaniesTotalAmountSpendOnInterviewsPerMonth(companyId: string): Promise<{ _id: number; totalRevenue: number }[]>
+  getPaymentTransactionsDetailsByCompanyId(companyId: string): Promise<IPaymentTransaction[]|[]>
+  getTotalAmountSpendOnInterviewsByCompany(companyId: string): Promise<number>
 } 

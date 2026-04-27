@@ -29,7 +29,7 @@ import { IAuthService } from "./IAuthService";
 import jwt from "jsonwebtoken";
 import { AccessTokenPayload, RefreshTokenPayload } from "../../types/token";
 
-import { otpVerificationHtml, wrapHtml } from "../../helper/wrapHtml";
+import { otpVerificationHtml, wrapHtml } from "../../helper/htmlWrapper";
 import { AUTH_MESSAGES } from "../../constants/messages/AuthMessages";
 import { ERROR_MESSAGES } from "../../constants/messages/ErrorMessages";
 import { VALIDATION_MESSAGES } from "../../constants/messages/ValidationMessages";
@@ -84,14 +84,7 @@ export class AuthService implements IAuthService {
   ) {}
 
   async login(authPayload: LoginRequestDTO): Promise<AuthResponseDTO> {
-    const validatedAuthPayload = LoginRequestSchema.safeParse(authPayload);
-
-    if (!validatedAuthPayload.success) {
-      const firstIssue = validatedAuthPayload.error.issues[0];
-      throw new CustomError(firstIssue.message, HttpStatus.BAD_REQUEST);
-    }
-
-    const { email, password, role } = validatedAuthPayload.data;
+    const { email, password, role } = authPayload;
 
     let user: TUserType | null | undefined;
 
@@ -111,7 +104,7 @@ export class AuthService implements IAuthService {
           );
         }
         if (user?.status === "pending") {
-          user = await this._candidateRepository.update(user._id as string, {
+          user = await this._candidateRepository.update(user._id.toString(), {
             status: "active",
           });
         }
@@ -149,12 +142,12 @@ export class AuthService implements IAuthService {
     // }
 
     const accessToken = await generateAccessToken({
-      userId: user._id as string,
+      userId: user._id.toString(),
       role,
     });
 
     const refreshToken = await generateRefreshToken({
-      userId: user._id as string,
+      userId: user._id.toString(),
       role,
       jti: generateTokenId(),
     });
@@ -163,7 +156,7 @@ export class AuthService implements IAuthService {
 
     if (role == Roles.COMPANY) {
       subscriptionDetails = await this._subscriptionRecord.findOne({
-        subscriberId: user._id as string,
+        subscriberId: user._id.toString(),
       });
     }
 
@@ -193,18 +186,8 @@ export class AuthService implements IAuthService {
     company: CompanyRegisterRequestDTO
   ): Promise<AuthUserResponseDTO> {
     try {
-      const {
-        data: validatedData,
-        success,
-        error,
-      } = CompanyRegistrationSchema.safeParse(company);
-      if (!success) {
-        const firstError = error.errors[0];
-        throw new CustomError(firstError.message, HttpStatus.BAD_REQUEST);
-      }
-
       const existingCompany = await this._companyRepository.findByEmail(
-        validatedData.email
+        company.email
       );
       if (existingCompany) {
         throw new CustomError(
@@ -213,10 +196,9 @@ export class AuthService implements IAuthService {
         );
       }
 
-      validatedData.password = await hashPassword(validatedData.password);
+      company.password = await hashPassword(company.password);
 
-      const createdCompany =
-        await this._companyRepository.create(validatedData);
+      const createdCompany = await this._companyRepository.create(company);
       await this._walletRepository.create({
         userId: createdCompany._id as Types.ObjectId,
         userType: Roles.COMPANY,
@@ -224,6 +206,7 @@ export class AuthService implements IAuthService {
       await this.sendVerificationCode(createdCompany.email);
       return AuthMapper.toAuthUserResponse(createdCompany);
     } catch (error) {
+      console.log(error);
       if (error instanceof CustomError) {
         throw error;
       }
@@ -239,27 +222,18 @@ export class AuthService implements IAuthService {
     interviewer: InterviewerRegisterRequestDTO,
     resume: Express.Multer.File
   ): Promise<AuthUserResponseDTO> {
-    const parsedResult = InterviewerRegisterSchema.safeParse(interviewer);
-
-    if (!parsedResult.success) {
-      const firstError = parsedResult.error.errors[0];
-      throw new CustomError(firstError.message, 400);
-    }
-
-    const validatedData = parsedResult.data;
-
     const existingUser = await this._interviewerRepository.findByEmail(
-      validatedData.email
+      interviewer.email
     );
     if (existingUser) {
       throw new CustomError(AUTH_MESSAGES.INTERVIEWER_ALREADY_EXISTS, 400);
     }
 
-    const hashedPassword = await hashPassword(validatedData.password);
-    const resumeKey= await uploadFileToS3(resume)
+    const hashedPassword = await hashPassword(interviewer.password);
+    const resumeKey = await uploadFileToS3(resume);
 
     const validatedInterviewer = {
-      ...validatedData,
+      ...interviewer,
       password: hashedPassword,
       resume: resumeKey,
       status: "pending" as TStatus,
@@ -337,12 +311,6 @@ export class AuthService implements IAuthService {
   ): Promise<void> {
     const { email, role, otp } = authenticateOTPPayload;
     try {
-      if (otp.length !== 6) {
-        throw new CustomError(
-          AUTH_MESSAGES.INVALID_OTP_FORMAT,
-          HttpStatus.BAD_REQUEST
-        );
-      }
 
       const isOtpExists = await this._otpRepository.otpExists(email);
       if (!isOtpExists) {
@@ -352,7 +320,7 @@ export class AuthService implements IAuthService {
         );
       }
       const existingOtp = await this._otpRepository.getOtp(email);
-      
+
       if (existingOtp !== otp) {
         throw new CustomError(
           AUTH_MESSAGES.INCORRECT_OTP,
@@ -367,11 +335,11 @@ export class AuthService implements IAuthService {
           HttpStatus.NOT_FOUND
         );
       if (role === Roles.COMPANY) {
-        await this._companyRepository.update(user._id as string, {
+        await this._companyRepository.update(user._id.toString(), {
           isVerified: true,
         });
       } else if (role === Roles.INTERVIEWER) {
-        await this._interviewerRepository.update(user._id as string, {
+        await this._interviewerRepository.update(user._id.toString(), {
           isVerified: true,
         });
       }
@@ -401,12 +369,12 @@ export class AuthService implements IAuthService {
         //   );
         // }
         const accessToken = await generateAccessToken({
-          userId: interviewer._id as string,
+          userId: interviewer._id.toString(),
           role: Roles.INTERVIEWER,
         });
 
         const refreshToken = await generateRefreshToken({
-          userId: interviewer._id as string,
+          userId: interviewer._id.toString(),
           role: Roles.INTERVIEWER,
           jti: generateTokenId(),
         });
@@ -431,7 +399,6 @@ export class AuthService implements IAuthService {
         user: createdInterviewer,
       });
     } catch (error) {
-      
       if (error instanceof CustomError) {
         throw error;
       } else {
@@ -466,7 +433,7 @@ export class AuthService implements IAuthService {
         );
       }
       const resetToken = await generateAccessToken({
-        userId: user._id as string,
+        userId: user._id.toString(),
         role,
       });
       await redis.setex(`resetToken:${user._id}`, 900, resetToken);
@@ -505,7 +472,7 @@ export class AuthService implements IAuthService {
 
     const hashedPassword = await hashPassword(password);
     const role = decoded.role;
-    
+
     try {
       switch (role) {
         case Roles.COMPANY:
@@ -519,7 +486,7 @@ export class AuthService implements IAuthService {
           });
           break;
         case Roles.CANDIDATE:
-           await this._candidateRepository.update(userId, {
+          await this._candidateRepository.update(userId, {
             password: hashedPassword,
           });
           break;

@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { sendEmail } from "./EmailService";
-import { createPasswordHtml } from "./wrapHtml";
+import { createPasswordHtml } from "./htmlWrapper";
 import { ICandidate } from "../models/candidate/Candidate";
 import { Roles } from "../constants/enums/roles";
 
@@ -15,7 +15,7 @@ export const sendCreatePasswordEmail = async (candidates: ICandidate[],companyNa
   for (const candidate of candidates) {
     const token = await jwt.sign(
       {
-        userId: candidate._id as string,
+        userId: candidate._id.toString(),
         role: Roles.CANDIDATE,
         email: candidate.email,
       },

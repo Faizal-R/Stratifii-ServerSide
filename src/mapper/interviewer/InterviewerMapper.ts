@@ -7,7 +7,7 @@ import { IInterviewer } from "../../models/interviewer/Interviewer";
 export const InterviewerMapper = {
   toSummary: (
     interviewer: IInterviewer,
-    resumeUrl: string,
+    resumeUrl: string | null,
     avatarUrl: string | null
   ): InterviewerSummaryDTO => ({
     _id: interviewer._id.toString(),
@@ -22,7 +22,7 @@ export const InterviewerMapper = {
 
   toResponse: (
     interviewer: IInterviewer,
-    resumeUrl: string,
+    resumeUrl: string | null,
     avatarUrl: string | null = null
   ): InterviewerResponseDTO => ({
     _id: interviewer._id.toString(),

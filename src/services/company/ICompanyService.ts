@@ -2,10 +2,12 @@ import {
   CompanyBasicDTO,
   CompanyResponseDTO,
 } from "../../dto/response/company/CompanyResponseDTO";
+import { PaymentTransactionBasicDTO } from "../../dto/response/payment/PaymentTransactionDTO";
 import { IDelegatedCandidate } from "../../models/candidate/DelegatedCandidate";
 
 import { IJob } from "../../models/job/Job";
 import { IPaymentTransaction } from "../../models/payment/PaymentTransaction";
+import { ISubscriptionRecord } from "../../models/subscription/SubscriptionRecord";
 import { ICompanyProfile } from "../../validations/CompanyValidations";
 export interface ICompanyService {
   getCompanyProfile(companyId: string): Promise<CompanyResponseDTO | null>;
@@ -28,5 +30,11 @@ export interface ICompanyService {
       subscription: number;
       interviews: number;
     }[];
+  }>;
+  getCompanyPaymentHistory(companyId: string): Promise<{
+    subscriptionPayments: ISubscriptionRecord[];
+    interviewProcessPayments: PaymentTransactionBasicDTO[];
+    totalSpendOnInterview: number;
+    totalSpendOnSubscription?: number;
   }>;
 }

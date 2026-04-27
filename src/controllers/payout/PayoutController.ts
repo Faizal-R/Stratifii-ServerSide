@@ -62,7 +62,7 @@ export class PayoutController implements IPayoutController {
     response: Response
   ): Promise<void> {
     try {
-      const payoutRequestId = request.params.payoutRequestId;
+      const payoutRequestId = request.params.payoutRequestId as string;
       
       const { status } = request.body;
       

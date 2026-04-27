@@ -19,7 +19,7 @@ import {
   companyAccountVerificationEmailHtml,
   interviewerAccountRejectionHtml,
   interviewerAccountVerificationEmailHtml,
-} from "../../helper/wrapHtml";
+} from "../../helper/htmlWrapper";
 import { inject, injectable } from "inversify";
 import { DI_TOKENS } from "../../di/types";
 import { IPaymentTransactionRepository } from "../../repositories/payment/IPaymentTransactionRepository";
@@ -54,15 +54,12 @@ export class AdminService implements IAdminService {
     @inject(DI_TOKENS.REPOSITORIES.INTERVIEW_REPOSITORY)
     private readonly _interviewRepository: IInterviewRepository
   ) { }
-  async getAllCompanies(status: string): Promise<CompanyResponseDTO[]> {
+  async getAllCompanies(status: string): Promise<CompanyResponseDTO[]|[]> {
     try {
       const companies = await this._adminRepository.getAllCompanies(status);
 
       if (!companies || companies.length === 0) {
-        throw new CustomError(
-          `No companies found with status: ${status}`,
-          HttpStatus.NOT_FOUND
-        );
+     return []
       }
 
       return companies.map((company: ICompany) =>
@@ -124,12 +121,12 @@ export class AdminService implements IAdminService {
         );
       }
       const accessToken = await generateAccessToken({
-        userId: admin._id as string,
+        userId: admin._id.toString(),
         role: Roles.ADMIN,
       });
 
       const refreshToken = generateRefreshToken({
-        userId: admin._id as string,
+        userId: admin._id.toString(),
         role: Roles.ADMIN,
         jti: generateTokenId(),
       });

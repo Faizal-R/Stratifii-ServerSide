@@ -26,7 +26,7 @@ export class InterviewerController implements IInterviewerController {
     private readonly _interviewService: IInterviewService,
     @inject(DI_TOKENS.SERVICES.WALLET_SERVICE)
     private readonly _walletService: IWalletService
-  ) {}
+  ) { }
 
   async getInterviewerProfile(request: Request, response: Response) {
     try {
@@ -42,13 +42,13 @@ export class InterviewerController implements IInterviewerController {
         interviewer
       );
     } catch (error) {
-      
+
       return errorResponse(response, error);
     }
   }
   async updateInterviewerProfile(request: Request, response: Response) {
     try {
-      
+
 
       const interviewerId = request.user?.userId ?? request.body.interviewerId;
       const interviewer = JSON.parse(request.body.interviewer); //request.body
@@ -60,8 +60,8 @@ export class InterviewerController implements IInterviewerController {
         resume =
           (request.files["resume"]?.[0] as Express.Multer.File) ?? undefined;
       }
-      
-      
+
+
       // if (!interviewer.success) {
       //   return createResponse(
       //     response,
@@ -93,8 +93,8 @@ export class InterviewerController implements IInterviewerController {
   async changePassword(request: Request, response: Response): Promise<void> {
     const passwordDetails = request.body;
     const interviewerId = request.user?.userId;
-    if(!interviewerId){
-      errorResponse(response,"Interviewer not found");
+    if (!interviewerId) {
+      errorResponse(response, "Interviewer not found");
       return;
     }
     try {
@@ -117,10 +117,10 @@ export class InterviewerController implements IInterviewerController {
 
   async addBankDetails(request: Request, response: Response): Promise<void> {
     const bankDetails: IBankDetails = request.body;
-    
+
     const interviewerId = request.user?.userId;
-    if(!interviewerId){
-      errorResponse(response,"Interviewer not found");
+    if (!interviewerId) {
+      errorResponse(response, "Interviewer not found");
       return;
     }
     try {
@@ -135,7 +135,7 @@ export class InterviewerController implements IInterviewerController {
         INTERVIEWER__SUCCESS_MESSAGES.INTERVIEWER_BANK_DETAILS_ADDED
       );
     } catch (error) {
-      
+
       errorResponse(response, error);
     }
   }
@@ -145,12 +145,12 @@ export class InterviewerController implements IInterviewerController {
     response: Response
   ): Promise<void> {
     try {
-      
+
       const interviewerId = request.user?.userId;
-      
+
       const { wallet, transactions } =
         await this._walletService.getUserWalletAndTransactions(interviewerId!);
-      
+
       createResponse(
         response,
         HttpStatus.OK,
@@ -169,8 +169,8 @@ export class InterviewerController implements IInterviewerController {
   ): Promise<void> {
     try {
       const interviewerId = request.user?.userId;
-      if(!interviewerId){
-        errorResponse(response,"Interviewer not found");
+      if (!interviewerId) {
+        errorResponse(response, "Interviewer not found");
         return;
       }
       const upcomingInterviews =

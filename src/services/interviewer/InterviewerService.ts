@@ -23,6 +23,7 @@ import { IWallet } from "../../models/wallet/Wallet";
 import { generateSignedUrl, uploadFileToS3 } from "../../helper/s3Helper";
 import { InterviewerMapper } from "../../mapper/interviewer/InterviewerMapper";
 import { InterviewerResponseDTO } from "../../dto/response/interviewer/InterviewerResponseDTO";
+import { MulterError } from "multer";
 
 @injectable()
 export class InterviewerService implements IInterviewerService {
@@ -126,6 +127,14 @@ async getInterviewerWallet(interviewerId: string): Promise<IWallet | null> {
       if (error instanceof CustomError) {
         throw error;
       }
+       if (error instanceof MulterError) {
+              if (error.code == "LIMIT_FILE_SIZE") {
+                throw new CustomError(
+                  "“Oops! That file is too big. Please upload something under 10MB.”",
+                  HttpStatus.BAD_REQUEST,
+                );
+              }
+            }
       throw new CustomError(
         ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
         HttpStatus.INTERNAL_SERVER_ERROR

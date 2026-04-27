@@ -5,6 +5,7 @@ import { IInterviewService } from "../../services/interview/IInterviewService";
 import { Request, Response } from "express";
 import { createResponse, errorResponse } from "../../helper/responseHandler";
 import { HttpStatus } from "../../config/HttpStatusCodes";
+import { Roles } from "../../constants/enums/roles";
 @injectable()
 export class InterviewController implements IInterviewController {
   constructor(
@@ -16,7 +17,7 @@ export class InterviewController implements IInterviewController {
     response: Response
   ): Promise<void> {
     try {
-      const interviewId = request.params.id;
+      const interviewId = request.params.id as string;
       const { feedback } = request.body;
 
       await this._interviewService.updateAndSubmitFeedback(
@@ -37,7 +38,7 @@ export class InterviewController implements IInterviewController {
     request: Request,
     response: Response
   ): Promise<void> {
-    const candidateId = request.params.id;
+    const candidateId = request.params.id as string;
     try {
       const interviews =
         await this._interviewService.getScheduledInterviews(candidateId);
@@ -57,7 +58,7 @@ export class InterviewController implements IInterviewController {
     request: Request,
     response: Response
   ): Promise<void> {
-    const candidateId = request.params.candidateId;
+    const candidateId = request.params.candidateId as string;
     try {
       const interviews =
         await this._interviewService.getAllInterviewsByCandidateId(candidateId);
@@ -77,7 +78,7 @@ export class InterviewController implements IInterviewController {
     request: Request,
     response: Response
   ): Promise<void> {
-    const delegatedCandidateId = request.params.delegatedCandidateId;
+    const delegatedCandidateId = request.params.delegatedCandidateId as string;
     try {
       const delegatedCandidate =
         await this._interviewService.completeCandidateInterviewProcess(
@@ -94,4 +95,23 @@ export class InterviewController implements IInterviewController {
       errorResponse(response, error);
     }
   }
+
+   async handleNoShowInterview(request: Request, response: Response): Promise<void> {
+     const interviewId = request.params.interviewId as string;
+     const noShowBy = request.body.noShowBy;
+     try {
+       const delegatedCandidate =
+         await this._interviewService.handleNoShowInterview(interviewId,noShowBy);
+       return createResponse(
+         response,
+         HttpStatus.OK,
+         true,
+         noShowBy===Roles.CANDIDATE?"This Interview Marked as No Show And Your Interview Will Be Reschedule Soon ":"Interview Marked as No Show Successfully",
+         delegatedCandidate
+       );
+     } catch (error) {
+       errorResponse(response, error);
+     }
+   }
+
 }

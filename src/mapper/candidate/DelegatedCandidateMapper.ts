@@ -9,7 +9,7 @@ export const DelegatedCandidateMapper = {
     candidateAvatarUrl: string|null,
     candidateResumeUrl: string
   ):DelegatedCandidateForCompanyDTO => ({
-    _id: delegatedCandidate._id as string,
+    _id: delegatedCandidate._id.toString(),
 
     candidate: CandidateMapper.toResponse(
       delegatedCandidate.candidate as ICandidate,

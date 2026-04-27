@@ -24,6 +24,11 @@ import { IPaymentTransaction } from "../../models/payment/PaymentTransaction";
 import { generateSignedUrl, uploadFileToS3 } from "../../helper/s3Helper";
 import { ISubscriptionRecordRepository } from "../../repositories/subscription/subscription-record/ISubscriptionRecordRepository";
 import { convertNumberToMonth } from "../../utils/convertNumberToMonth";
+import { ISubscriptionRecord } from "../../models/subscription/SubscriptionRecord";
+import { JobMapper } from "../../mapper/job/JobMapper";
+import { PaymentTransactionBasicDTO } from "../../dto/response/payment/PaymentTransactionDTO";
+import { PaymentMapper } from "../../mapper/payment/PaymentMapper";
+import { MulterError } from "multer";
 
 @injectable()
 export class CompanyService implements ICompanyService {
@@ -39,11 +44,11 @@ export class CompanyService implements ICompanyService {
     @inject(DI_TOKENS.REPOSITORIES.PAYMENT_TRANSACTION_REPOSITORY)
     private readonly _paymentTransactionRepository: IPaymentTransactionRepository,
     @inject(DI_TOKENS.REPOSITORIES.SUBSCRIPTION_RECORD_REPOSITORY)
-    private readonly _subscriptionRecordRepository: ISubscriptionRecordRepository
+    private readonly _subscriptionRecordRepository: ISubscriptionRecordRepository,
   ) {}
 
   async getCompanyProfile(
-    companyId: string
+    companyId: string,
   ): Promise<CompanyResponseDTO | null> {
     try {
       const company = await this._companyRepository.findById(companyId);
@@ -57,14 +62,14 @@ export class CompanyService implements ICompanyService {
       }
       throw new CustomError(
         ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
   async updateCompanyProfile(
     companyId: string,
     company: ICompanyProfile,
-    companyLogoFile?: Express.Multer.File
+    companyLogoFile?: Express.Multer.File,
   ): Promise<CompanyResponseDTO | null> {
     try {
       if (companyLogoFile) {
@@ -73,7 +78,7 @@ export class CompanyService implements ICompanyService {
       }
       const updatedCompany = await this._companyRepository.update(
         companyId,
-        company
+        company,
       );
       const companyLogo = await generateSignedUrl(company.companyLogoKey!);
       return CompanyMapper.toResponse(updatedCompany!, companyLogo);
@@ -81,23 +86,31 @@ export class CompanyService implements ICompanyService {
       if (error instanceof CustomError) {
         throw error;
       }
+      if (error instanceof MulterError) {
+        if (error.code == "LIMIT_FILE_SIZE") {
+          throw new CustomError(
+            "“Oops! That file is too big. Please upload something under 10MB.”",
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+      }
       throw new CustomError(
         ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
   async changePassword(
     currentPassword: string,
     newPassword: string,
-    companyId: string
+    companyId: string,
   ): Promise<CompanyBasicDTO | null> {
     try {
       const company = await this._companyRepository.findById(companyId);
       if (!company || !comparePassword(currentPassword, company.password)) {
         throw new CustomError(
           USER_COMMON_MESSAGES.CURRENT_PASSWORD_INCORRECT,
-          HttpStatus.BAD_REQUEST
+          HttpStatus.BAD_REQUEST,
         );
       }
       const hashedPassword = await hashPassword(newPassword);
@@ -113,7 +126,7 @@ export class CompanyService implements ICompanyService {
         error instanceof Error
           ? error.message
           : ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -122,40 +135,95 @@ export class CompanyService implements ICompanyService {
     jobs: IJob[];
     candidates: IDelegatedCandidate[];
     payments: IPaymentTransaction[];
-    monthlySpend:{
-      month:string;
-      subscription:number;
-      interviews:number
-    }[]
+    monthlySpend: {
+      month: string;
+      subscription: number;
+      interviews: number;
+    }[];
   }> {
+    const jobs = await this._jobRepository.find({ company: companyId });
+    const candidates = await this._delegatedCandidateRepository.find({
+      company: companyId,
+    });
+    const payments = await this._paymentTransactionRepository.find({
+      company: companyId,
+    });
+    const spendsOnSubscription =
+      await this._subscriptionRecordRepository.getTotalSubscriptionRevenueOfCompanyWithMonth(
+        companyId,
+      );
 
-      const jobs = await this._jobRepository.find({ company: companyId });
-      const candidates = await this._delegatedCandidateRepository.find({
-        company: companyId,
+    const amountSpendOnInterviews =
+      await this._paymentTransactionRepository.getCompaniesTotalAmountSpendOnInterviewsPerMonth(
+        companyId,
+      );
+
+    const monthlySpendOnSubscriptionAndInterviews = [];
+    for (let i = 1; i <= 12; i++) {
+      monthlySpendOnSubscriptionAndInterviews.push({
+        month: convertNumberToMonth(i),
+        subscription:
+          spendsOnSubscription.find((item) => item._id === i)?.totalRevenue ||
+          0,
+        interviews:
+          amountSpendOnInterviews.find((item) => item._id === i)
+            ?.totalRevenue || 0,
       });
-      const payments = await this._paymentTransactionRepository.find({
-        company: companyId,
-      });
-      const spendsOnSubscription=await this._subscriptionRecordRepository.getTotalSubscriptionRevenueOfCompanyWithMonth(companyId);
-      console.log("spendsOnSubscripion",spendsOnSubscription)
-      const amountSpendOnInterviews= await this._paymentTransactionRepository.getCompaniesTotalAmountSpendOnInterviewsPerMonth(companyId)
-      console.log("amountSpendOnInterviews",amountSpendOnInterviews)
-      const monthlySpendOnSubscriptionAndInterviews=[]
-      for(let i=1;i<=12;i++){
-        monthlySpendOnSubscriptionAndInterviews.push({
-          month:convertNumberToMonth(i),
-          subscription:spendsOnSubscription.find((item)=>item._id===i)?.totalRevenue||0,
-           interviews:amountSpendOnInterviews.find((item)=>item._id===i)?.totalRevenue||0
-        })
-      }
-     console.log("monthlySpendOnSubscriptionAndInterviews",monthlySpendOnSubscriptionAndInterviews)
-     
+    }
+
+    return {
+      jobs,
+      candidates,
+      payments,
+      monthlySpend: monthlySpendOnSubscriptionAndInterviews,
+    };
+  }
+
+  async getCompanyPaymentHistory(companyId: string): Promise<{
+    subscriptionPayments: ISubscriptionRecord[];
+    interviewProcessPayments: PaymentTransactionBasicDTO[];
+    totalSpendOnInterview: number;
+    totalSpendOnSubscription?: number;
+  }> {
+    try {
+      const subscriptionPayments =
+        await this._subscriptionRecordRepository.find({
+          subscriberId: companyId,
+        });
+
+      const interviewProcessPayments =
+        await this._paymentTransactionRepository.getPaymentTransactionsDetailsByCompanyId(
+          companyId,
+        );
+
+      const mappedInterviewProcessPayments = interviewProcessPayments.map(
+        (payment: IPaymentTransaction) => {
+          return PaymentMapper.toSummary(payment);
+        },
+      );
+      const totalAmountSpendOnInterview =
+        await this._paymentTransactionRepository.getTotalAmountSpendOnInterviewsByCompany(
+          companyId,
+        );
+      const totalAmountSpendOnSubscription =
+        await this._subscriptionRecordRepository.getTotalAmountSpendOnSubscriptionByCompany(
+          companyId,
+        );
+
       return {
-        jobs,
-        candidates,
-        payments,
-        monthlySpend:monthlySpendOnSubscriptionAndInterviews
+        subscriptionPayments,
+        interviewProcessPayments: mappedInterviewProcessPayments,
+        totalSpendOnInterview: totalAmountSpendOnInterview,
+        totalSpendOnSubscription: totalAmountSpendOnSubscription,
       };
-    
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      throw new CustomError(
+        "An error occurred while fetching payment history",
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }
