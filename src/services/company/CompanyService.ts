@@ -28,6 +28,7 @@ import { ISubscriptionRecord } from "../../models/subscription/SubscriptionRecor
 import { JobMapper } from "../../mapper/job/JobMapper";
 import { PaymentTransactionBasicDTO } from "../../dto/response/payment/PaymentTransactionDTO";
 import { PaymentMapper } from "../../mapper/payment/PaymentMapper";
+import { MulterError } from "multer";
 
 @injectable()
 export class CompanyService implements ICompanyService {
@@ -43,11 +44,11 @@ export class CompanyService implements ICompanyService {
     @inject(DI_TOKENS.REPOSITORIES.PAYMENT_TRANSACTION_REPOSITORY)
     private readonly _paymentTransactionRepository: IPaymentTransactionRepository,
     @inject(DI_TOKENS.REPOSITORIES.SUBSCRIPTION_RECORD_REPOSITORY)
-    private readonly _subscriptionRecordRepository: ISubscriptionRecordRepository
+    private readonly _subscriptionRecordRepository: ISubscriptionRecordRepository,
   ) {}
 
   async getCompanyProfile(
-    companyId: string
+    companyId: string,
   ): Promise<CompanyResponseDTO | null> {
     try {
       const company = await this._companyRepository.findById(companyId);
@@ -61,24 +62,23 @@ export class CompanyService implements ICompanyService {
       }
       throw new CustomError(
         ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
   async updateCompanyProfile(
     companyId: string,
     company: ICompanyProfile,
-    companyLogoFile?: Express.Multer.File
+    companyLogoFile?: Express.Multer.File,
   ): Promise<CompanyResponseDTO | null> {
     try {
-   
       if (companyLogoFile) {
         const companyLogoKey = await uploadFileToS3(companyLogoFile);
         company.companyLogoKey = companyLogoKey;
       }
       const updatedCompany = await this._companyRepository.update(
         companyId,
-        company
+        company,
       );
       const companyLogo = await generateSignedUrl(company.companyLogoKey!);
       return CompanyMapper.toResponse(updatedCompany!, companyLogo);
@@ -86,23 +86,31 @@ export class CompanyService implements ICompanyService {
       if (error instanceof CustomError) {
         throw error;
       }
+      if (error instanceof MulterError) {
+        if (error.code == "LIMIT_FILE_SIZE") {
+          throw new CustomError(
+            "“Oops! That file is too big. Please upload something under 10MB.”",
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+      }
       throw new CustomError(
         ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
   async changePassword(
     currentPassword: string,
     newPassword: string,
-    companyId: string
+    companyId: string,
   ): Promise<CompanyBasicDTO | null> {
     try {
       const company = await this._companyRepository.findById(companyId);
       if (!company || !comparePassword(currentPassword, company.password)) {
         throw new CustomError(
           USER_COMMON_MESSAGES.CURRENT_PASSWORD_INCORRECT,
-          HttpStatus.BAD_REQUEST
+          HttpStatus.BAD_REQUEST,
         );
       }
       const hashedPassword = await hashPassword(newPassword);
@@ -118,7 +126,7 @@ export class CompanyService implements ICompanyService {
         error instanceof Error
           ? error.message
           : ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -142,14 +150,14 @@ export class CompanyService implements ICompanyService {
     });
     const spendsOnSubscription =
       await this._subscriptionRecordRepository.getTotalSubscriptionRevenueOfCompanyWithMonth(
-        companyId
+        companyId,
       );
-  
+
     const amountSpendOnInterviews =
       await this._paymentTransactionRepository.getCompaniesTotalAmountSpendOnInterviewsPerMonth(
-        companyId
+        companyId,
       );
-   
+
     const monthlySpendOnSubscriptionAndInterviews = [];
     for (let i = 1; i <= 12; i++) {
       monthlySpendOnSubscriptionAndInterviews.push({
@@ -162,8 +170,6 @@ export class CompanyService implements ICompanyService {
             ?.totalRevenue || 0,
       });
     }
-  
- 
 
     return {
       jobs,
@@ -184,26 +190,25 @@ export class CompanyService implements ICompanyService {
         await this._subscriptionRecordRepository.find({
           subscriberId: companyId,
         });
-   
+
       const interviewProcessPayments =
         await this._paymentTransactionRepository.getPaymentTransactionsDetailsByCompanyId(
-          companyId
+          companyId,
         );
 
       const mappedInterviewProcessPayments = interviewProcessPayments.map(
         (payment: IPaymentTransaction) => {
           return PaymentMapper.toSummary(payment);
-        }
+        },
       );
       const totalAmountSpendOnInterview =
         await this._paymentTransactionRepository.getTotalAmountSpendOnInterviewsByCompany(
-          companyId
+          companyId,
         );
       const totalAmountSpendOnSubscription =
         await this._subscriptionRecordRepository.getTotalAmountSpendOnSubscriptionByCompany(
-          companyId
+          companyId,
         );
-     
 
       return {
         subscriptionPayments,
@@ -217,7 +222,7 @@ export class CompanyService implements ICompanyService {
       }
       throw new CustomError(
         "An error occurred while fetching payment history",
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
