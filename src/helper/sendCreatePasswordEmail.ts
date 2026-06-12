@@ -9,7 +9,7 @@ import redis from "../config/RedisConfig";
 import { config } from "dotenv";
 config() // Load environment variables from .env file
 
-export const sendCreatePasswordEmail = async (candidates: ICandidate[],companyName:string) => {
+export const sendJobDelegationEmailToNewCandidates = async (candidates: ICandidate[],companyName:string) => {
  
   const frontendBaseUrl = process.env.FRONTEND_URL; // e.g., https://yourdomain.com
 
@@ -41,7 +41,7 @@ export const sendCreatePasswordEmail = async (candidates: ICandidate[],companyNa
   }
 };
 
-export const sendJobDelegationEmail = async (
+export const sendJobDelegationEmailToActiveCandidates = async (
   candidates: ICandidate[],
   companyName: string
 ) => {

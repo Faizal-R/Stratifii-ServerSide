@@ -12,7 +12,7 @@ import crypto from "crypto";
 import { Types } from "mongoose";
 import { IJobRepository } from "../../repositories/job/IJobRepository";
 
-import { sendCreatePasswordEmail, sendJobDelegationEmail } from "../../helper/sendCreatePasswordEmail";
+import { sendJobDelegationEmailToNewCandidates, sendJobDelegationEmailToActiveCandidates } from "../../helper/sendCreatePasswordEmail";
 import { IDelegatedCandidateRepository } from "../../repositories/candidate/candidateDelegation/IDelegatedCandidateRepository";
 import { ICandidateRepository } from "../../repositories/candidate/ICandidateRepository";
 import { ICompanyRepository } from "../../repositories/company/ICompanyRepository";
@@ -179,11 +179,11 @@ export class PaymentTransactionService implements IPaymentTransactionService {
 
       //  Send onboarding emails
       const companyName=company?.name || "Company";
-      await sendCreatePasswordEmail(candidatesToOnboard, companyName);
+      await sendJobDelegationEmailToNewCandidates(candidatesToOnboard, companyName);
 
       // Send mail to candidates who are already onboarded
       if (candidateAllReadyOnboarded.length > 0) {
-        await sendJobDelegationEmail(candidateAllReadyOnboarded, companyName);
+        await sendJobDelegationEmailToActiveCandidates(candidateAllReadyOnboarded, companyName);
       }
     }
 
