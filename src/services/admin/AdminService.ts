@@ -19,7 +19,7 @@ import {
   companyAccountVerificationEmailHtml,
   interviewerAccountRejectionHtml,
   interviewerAccountVerificationEmailHtml,
-} from "../../helper/htmlWrapper";
+} from "../../helper/htmlWrappers";
 import { inject, injectable } from "inversify";
 import { DI_TOKENS } from "../../di/types";
 import { IPaymentTransactionRepository } from "../../repositories/payment/IPaymentTransactionRepository";

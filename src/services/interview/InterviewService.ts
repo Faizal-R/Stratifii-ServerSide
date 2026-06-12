@@ -25,7 +25,7 @@ import { DelegatedCandidateMapper } from "../../mapper/candidate/DelegatedCandid
 import { DelegatedCandidateForCompanyDTO } from "../../dto/response/candidate/DelegatedCandidateResponseDTO";
 import { Roles } from "../../constants/enums/roles";
 import { sendEmail } from "../../helper/EmailService";
-import { generateMockInterviewResultEmail } from "../../helper/htmlWrapper";
+import { generateMockInterviewResultEmail } from "../../helper/htmlWrappers";
 import { ICompany } from "../../models/company/Company";
 
 @injectable()

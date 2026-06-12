@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { sendEmail } from "./EmailService";
-import { createPasswordHtml } from "./htmlWrapper";
+import { createPasswordHtml, onboardedCandidateJobDelegationHtml } from "./htmlWrappers";
 import { ICandidate } from "../models/candidate/Candidate";
 import { Roles } from "../constants/enums/roles";
 
@@ -8,6 +8,7 @@ import redis from "../config/RedisConfig";
 
 import { config } from "dotenv";
 config() // Load environment variables from .env file
+
 export const sendCreatePasswordEmail = async (candidates: ICandidate[],companyName:string) => {
  
   const frontendBaseUrl = process.env.FRONTEND_URL; // e.g., https://yourdomain.com
@@ -36,6 +37,27 @@ export const sendCreatePasswordEmail = async (candidates: ICandidate[],companyNa
       html,
       
       "Action Required - Complete Your Account Setup for Your Interview Process"
+    );
+  }
+};
+
+export const sendJobDelegationEmail = async (
+  candidates: ICandidate[],
+  companyName: string
+) => {
+  const frontendBaseUrl = process.env.FRONTEND_URL; 
+  const link = `${frontendBaseUrl}/candidate/dashboard`;
+
+  for (const candidate of candidates) {
+    const html = onboardedCandidateJobDelegationHtml(
+      candidate.name,
+      companyName,
+      link
+    );
+    await sendEmail(
+      candidate.email,
+      html,
+      `New Interview Process Invitation from ${companyName}`
     );
   }
 };
