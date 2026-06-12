@@ -49,10 +49,10 @@ jobs:
         run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
       
       - name: Build Docker Image
-        run: docker build --build-arg ENV_FILE=.env -t 5zziiihhh/stratifii-node-app:latest .
+        run: docker build --build-arg ENV_FILE=.env -t 5zziiihhh/stratifii-server:latest .
       
       - name: Publish Image to Docker Hub
-        run: docker push 5zziiihhh/stratifii-node-app:latest
+        run: docker push 5zziiihhh/stratifii-server:latest
 
   deploy:
     needs: build
@@ -89,10 +89,10 @@ jobs:
           echo "BUCKET_REGION=${{ secrets.BUCKET_REGION }}" >> .env
       
       - name: Pull image from Docker Hub
-        run: sudo docker pull 5zziiihhh/stratifii-node-app:latest
+        run: sudo docker pull 5zziiihhh/stratifii-server:latest
       
       - name: Delete old container
-        run: sudo docker rm -f stratifii-node-app || true
+        run: sudo docker rm -f stratifii-server || true
       
       - name: Run Docker Container
-        run: sudo docker run -d -p 8000:8000 --name stratifii-node-app --env-file .env --restart unless-stopped 5zziiihhh/stratifii-node-app:latest
+        run: sudo docker run -d -p 8000:8000 --name stratifii-server --env-file .env --restart unless-stopped 5zziiihhh/stratifii-server:latest
